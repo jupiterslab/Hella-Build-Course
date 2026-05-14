@@ -1,5 +1,5 @@
 // ═══════════════════════════════════════════
-// HELLA SKILLZ — SUPABASE CONFIG + AUTH
+// HELLA BUILD — SUPABASE CONFIG + AUTH
 // Replace SUPABASE_URL and SUPABASE_KEY with
 // your real Hella Build project credentials
 // ═══════════════════════════════════════════
