@@ -1,0 +1,1764 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>C.O.R.E. Client Portal — Jupiter's Lab Creative Studio</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Rajdhani:wght@400;500;600;700&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --navy: #0B1F3A;
+    --navy-mid: #0D2847;
+    --navy-light: #152E50;
+    --lavender: #C5B8E8;
+    --lavender-light: #EDE8F8;
+    --mint: #B8DDB0;
+    --mint-light: #EBF6E8;
+    --gold: #F0C97A;
+    --steel: #9BB5D4;
+    --steel-light: #EDF2F8;
+    --white: #FFFFFF;
+    --off-white: #F7F5FF;
+    --text-dark: #0F0F1A;
+    --text-mid: #3D3D55;
+    --text-light: #666677;
+    --border: #D0CCEC;
+    --border-light: #E2DFEF;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Rajdhani', sans-serif;
+    background: var(--white);
+    color: var(--text-dark);
+    line-height: 1.6;
+  }
+
+  /* ── COVER ── */
+  .cover {
+    background: var(--navy);
+    padding: 80px 60px;
+    text-align: center;
+  }
+  .cover-studio {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.35em;
+    color: var(--lavender);
+    text-transform: uppercase;
+    margin-bottom: 24px;
+  }
+  .cover-title {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 52px;
+    font-weight: 700;
+    color: var(--white);
+    letter-spacing: 0.02em;
+    margin-bottom: 12px;
+  }
+  .cover-subtitle {
+    font-size: 15px;
+    letter-spacing: 0.2em;
+    color: var(--mint);
+    margin-bottom: 48px;
+  }
+  .cover-divider {
+    width: 100%;
+    height: 1px;
+    background: var(--lavender);
+    opacity: 0.4;
+    margin-bottom: 40px;
+  }
+  .cover-fields {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 32px;
+    max-width: 680px;
+    margin: 0 auto;
+  }
+  .cover-field-label {
+    font-size: 10px;
+    letter-spacing: 0.3em;
+    color: #B8B8D8;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+  .cover-field-value {
+    font-size: 16px;
+    color: var(--white);
+    border-bottom: 1px solid rgba(197,184,232,0.3);
+    padding-bottom: 6px;
+    min-height: 28px;
+  }
+  .tier-checkboxes {
+    display: flex;
+    gap: 24px;
+    justify-content: center;
+  }
+  .tier-checkbox {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: var(--white);
+  }
+  .tier-checkbox input { accent-color: var(--mint); width: 14px; height: 14px; }
+
+  /* ── LAYOUT ── */
+  .container {
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 0 40px;
+  }
+
+  /* ── SECTION ── */
+  .section {
+    padding: 56px 0 40px;
+    border-bottom: 1px solid var(--border-light);
+  }
+  .section:last-child { border-bottom: none; }
+
+  .section-title {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--navy);
+    margin-bottom: 8px;
+  }
+  .section-divider {
+    height: 2px;
+    background: var(--navy);
+    margin-bottom: 24px;
+    width: 100%;
+  }
+
+  /* ── LABELS ── */
+  .label {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: var(--navy);
+    margin-bottom: 12px;
+    margin-top: 32px;
+  }
+
+  /* ── BODY TEXT ── */
+  .body-text {
+    font-size: 15px;
+    color: var(--text-dark);
+    line-height: 1.7;
+    margin-bottom: 16px;
+  }
+  .body-text.muted {
+    color: var(--text-mid);
+    font-style: italic;
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 300;
+    font-size: 14px;
+  }
+
+  /* ── CALLOUT ── */
+  .callout {
+    border-left: 3px solid var(--navy);
+    background: var(--lavender-light);
+    padding: 16px 20px;
+    margin: 20px 0;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    font-style: italic;
+    font-weight: 300;
+    color: var(--text-dark);
+    line-height: 1.65;
+  }
+  .callout.mint { border-color: var(--mint); background: var(--mint-light); }
+  .callout.steel { border-color: var(--steel); background: var(--steel-light); }
+  .callout.gold { border-color: var(--gold); background: #FBF6E8; }
+
+  /* ── STATUS ROWS ── */
+  .status-table { width: 100%; border-collapse: collapse; margin: 8px 0; }
+  .status-table td { padding: 10px 16px; font-size: 14px; }
+  .status-badge {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    padding: 5px 12px;
+    white-space: nowrap;
+  }
+  .status-badge.active { background: var(--mint); color: var(--navy); }
+  .status-badge.locked { background: #C8C5DC; color: #1A1A3A; }
+  .status-badge.complete { background: var(--lavender); color: var(--navy); }
+  .status-desc { color: var(--text-mid); font-style: italic; background: #F7F5FF; }
+
+  /* ── PROGRESS TRACKER ── */
+  .progress-tracker {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0;
+    margin: 20px 0 40px;
+    border-radius: 2px;
+    overflow: hidden;
+  }
+  .stage-block {
+    padding: 20px 12px;
+    text-align: center;
+    background: #D8D5EC;
+    transition: background 0.2s;
+  }
+  .stage-block.active { background: var(--navy); }
+  .stage-block-letter {
+    font-size: 28px;
+    font-weight: 700;
+    font-family: 'Rajdhani', sans-serif;
+    color: #4A4A66;
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+  .stage-block.active .stage-block-letter { color: var(--lavender); }
+  .stage-block-name {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    color: #3D3D58;
+    text-transform: uppercase;
+  }
+  .stage-block.active .stage-block-name { color: var(--white); }
+  .stage-block-status {
+    font-size: 10px;
+    color: #555570;
+    font-style: italic;
+    margin-top: 3px;
+  }
+  .stage-block.active .stage-block-status { color: var(--mint); }
+
+  /* ── STAGE HEADER ── */
+  .stage-header {
+    display: grid;
+    grid-template-columns: 56px 1fr auto;
+    align-items: center;
+    background: var(--navy);
+    margin-bottom: 24px;
+    border-radius: 2px;
+    overflow: hidden;
+  }
+  .stage-header-letter {
+    background: var(--lavender);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 56px;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 26px;
+    font-weight: 700;
+    color: var(--navy);
+  }
+  .stage-header-letter.order { background: var(--steel); }
+  .stage-header-letter.revenue { background: var(--mint); }
+  .stage-header-letter.execute { background: var(--gold); }
+  .stage-header-content {
+    padding: 0 20px;
+  }
+  .stage-header-num {
+    font-size: 10px;
+    color: #B8B8D8;
+    letter-spacing: 0.2em;
+    display: inline;
+    margin-right: 8px;
+  }
+  .stage-header-name {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--white);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    display: inline;
+  }
+  .stage-header-status {
+    padding: 0 20px;
+    font-size: 11px;
+    color: #B8B8D8;
+    font-style: italic;
+  }
+  .stage-header-status.active-status { color: var(--mint); }
+
+  /* ── LOCKED OVERLAY ── */
+  .locked-section {
+    opacity: 0.65;
+    pointer-events: none;
+    user-select: none;
+  }
+
+  /* ── CLARITY LAYERS TABLE ── */
+  .layers-table { width: 100%; border-collapse: collapse; margin: 16px 0 24px; }
+  .layers-table tr { border-bottom: 1px solid var(--border-light); }
+  .layers-num {
+    background: var(--navy);
+    color: var(--lavender);
+    font-size: 12px;
+    font-weight: 700;
+    width: 44px;
+    text-align: center;
+    padding: 14px 8px;
+    vertical-align: top;
+  }
+  .layers-text {
+    background: var(--off-white);
+    padding: 14px 18px;
+    font-size: 14px;
+    color: var(--text-dark);
+    line-height: 1.6;
+  }
+
+  /* ── FIELD BOXES ── */
+  .field-box {
+    margin-bottom: 16px;
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+  .field-label-bar {
+    background: #EDEDF7;
+    padding: 10px 16px;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: var(--navy);
+    border-bottom: 1px solid var(--border);
+  }
+  .field-input-area {
+    background: var(--off-white);
+    padding: 16px;
+    min-height: 90px;
+  }
+  .field-placeholder {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    font-style: italic;
+    font-weight: 300;
+    color: #4A4A66;
+    margin-bottom: 12px;
+    letter-spacing: 0.01em;
+  }
+  textarea {
+    width: 100%;
+    background: transparent;
+    border: none;
+    outline: none;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 15px;
+    color: var(--text-dark);
+    resize: vertical;
+    min-height: 60px;
+    line-height: 1.6;
+  }
+
+  /* ── CONSULTANT ASSESSMENT ── */
+  .assessment-field {
+    background: var(--off-white);
+    border: 1px solid var(--border);
+    margin-bottom: 16px;
+  }
+
+  /* ── STAGE COMPLETION ── */
+  .completion-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-top: 24px;
+  }
+  .completion-cell {
+    border: 1px solid var(--border);
+    padding: 16px 20px;
+  }
+  .completion-cell.green { background: var(--mint-light); }
+  .completion-cell.purple { background: var(--off-white); }
+  .completion-cell-label {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: var(--navy);
+    margin-bottom: 8px;
+  }
+  .completion-check {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 14px;
+    color: var(--text-dark);
+  }
+  .completion-check input { accent-color: var(--navy); width: 16px; height: 16px; }
+  .completion-date {
+    font-size: 14px;
+    color: #4A4A66;
+    font-style: italic;
+    font-family: 'Cormorant Garamond', serif;
+    border: none;
+    background: transparent;
+    outline: none;
+    width: 100%;
+    font-size: 15px;
+  }
+
+  /* ── REVENUE LEAKS ── */
+  .leaks-table { width: 100%; border-collapse: collapse; margin: 16px 0; }
+  .leaks-table tr { border-bottom: 1px solid #E0E8E0; }
+  .leak-num {
+    width: 44px;
+    text-align: center;
+    padding: 14px 8px;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--navy);
+    vertical-align: top;
+  }
+  .leak-num.l1 { background: #EBF6E8; }
+  .leak-num.l2 { background: var(--lavender-light); }
+  .leak-num.l3 { background: #EBF6E8; }
+  .leak-text { padding: 14px 18px; font-size: 14px; background: #FFFFFF; line-height: 1.6; }
+
+  /* ── 90 DAY BLUEPRINT ── */
+  .blueprint-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0;
+    margin: 20px 0;
+    border-radius: 2px;
+    overflow: hidden;
+  }
+  .blueprint-phase-header {
+    padding: 18px 16px;
+    text-align: center;
+  }
+  .bp-h1 { background: var(--navy); }
+  .bp-h2 { background: var(--navy-light); }
+  .bp-h3 { background: var(--navy-mid); }
+  .blueprint-phase-label {
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+  .bp-h1 .blueprint-phase-label { color: var(--mint); }
+  .bp-h2 .blueprint-phase-label { color: var(--lavender); }
+  .bp-h3 .blueprint-phase-label { color: var(--gold); }
+  .blueprint-phase-days { font-size: 12px; color: #C0C0E0; margin-bottom: 4px; }
+  .blueprint-phase-name {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--white);
+  }
+  .blueprint-phase-body {
+    padding: 20px 16px;
+    border: 1px solid var(--border-light);
+    border-top: none;
+    background: var(--off-white);
+  }
+  .blueprint-phase-body .goal-label {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--navy);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 6px;
+  }
+  .blueprint-phase-body .goal-text {
+    font-size: 13px;
+    color: var(--text-dark);
+    margin-bottom: 14px;
+    line-height: 1.5;
+  }
+  .blueprint-phase-body .revenue-label {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--navy);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 4px;
+  }
+  .blueprint-phase-body .revenue-amount {
+    font-size: 13px;
+    color: var(--text-mid);
+    font-style: italic;
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 300;
+  }
+
+  /* ── DELIVERABLES VAULT ── */
+  .vault-header {
+    background: var(--navy-mid);
+    padding: 28px 32px;
+    margin-bottom: 24px;
+    border-radius: 2px;
+  }
+  .vault-header-label {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.35em;
+    color: var(--mint);
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+  .vault-header-sub {
+    font-size: 16px;
+    color: var(--white);
+  }
+  .deliverable-row {
+    display: grid;
+    grid-template-columns: 32px 1fr auto;
+    align-items: center;
+    border-bottom: 1px solid var(--border-light);
+    padding: 14px 0;
+    gap: 16px;
+  }
+  .deliverable-arrow {
+    color: var(--mint);
+    font-size: 16px;
+    background: var(--navy);
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .deliverable-content { flex: 1; }
+  .deliverable-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--navy);
+    margin-bottom: 2px;
+  }
+  .deliverable-desc {
+    font-size: 12px;
+    color: var(--text-mid);
+    font-style: italic;
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 300;
+  }
+  .deliverable-link {
+    font-size: 12px;
+    color: #4A4A66;
+    font-style: italic;
+    white-space: nowrap;
+    text-align: right;
+  }
+
+  /* ── FOOTER ── */
+  .portal-footer {
+    background: var(--white);
+    border-top: 2px solid var(--lavender);
+    padding: 28px 40px;
+    text-align: center;
+    margin-top: 60px;
+  }
+  .portal-footer-main {
+    font-size: 13px;
+    color: #3D3D55;
+    margin-bottom: 4px;
+  }
+  .portal-footer-framework {
+    font-size: 12px;
+    color: #7A6BBF;
+    letter-spacing: 0.2em;
+  }
+
+
+  /* ── READINESS SCORE ── */
+  .score-summary {
+    background: var(--navy);
+    border-radius: 2px;
+    padding: 28px 32px;
+    margin: 32px 0 8px;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: center;
+    gap: 32px;
+  }
+  .score-summary-left {}
+  .score-summary-label {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.35em;
+    color: var(--mint);
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+  .score-summary-title {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--white);
+    margin-bottom: 4px;
+  }
+  .score-summary-sub {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    color: var(--lavender);
+    font-style: italic;
+  }
+  .score-total-box {
+    text-align: center;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(197,184,232,0.3);
+    padding: 16px 28px;
+    border-radius: 2px;
+    min-width: 140px;
+  }
+  .score-total-num {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 42px;
+    font-weight: 700;
+    color: var(--white);
+    line-height: 1;
+  }
+  .score-total-denom {
+    font-size: 16px;
+    color: var(--lavender);
+    margin-left: 4px;
+  }
+  .score-total-label {
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    color: var(--mint);
+    text-transform: uppercase;
+    margin-top: 6px;
+  }
+  .score-band {
+    margin-top: 16px;
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+  .score-band-label {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: #B8B8D8;
+  }
+  .score-band-value {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--mint);
+  }
+  .score-dimensions {
+    margin: 20px 0 0;
+  }
+  .score-dim-row {
+    display: grid;
+    grid-template-columns: 32px 1fr 80px 200px;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border-light);
+  }
+  .score-dim-row:last-child { border-bottom: none; }
+  .score-dim-num {
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--navy);
+    flex-shrink: 0;
+    border-radius: 1px;
+  }
+  .score-dim-name {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--navy);
+  }
+  .score-dim-entry {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    color: var(--text-mid);
+  }
+  .score-dim-entry input[type=number] {
+    width: 48px;
+    border: 1px solid var(--border);
+    background: var(--white);
+    padding: 4px 8px;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--navy);
+    text-align: center;
+    outline: none;
+    border-radius: 1px;
+  }
+  .score-dim-notes input[type=text] {
+    width: 100%;
+    border: none;
+    border-bottom: 1px solid var(--border);
+    background: transparent;
+    padding: 4px 0;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    color: var(--text-dark);
+    outline: none;
+  }
+  .score-dim-notes input::placeholder { color: #AAAACC; font-style: italic; }
+  .score-bands-ref {
+    margin: 20px 0 0;
+  }
+  .band-row {
+    display: grid;
+    grid-template-columns: 80px 160px 1fr;
+    gap: 12px;
+    align-items: start;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border-light);
+    font-size: 13px;
+  }
+  .band-row:last-child { border-bottom: none; }
+  .band-range { font-weight: 700; color: var(--navy); font-family: 'Rajdhani', sans-serif; font-size: 15px; }
+  .band-name { font-weight: 700; color: var(--navy); }
+  .band-desc { color: var(--text-mid); font-family: 'DM Sans', sans-serif; font-size: 13px; }
+
+  /* ── SAVE BUTTON ── */
+  .save-section-btn {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 28px 0 8px;
+    padding: 14px 28px;
+    background: var(--navy);
+    color: var(--white);
+    border: none;
+    border-radius: 2px;
+    font-family: "Rajdhani", sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: background 0.2s;
+    width: 100%;
+    justify-content: center;
+  }
+  .save-section-btn:hover { background: var(--navy-light); }
+  .save-section-btn:disabled { background: #888; cursor: not-allowed; }
+  .save-section-btn .btn-icon { font-size: 16px; }
+  .save-status-msg {
+    text-align: center;
+    font-family: "DM Sans", sans-serif;
+    font-size: 13px;
+    font-style: italic;
+    padding: 8px 0 4px;
+    min-height: 28px;
+    transition: opacity 0.4s;
+  }
+  .save-status-msg.success { color: #3A8A3A; }
+  .save-status-msg.error { color: #AA2222; }
+  .save-status-msg.saving { color: var(--text-mid); }
+
+
+  /* ── MANUAL SAVE ── */
+  .field-save-btn {
+    display: block;
+    margin: 6px 16px 12px auto;
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--navy);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.05em;
+    padding: 5px 14px;
+    cursor: pointer;
+    border-radius: 1px;
+    transition: background 0.15s, border-color 0.15s;
+  }
+  .field-save-btn:hover { background: var(--lav-light); border-color: var(--lavender); }
+  .field-save-btn.saved { background: var(--mint-light); border-color: var(--mint); color: #1A4A2A; }
+  .section-save-btn {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 20px;
+    background: var(--navy);
+    color: var(--white);
+    border: none;
+    padding: 14px 28px;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    cursor: pointer;
+    text-transform: uppercase;
+    width: 100%;
+    justify-content: center;
+  }
+  .section-save-btn:hover { background: var(--navy-mid); }
+  .section-save-btn.saved { background: #2A6A3A; }
+  .section-save-status {
+    font-size: 12px;
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 400;
+    text-transform: none;
+    letter-spacing: 0;
+    opacity: 0.8;
+  }
+
+  /* ── PRINT ── */
+  @media print {
+    .cover { padding: 60px 40px; }
+    .stage-block, .stage-header, .vault-header { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .locked-section { opacity: 1; }
+  }
+
+  @media (max-width: 640px) {
+    .cover-fields { grid-template-columns: 1fr; }
+    .progress-tracker { grid-template-columns: repeat(2, 1fr); }
+    .blueprint-grid { grid-template-columns: 1fr; }
+    .completion-row { grid-template-columns: 1fr; }
+    .container { padding: 0 20px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ── COVER ── -->
+<div class="cover">
+  <div class="cover-studio">Jupiter's Lab Creative Studio</div>
+  <div class="cover-title">C.O.R.E. Client Portal</div>
+  <div class="cover-subtitle">Clarify &nbsp;·&nbsp; Order &nbsp;·&nbsp; Revenue &nbsp;·&nbsp; Execute</div>
+  <div class="cover-divider"></div>
+  <div class="cover-fields">
+    <div>
+      <div class="cover-field-label">Client Name</div>
+      <div class="cover-field-value" contenteditable="true" data-field="cover_01">&nbsp;</div>
+    </div>
+    <div>
+      <div class="cover-field-label">Engagement Start</div>
+      <div class="cover-field-value" contenteditable="true" data-field="cover_02">&nbsp;</div>
+    </div>
+    <div>
+      <div class="cover-field-label">Service Tier</div>
+      <div class="tier-checkboxes" style="justify-content:flex-start; margin-top:4px;">
+        <label class="tier-checkbox"><input type="checkbox" data-field="cover_tier_1"> Tier 1</label>
+        <label class="tier-checkbox"><input type="checkbox" data-field="cover_tier_2"> Tier 2</label>
+        <label class="tier-checkbox"><input type="checkbox" data-field="cover_tier_3"> Tier 3</label>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+
+  <!-- ── HOW TO USE ── -->
+  <div class="section">
+    <div class="section-title">How to Use This Portal</div>
+    <div class="section-divider"></div>
+    <p class="body-text">This portal is your structured environment for moving through the C.O.R.E. Framework. Each stage builds on the previous one. You do not move forward until the current stage is complete and reviewed.</p>
+    <p class="body-text">Your answers here are not for reflection — they are decisions. The quality of what you put in determines the clarity of what comes out.</p>
+    <div class="callout">Stages are unlocked sequentially. Your consultant reviews your responses at the end of each stage and marks it complete before the next one opens.</div>
+
+    <div class="label">Stage Statuses</div>
+    <table class="status-table">
+      <tr>
+        <td style="width:100px;"><span class="status-badge active">ACTIVE</span></td>
+        <td class="status-desc">This stage is open. Complete all fields and notify your consultant.</td>
+      </tr>
+      <tr>
+        <td><span class="status-badge locked">LOCKED</span></td>
+        <td class="status-desc">This stage is not yet available. Complete the active stage first.</td>
+      </tr>
+      <tr>
+        <td><span class="status-badge complete">COMPLETE</span></td>
+        <td class="status-desc">This stage has been reviewed and signed off by your consultant.</td>
+      </tr>
+    </table>
+
+    <div class="label">Your C.O.R.E. Progress</div>
+    <p class="body-text muted">Updated by your consultant as each stage is completed.</p>
+    <div class="progress-tracker">
+      <div class="stage-block active">
+        <div class="stage-block-letter">C</div>
+        <div class="stage-block-name">Clarify</div>
+        <div class="stage-block-status">Active</div>
+      </div>
+      <div class="stage-block">
+        <div class="stage-block-letter">O</div>
+        <div class="stage-block-name">Order</div>
+        <div class="stage-block-status">Locked</div>
+      </div>
+      <div class="stage-block">
+        <div class="stage-block-letter">R</div>
+        <div class="stage-block-name">Revenue</div>
+        <div class="stage-block-status">Locked</div>
+      </div>
+      <div class="stage-block">
+        <div class="stage-block-letter">E</div>
+        <div class="stage-block-name">Execute</div>
+        <div class="stage-block-status">Locked</div>
+      </div>
+    </div>
+  </div>
+
+
+    <!-- ── READINESS SCORE TRACKER ── -->
+    <div class="score-summary">
+      <div class="score-summary-left">
+        <div class="score-summary-label">Revenue Readiness Score</div>
+        <div class="score-summary-title">Client Assessment — Running Total</div>
+        <div class="score-summary-sub">Updated by your consultant as each stage is assessed.</div>
+        <div class="score-band">
+          <span class="score-band-label">Current Band:</span>
+          <span class="score-band-value" id="band-display">—</span>
+        </div>
+      </div>
+      <div class="score-total-box">
+        <div><span class="score-total-num" id="total-score">—</span><span class="score-total-denom"> / 50</span></div>
+        <div class="score-total-label">Total Score</div>
+      </div>
+    </div>
+
+    <div class="score-dimensions">
+      <div class="label" style="margin-top:0;">Dimension Scores</div>
+      <p class="body-text muted">Enter scores 1–10 per dimension. Total updates automatically.</p>
+
+      <div class="score-dim-row">
+        <div class="score-dim-num" style="background:#EDE8F8;">C</div>
+        <div class="score-dim-name">Offer Clarity</div>
+        <div class="score-dim-entry"><input data-field="dim_score_01" type="number" min="1" max="10" class="dim-score" placeholder="—"> <span style="color:#999;">/ 10</span></div>
+        <div class="score-dim-notes"><input data-field="dim_note_01" type="text" placeholder="Key finding..."></div>
+      </div>
+      <div class="score-dim-row">
+        <div class="score-dim-num" style="background:#EDF2F8;">O</div>
+        <div class="score-dim-name">Audience Precision</div>
+        <div class="score-dim-entry"><input data-field="dim_score_02" type="number" min="1" max="10" class="dim-score" placeholder="—"> <span style="color:#999;">/ 10</span></div>
+        <div class="score-dim-notes"><input data-field="dim_note_02" type="text" placeholder="Key finding..."></div>
+      </div>
+      <div class="score-dim-row">
+        <div class="score-dim-num" style="background:#EBF6E8;">R</div>
+        <div class="score-dim-name">Sequence Integrity</div>
+        <div class="score-dim-entry"><input data-field="dim_score_03" type="number" min="1" max="10" class="dim-score" placeholder="—"> <span style="color:#999;">/ 10</span></div>
+        <div class="score-dim-notes"><input data-field="dim_note_03" type="text" placeholder="Key finding..."></div>
+      </div>
+      <div class="score-dim-row">
+        <div class="score-dim-num" style="background:#FBF6E8;">E</div>
+        <div class="score-dim-name">Revenue Structure</div>
+        <div class="score-dim-entry"><input data-field="dim_score_04" type="number" min="1" max="10" class="dim-score" placeholder="—"> <span style="color:#999;">/ 10</span></div>
+        <div class="score-dim-notes"><input data-field="dim_note_04" type="text" placeholder="Key finding..."></div>
+      </div>
+      <div class="score-dim-row">
+        <div class="score-dim-num" style="background:#F5EEF8;">E</div>
+        <div class="score-dim-name">Infrastructure Readiness</div>
+        <div class="score-dim-entry"><input data-field="dim_score_05" type="number" min="1" max="10" class="dim-score" placeholder="—"> <span style="color:#999;">/ 10</span></div>
+        <div class="score-dim-notes"><input data-field="dim_note_05" type="text" placeholder="Key finding..."></div>
+      </div>
+    </div>
+
+    <div class="label" style="margin-top:28px;">Score Band Reference</div>
+    <div class="score-bands-ref">
+      <div class="band-row">
+        <div class="band-range">40–50</div>
+        <div class="band-name">Foundation Solid</div>
+        <div class="band-desc">Ready to scale. Recommend Tier 3 Retainer as primary path.</div>
+      </div>
+      <div class="band-row">
+        <div class="band-range">28–39</div>
+        <div class="band-name">Partially Built</div>
+        <div class="band-desc">Clear gaps. Recommend Tier 2 Intensive, potentially followed by Tier 3.</div>
+      </div>
+      <div class="band-row">
+        <div class="band-range">15–27</div>
+        <div class="band-name">Early Stage</div>
+        <div class="band-desc">Significant clarity and sequencing work needed. Tier 2 Intensive required.</div>
+      </div>
+      <div class="band-row">
+        <div class="band-range">1–14</div>
+        <div class="band-name">Pre-Foundation</div>
+        <div class="band-desc">Offer and audience undefined. Start at Tier 1 Assessment before any investment.</div>
+      </div>
+    </div>
+
+  </div><!-- end how-to-use section -->
+
+  <!-- score calculation script -->
+  <script>
+    function updateScore() {
+      const inputs = document.querySelectorAll('.dim-score');
+      let total = 0;
+      let filled = 0;
+      inputs.forEach(input => {
+        const val = parseInt(input.value);
+        if (!isNaN(val) && val >= 1 && val <= 10) {
+          total += val;
+          filled++;
+        }
+      });
+      const display = document.getElementById('total-score');
+      const band = document.getElementById('band-display');
+      if (filled === 0) {
+        display.textContent = '—';
+        band.textContent = '—';
+      } else {
+        display.textContent = total;
+        if (total >= 40) band.textContent = 'Foundation Solid';
+        else if (total >= 28) band.textContent = 'Partially Built';
+        else if (total >= 15) band.textContent = 'Early Stage';
+        else band.textContent = 'Pre-Foundation';
+      }
+    }
+    document.querySelectorAll('.dim-score').forEach(input => {
+      input.addEventListener('input', updateScore);
+    });
+  </script>
+
+
+  <!-- ══════════════════════════════════════════════════ -->
+  <!-- STAGE 01 — CLARIFY -->
+  <!-- ══════════════════════════════════════════════════ -->
+  <div class="section">
+    <div class="stage-header">
+      <div class="stage-header-letter">C</div>
+      <div class="stage-header-content">
+        <span class="stage-header-num">01</span>
+        <span class="stage-header-name">Clarify</span>
+      </div>
+      <div class="stage-header-status active-status">Active</div>
+    </div>
+
+    <p class="body-text">Clarity is not an abstract concept — it is the first revenue decision you make. Before you price, position, or pitch, this stage answers the foundational question: what are you actually building, for whom, and why will they pay for it?</p>
+    <div class="callout">Complete all six diagnostic responses. Your answers should be direct and specific — not aspirational. Describe what is true right now, not what you want it to be.</div>
+
+    <div class="label">The 5 Clarity Layers</div>
+    <p class="body-text muted">Before answering the diagnostic questions, read the five clarity layers below. These are the areas we will assess together.</p>
+    <table class="layers-table">
+      <tr>
+        <td class="layers-num">01</td>
+        <td class="layers-text"><strong>Offer Identity</strong> — What do you actually sell? Not what you think you sell. The gap between perceived offer and actual transformation is where most revenue leaks happen.</td>
+      </tr>
+      <tr>
+        <td class="layers-num">02</td>
+        <td class="layers-text"><strong>Audience Alignment</strong> — Who is ready, willing, and able to pay you right now? Not your dream client — your current client.</td>
+      </tr>
+      <tr>
+        <td class="layers-num">03</td>
+        <td class="layers-text"><strong>Transformation Mapping</strong> — Where is the client before you, and where are they after? The clearer this bridge, the easier the sale.</td>
+      </tr>
+      <tr>
+        <td class="layers-num">04</td>
+        <td class="layers-text"><strong>Sequence Audit</strong> — Are you building in the right order? Sequence errors almost always trace back to revenue leaks.</td>
+      </tr>
+      <tr>
+        <td class="layers-num">05</td>
+        <td class="layers-text"><strong>Revenue Readiness Score</strong> — A diagnostic snapshot of how ready your business is to generate consistent revenue.</td>
+      </tr>
+    </table>
+
+    <div class="label">Diagnostic Questions — Clarify</div>
+    <p class="body-text muted">Answer each question directly. These are the exact questions your consultant uses to assess revenue readiness.</p>
+
+    <div class="field-box">
+      <div class="field-label-bar">Question 1</div>
+      <div class="field-input-area">
+        <div class="field-placeholder">Can you describe your offer in one sentence a stranger would understand?</div>
+        <textarea data-field="field_001" rows="3" placeholder="Your answer..."></textarea>
+      </div>
+    </div>
+    <div class="field-box">
+      <div class="field-label-bar">Question 2</div>
+      <div class="field-input-area">
+        <div class="field-placeholder">Who paid you last, and why did they choose you over anyone else?</div>
+        <textarea data-field="field_002" rows="3" placeholder="Your answer..."></textarea>
+      </div>
+    </div>
+    <div class="field-box">
+      <div class="field-label-bar">Question 3</div>
+      <div class="field-input-area">
+        <div class="field-placeholder">What does your client's life look like 90 days after working with you?</div>
+        <textarea data-field="field_003" rows="3" placeholder="Your answer..."></textarea>
+      </div>
+    </div>
+    <div class="field-box">
+      <div class="field-label-bar">Question 4</div>
+      <div class="field-input-area">
+        <div class="field-placeholder">What are you building right now that doesn't directly generate revenue?</div>
+        <textarea data-field="field_004" rows="3" placeholder="Your answer..."></textarea>
+      </div>
+    </div>
+    <div class="field-box">
+      <div class="field-label-bar">Question 5</div>
+      <div class="field-input-area">
+        <div class="field-placeholder">If revenue doubled tomorrow, what would break first?</div>
+        <textarea data-field="field_005" rows="3" placeholder="Your answer..."></textarea>
+      </div>
+    </div>
+    <div class="field-box">
+      <div class="field-label-bar">Question 6</div>
+      <div class="field-input-area">
+        <div class="field-placeholder">What's the real reason your last ideal client didn't move forward?</div>
+        <textarea data-field="field_006" rows="3" placeholder="Your answer..."></textarea>
+      </div>
+    </div>
+
+    <button class="save-section-btn" data-label="<span class=&quot;btn-icon&quot;>↑</span> Save My Clarify Responses" onclick="saveSectionFields(this, [&apos;field_001&apos;,&apos;field_002&apos;,&apos;field_003&apos;,&apos;field_004&apos;,&apos;field_005&apos;,&apos;field_006&apos;])">
+      <span class="btn-icon">↑</span> Save My Clarify Responses
+    </button>
+    <div class="save-status-msg"></div>
+
+    <div class="label">Consultant Assessment — Clarify</div>
+    <p class="body-text muted">Completed by Jeylechia Kirkland after reviewing your responses.</p>
+    <div class="field-box assessment-field">
+      <div class="field-label-bar">Revenue Readiness Score</div>
+      <div class="field-input-area"><textarea data-field="field_007" rows="2" placeholder="Score and notes entered after session review..."></textarea></div>
+    </div>
+    <div class="field-box assessment-field">
+      <div class="field-label-bar">Key Findings</div>
+      <div class="field-input-area"><textarea data-field="field_008" rows="3" placeholder="Summary of offer clarity, audience alignment, and sequence errors identified..."></textarea></div>
+    </div>
+    <div class="field-box assessment-field">
+      <div class="field-label-bar">Corrected Build Sequence</div>
+      <div class="field-input-area"><textarea data-field="field_009" rows="3" placeholder="The recommended sequence going forward based on your diagnostic..."></textarea></div>
+    </div>
+
+    <div class="completion-row">
+      <div class="completion-cell green">
+        <div class="completion-cell-label">Stage Status</div>
+            <button class="section-save-btn" onclick="saveSectionAll(this, 'execute')">
+      Save All — Execute <span class="section-save-status" id="section-save-status-execute"></span>
+    </button>
+<label class="completion-check"><input type="checkbox" data-field="stage_complete_04"> Complete — Order stage now unlocked</label>
+      </div>
+      <div class="completion-cell purple">
+        <div class="completion-cell-label">Date Completed</div>
+        <input type="date" data-field="stage_date_01" class="completion-date">
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════ -->
+  <!-- STAGE 02 — ORDER -->
+  <!-- ══════════════════════════════════════════════════ -->
+  <div class="section locked-section">
+    <div class="stage-header">
+      <div class="stage-header-letter order">O</div>
+      <div class="stage-header-content">
+        <span class="stage-header-num">02</span>
+        <span class="stage-header-name">Order</span>
+      </div>
+      <div class="stage-header-status">Locked</div>
+    </div>
+    <div class="callout steel">This stage unlocks after Clarify is marked complete by your consultant.</div>
+    <p class="body-text">Most founders don't have a strategy problem — they have a sequence problem. This stage audits the order in which you've been building and corrects it. Demand before product. Infrastructure before scale. Proof before investment.</p>
+
+    <div class="label">Diagnostic Questions — Order</div>
+    <div class="field-box">
+      <div class="field-label-bar">Question 1</div>
+      <div class="field-input-area">
+        <div class="field-placeholder">List the last three things you invested time or money into for your business. Did each one directly generate revenue?</div>
+        <textarea data-field="field_010" rows="3"></textarea>
+      </div>
+    </div>
+    <div class="field-box">
+      <div class="field-label-bar">Question 2</div>
+      <div class="field-input-area">
+        <div class="field-placeholder">Do you have a signed client agreement in place? If yes, what does it cover?</div>
+        <textarea data-field="field_011" rows="3"></textarea>
+      </div>
+    </div>
+    <div class="field-box">
+      <div class="field-label-bar">Question 3</div>
+      <div class="field-input-area">
+        <div class="field-placeholder">What does your onboarding process look like from the moment a client pays?</div>
+        <textarea data-field="field_012" rows="3"></textarea>
+      </div>
+    </div>
+    <div class="field-box">
+      <div class="field-label-bar">Question 4</div>
+      <div class="field-input-area">
+        <div class="field-placeholder">What is currently living in your head that should be documented?</div>
+        <textarea data-field="field_013" rows="3"></textarea>
+      </div>
+    </div>
+
+    <button class="save-section-btn" data-label="<span class=&quot;btn-icon&quot;>↑</span> Save My Order Responses" onclick="saveSectionFields(this, [&apos;field_010&apos;,&apos;field_011&apos;,&apos;field_012&apos;,&apos;field_013&apos;])">
+      <span class="btn-icon">↑</span> Save My Order Responses
+    </button>
+    <div class="save-status-msg"></div>
+
+    <div class="label">Consultant Assessment — Order</div>
+    <div class="field-box assessment-field">
+      <div class="field-label-bar">Sequence Errors Identified</div>
+      <div class="field-input-area"><textarea data-field="field_014" rows="3"></textarea></div>
+    </div>
+    <div class="field-box assessment-field">
+      <div class="field-label-bar">Corrected Build Sequence</div>
+      <div class="field-input-area"><textarea data-field="field_015" rows="3"></textarea></div>
+    </div>
+    <div class="field-box assessment-field">
+      <div class="field-label-bar">Infrastructure Gaps</div>
+      <div class="field-input-area"><textarea data-field="field_016" rows="3"></textarea></div>
+    </div>
+    <div class="completion-row">
+      <div class="completion-cell green">
+        <div class="completion-cell-label">Stage Status</div>
+        <label class="completion-check"><input type="checkbox" data-field="stage_complete_05"> Complete — Revenue stage now unlocked</label>
+      </div>
+      <div class="completion-cell purple">
+        <div class="completion-cell-label">Date Completed</div>
+        <input type="date" data-field="stage_date_02" class="completion-date">
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════ -->
+  <!-- STAGE 03 — REVENUE -->
+  <!-- ══════════════════════════════════════════════════ -->
+  <div class="section locked-section">
+    <div class="stage-header">
+      <div class="stage-header-letter revenue">R</div>
+      <div class="stage-header-content">
+        <span class="stage-header-num">03</span>
+        <span class="stage-header-name">Revenue</span>
+      </div>
+      <div class="stage-header-status">Locked</div>
+    </div>
+    <div class="callout mint">This stage unlocks after Order is marked complete by your consultant.</div>
+    <p class="body-text">Revenue clarity means knowing exactly what you sell, what it costs, and how it converts — before you scale anything. This stage structures your offer suite and pricing logic, and identifies where money is leaking right now.</p>
+
+    <div class="label">Diagnostic Questions — Revenue</div>
+    <div class="field-box">
+      <div class="field-label-bar">Question 1</div>
+      <div class="field-input-area">
+        <div class="field-placeholder">What is your current offer suite? List every service or product you sell with its price.</div>
+        <textarea data-field="field_017" rows="3"></textarea>
+      </div>
+    </div>
+    <div class="field-box">
+      <div class="field-label-bar">Question 2</div>
+      <div class="field-input-area">
+        <div class="field-placeholder">What do you need to earn monthly at minimum? Work backward — how many clients at what price gets you there?</div>
+        <textarea data-field="field_018" rows="3"></textarea>
+      </div>
+    </div>
+    <div class="field-box">
+      <div class="field-label-bar">Question 3</div>
+      <div class="field-input-area">
+        <div class="field-placeholder">Where are you underpricing? What would you charge if you priced to the outcome, not the hour?</div>
+        <textarea data-field="field_019" rows="3"></textarea>
+      </div>
+    </div>
+    <div class="field-box">
+      <div class="field-label-bar">Question 4</div>
+      <div class="field-input-area">
+        <div class="field-placeholder">What is your current conversion rate from inquiry to paid client?</div>
+        <textarea data-field="field_020" rows="3"></textarea>
+      </div>
+    </div>
+    <div class="field-box">
+      <div class="field-label-bar">Question 5</div>
+      <div class="field-input-area">
+        <div class="field-placeholder">Which of the three revenue leaks applies to you most right now: Offer Confusion, Sequence Error, or Underpricing?</div>
+        <textarea data-field="field_021" rows="3"></textarea>
+      </div>
+    </div>
+
+    <button class="save-section-btn" data-label="<span class=&quot;btn-icon&quot;>↑</span> Save My Revenue Responses" onclick="saveSectionFields(this, [&apos;field_017&apos;,&apos;field_018&apos;,&apos;field_019&apos;,&apos;field_020&apos;,&apos;field_021&apos;])">
+      <span class="btn-icon">↑</span> Save My Revenue Responses
+    </button>
+    <div class="save-status-msg"></div>
+
+    <div class="label">The 3 Revenue Leaks — Assessed</div>
+    <table class="leaks-table">
+      <tr>
+        <td class="leak-num l1">01</td>
+        <td class="leak-text"><strong>Offer Confusion</strong> — Clients can't buy what they can't understand. Vague positioning kills conversion before the conversation begins.</td>
+      </tr>
+      <tr>
+        <td class="leak-num l2">02</td>
+        <td class="leak-text"><strong>Sequence Error</strong> — Building audience before offer, scaling before proof, or launching before structure — getting the order wrong bleeds revenue at every stage.</td>
+      </tr>
+      <tr>
+        <td class="leak-num l3">03</td>
+        <td class="leak-text"><strong>Underpricing</strong> — Charging less doesn't attract more clients. It signals less value. Aligned pricing attracts aligned clients who execute and get results.</td>
+      </tr>
+    </table>
+
+    <div class="label">Consultant Assessment — Revenue</div>
+    <div class="field-box assessment-field">
+      <div class="field-label-bar">Offer Structure Recommendation</div>
+      <div class="field-input-area"><textarea data-field="field_022" rows="3"></textarea></div>
+    </div>
+    <div class="field-box assessment-field">
+      <div class="field-label-bar">90-Day Revenue Target</div>
+      <div class="field-input-area"><textarea data-field="field_023" rows="2"></textarea></div>
+    </div>
+    <div class="field-box assessment-field">
+      <div class="field-label-bar">Revenue Leaks Identified</div>
+      <div class="field-input-area"><textarea data-field="field_024" rows="3"></textarea></div>
+    </div>
+    <div class="completion-row">
+      <div class="completion-cell green">
+        <div class="completion-cell-label">Stage Status</div>
+        <label class="completion-check"><input type="checkbox" data-field="stage_complete_06"> Complete — Execute stage now unlocked</label>
+      </div>
+      <div class="completion-cell purple">
+        <div class="completion-cell-label">Date Completed</div>
+        <input type="date" data-field="stage_date_03" class="completion-date">
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════ -->
+  <!-- STAGE 04 — EXECUTE -->
+  <!-- ══════════════════════════════════════════════════ -->
+  <div class="section locked-section">
+    <div class="stage-header">
+      <div class="stage-header-letter execute">E</div>
+      <div class="stage-header-content">
+        <span class="stage-header-num">04</span>
+        <span class="stage-header-name">Execute</span>
+      </div>
+      <div class="stage-header-status">Locked</div>
+    </div>
+    <div class="callout gold">This stage unlocks after Revenue is marked complete by your consultant.</div>
+    <p class="body-text">Execution without direction is activity. This stage identifies your three highest-leverage actions and connects them to a structured 90-day blueprint. You will leave this stage with a documented roadmap — not a to-do list.</p>
+
+    <div class="label">Diagnostic Questions — Execute</div>
+    <div class="field-box">
+      <div class="field-label-bar">Question 1</div>
+      <div class="field-input-area">
+        <div class="field-placeholder">What are the three highest-leverage actions you could take in the next 30 days? Not the most urgent — the most impactful.</div>
+        <textarea data-field="field_025" rows="3"></textarea>
+      </div>
+    </div>
+    <div class="field-box">
+      <div class="field-label-bar">Question 2</div>
+      <div class="field-input-area">
+        <div class="field-placeholder">What is currently on your plate that does not directly serve your revenue goal? What can be eliminated or deferred?</div>
+        <textarea data-field="field_026" rows="3"></textarea>
+      </div>
+    </div>
+    <div class="field-box">
+      <div class="field-label-bar">Question 3</div>
+      <div class="field-input-area">
+        <div class="field-placeholder">What systems or automations would free the most time if they were in place?</div>
+        <textarea data-field="field_027" rows="3"></textarea>
+      </div>
+    </div>
+    <div class="field-box">
+      <div class="field-label-bar">Question 4</div>
+      <div class="field-input-area">
+        <div class="field-placeholder">What does success look like at the end of 90 days? Be specific — numbers, outcomes, deliverables.</div>
+        <textarea data-field="field_028" rows="3"></textarea>
+      </div>
+    </div>
+
+    <button class="save-section-btn" data-label="<span class=&quot;btn-icon&quot;>↑</span> Save My Execute Responses" onclick="saveSectionFields(this, [&apos;field_025&apos;,&apos;field_026&apos;,&apos;field_027&apos;,&apos;field_028&apos;])">
+      <span class="btn-icon">↑</span> Save My Execute Responses
+    </button>
+    <div class="save-status-msg"></div>
+
+    <div class="label">90-Day Blueprint</div>
+    <p class="body-text muted">Built by your consultant based on all four stages. Your execution roadmap.</p>
+    <div class="blueprint-grid">
+      <div>
+        <div class="blueprint-phase-header bp-h1">
+          <div class="blueprint-phase-label">Phase I</div>
+          <div class="blueprint-phase-days">Days 1–30</div>
+          <div class="blueprint-phase-name">Foundation</div>
+        </div>
+        <div class="blueprint-phase-body">
+          <div class="goal-label">Goal</div>
+          <div class="goal-text">Build infrastructure, close first clients, collect proof.</div>
+          <div class="revenue-label">Revenue Target</div>
+          <div class="revenue-amount">$1,500 – $3,000</div>
+        </div>
+      </div>
+      <div>
+        <div class="blueprint-phase-header bp-h2">
+          <div class="blueprint-phase-label">Phase II</div>
+          <div class="blueprint-phase-days">Days 31–60</div>
+          <div class="blueprint-phase-name">Momentum</div>
+        </div>
+        <div class="blueprint-phase-body">
+          <div class="goal-label">Goal</div>
+          <div class="goal-text">Pipeline consistent. First Tier 3 retainer secured.</div>
+          <div class="revenue-label">Revenue Target</div>
+          <div class="revenue-amount">$3,000 – $5,000</div>
+        </div>
+      </div>
+      <div>
+        <div class="blueprint-phase-header bp-h3">
+          <div class="blueprint-phase-label">Phase III</div>
+          <div class="blueprint-phase-days">Days 61–90</div>
+          <div class="blueprint-phase-name">Structure</div>
+        </div>
+        <div class="blueprint-phase-body">
+          <div class="goal-label">Goal</div>
+          <div class="goal-text">Revenue structured and predictable. Referral engine active.</div>
+          <div class="revenue-label">Revenue Target</div>
+          <div class="revenue-amount">$5,000 – $8,000</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="label">Consultant Assessment — Execute</div>
+    <div class="field-box assessment-field">
+      <div class="field-label-bar">3 Highest-Leverage Priorities</div>
+      <div class="field-input-area"><textarea data-field="field_029" rows="3"></textarea></div>
+    </div>
+    <div class="field-box assessment-field">
+      <div class="field-label-bar">Week-by-Week Roadmap</div>
+      <div class="field-input-area"><textarea data-field="field_030" rows="5"></textarea></div>
+    </div>
+    <div class="field-box assessment-field">
+      <div class="field-label-bar">Constraints to Address</div>
+      <div class="field-input-area"><textarea data-field="field_031" rows="3"></textarea></div>
+    </div>
+    <div class="completion-row">
+      <div class="completion-cell green">
+        <div class="completion-cell-label">Stage Status</div>
+        <label class="completion-check"><input type="checkbox" data-field="stage_complete_07"> Complete — C.O.R.E. Framework Finished</label>
+      </div>
+      <div class="completion-cell purple">
+        <div class="completion-cell-label">Date Completed</div>
+        <input type="date" data-field="stage_date_04" class="completion-date">
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════ -->
+  <!-- DELIVERABLES VAULT -->
+  <!-- ══════════════════════════════════════════════════ -->
+  <div class="section">
+    <div class="vault-header">
+      <div class="vault-header-label">Deliverables Vault</div>
+      <div class="vault-header-sub">Everything delivered during your engagement — in one place.</div>
+    </div>
+    <p class="body-text">All session summaries, strategic documents, recordings, and resources are stored here. Each item is labeled by stage and date.</p>
+
+    <div class="deliverable-row">
+      <div class="deliverable-arrow">↓</div>
+      <div class="deliverable-content">
+        <div class="deliverable-title">Session Recordings</div>
+        <div class="deliverable-desc">Links to all recorded sessions, labeled by tier and date.</div>
+      </div>
+      <div class="deliverable-link" contenteditable="true" data-field="cover_03">[ Link / Date ]</div>
+    </div>
+    <div class="deliverable-row">
+      <div class="deliverable-arrow">↓</div>
+      <div class="deliverable-content">
+        <div class="deliverable-title">Session Summaries</div>
+        <div class="deliverable-desc">Written summaries delivered within 48 hours of each session.</div>
+      </div>
+      <div class="deliverable-link" contenteditable="true" data-field="cover_04">[ Link / Date ]</div>
+    </div>
+    <div class="deliverable-row">
+      <div class="deliverable-arrow">↓</div>
+      <div class="deliverable-content">
+        <div class="deliverable-title">Business Clarity Architecture</div>
+        <div class="deliverable-desc">Tier 2 deliverable — your defined offer, audience, and transformation map.</div>
+      </div>
+      <div class="deliverable-link" contenteditable="true" data-field="cover_05">[ Link / Date ]</div>
+    </div>
+    <div class="deliverable-row">
+      <div class="deliverable-arrow">↓</div>
+      <div class="deliverable-content">
+        <div class="deliverable-title">Revenue Structure Design</div>
+        <div class="deliverable-desc">Tier 2 deliverable — offer suite, pricing tiers, and revenue model.</div>
+      </div>
+      <div class="deliverable-link" contenteditable="true" data-field="cover_06">[ Link / Date ]</div>
+    </div>
+    <div class="deliverable-row">
+      <div class="deliverable-arrow">↓</div>
+      <div class="deliverable-content">
+        <div class="deliverable-title">Customer Journey Map</div>
+        <div class="deliverable-desc">Tier 2 deliverable — the 5-stage client journey with touchpoints.</div>
+      </div>
+      <div class="deliverable-link" contenteditable="true" data-field="cover_07">[ Link / Date ]</div>
+    </div>
+    <div class="deliverable-row">
+      <div class="deliverable-arrow">↓</div>
+      <div class="deliverable-content">
+        <div class="deliverable-title">Infrastructure Alignment</div>
+        <div class="deliverable-desc">Tier 2 deliverable — the 4 infrastructure pillars assessed and built.</div>
+      </div>
+      <div class="deliverable-link" contenteditable="true" data-field="cover_08">[ Link / Date ]</div>
+    </div>
+    <div class="deliverable-row">
+      <div class="deliverable-arrow">↓</div>
+      <div class="deliverable-content">
+        <div class="deliverable-title">90-Day Blueprint</div>
+        <div class="deliverable-desc">Your full execution roadmap — week by week, phase by phase.</div>
+      </div>
+      <div class="deliverable-link" contenteditable="true" data-field="cover_09">[ Link / Date ]</div>
+    </div>
+    <div class="deliverable-row">
+      <div class="deliverable-arrow">↓</div>
+      <div class="deliverable-content">
+        <div class="deliverable-title">Strategic Advisory Notes</div>
+        <div class="deliverable-desc">Ongoing notes and guidance from retainer sessions (Tier 3).</div>
+      </div>
+      <div class="deliverable-link" contenteditable="true" data-field="cover_10">[ Link / Date ]</div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ── FOOTER ── -->
+<div class="portal-footer">
+  <div class="portal-footer-main">Jupiter's Lab Creative Studio &nbsp;·&nbsp; <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="c4aeafadb6afa8a5aaa084aeb1b4adb0a1b6b7a8a5a6eaa7aba9">[email&#160;protected]</a> &nbsp;·&nbsp; C.O.R.E. Framework</div>
+  <div class="portal-footer-framework">Clarify &nbsp;·&nbsp; Order &nbsp;·&nbsp; Revenue &nbsp;·&nbsp; Execute</div>
+</div>
+
+
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+// ── SUPABASE SAVE ──────────────────────────────────────────
+const SUPABASE_URL = 'https://fgmfkmcqllncnujazgce.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZnbWZrbWNxbGxuY251amF6Z2NlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ0ODA2MjMsImV4cCI6MjA5MDA1NjYyM30.ith7Y51PnEF2wFwtToSS6n74uYHg4Ks7c2QBGlfd6hI';
+
+// Get client ID from URL param
+const params = new URLSearchParams(window.location.search);
+const CLIENT_ID = params.get('client') || 'unknown';
+
+// Show client name in cover
+const clientNameEl = document.querySelector('.cover-field-value');
+if (clientNameEl && CLIENT_ID !== 'unknown') {
+  const display = CLIENT_ID.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+  clientNameEl.textContent = display;
+}
+
+// ── SAVE A SINGLE FIELD ──
+async function saveField(key, value) {
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/portal_responses?on_conflict=client_id,field_key`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'apikey': SUPABASE_KEY,
+      'Authorization': `Bearer ${SUPABASE_KEY}`,
+      'Prefer': 'resolution=merge-duplicates,return=minimal'
+    },
+    body: JSON.stringify({
+      client_id: CLIENT_ID,
+      field_key: key,
+      field_value: value,
+      updated_at: new Date().toISOString()
+    })
+  });
+  if (!res.ok) {
+    const err = await res.text();
+    console.error('Save failed:', key, res.status, err);
+  }
+  return res.ok;
+}
+// ── SAVE ALL FIELDS IN A SECTION (triggered by button) ──
+async function saveSectionFields(btn, fieldKeys) {
+  const msgEl = btn.nextElementSibling;
+  const origHTML = btn.innerHTML;
+
+  btn.disabled = true;
+  btn.innerHTML = '<span class="btn-icon">⟳</span> Saving…';
+  if (msgEl) { msgEl.textContent = 'Saving your responses…'; msgEl.className = 'save-status-msg saving'; }
+
+  let saved = 0;
+  let skipped = 0;
+  let failed = 0;
+  for (const key of fieldKeys) {
+    const el = document.querySelector('[data-field="' + key + '"]');
+    if (!el) continue;
+    const value = el.type === 'checkbox' ? (el.checked ? 'true' : 'false') : (el.value || '').trim();
+    // Skip empty fields — no point saving blank values
+    if (!value) { skipped++; continue; }
+    const ok = await saveField(key, value);
+    if (ok) saved++;
+    else failed++;
+  }
+
+  btn.disabled = false;
+  btn.innerHTML = origHTML;
+
+  if (failed === 0) {
+    if (msgEl) { msgEl.textContent = '✓ ' + saved + ' response' + (saved !== 1 ? 's' : '') + ' saved successfully.'; msgEl.className = 'save-status-msg success'; }
+    setTimeout(() => { if (msgEl) msgEl.textContent = ''; }, 4000);
+  } else {
+    if (msgEl) { msgEl.textContent = saved + ' saved, ' + failed + ' failed. Check your connection and try again.'; msgEl.className = 'save-status-msg error'; }
+  }
+}
+
+
+
+// ── LOAD ALL SAVED FIELDS ──
+async function loadFields() {
+  const res = await fetch(
+    `${SUPABASE_URL}/rest/v1/portal_responses?client_id=eq.${CLIENT_ID}&select=field_key,field_value`,
+    {
+      headers: {
+        'apikey': SUPABASE_KEY,
+        'Authorization': `Bearer ${SUPABASE_KEY}`
+      }
+    }
+  );
+  if (!res.ok) return;
+  const rows = await res.json();
+  rows.forEach(row => {
+    const el = document.querySelector(`[data-field="${row.field_key}"]`);
+    if (!el) return;
+    if (el.type === 'checkbox') {
+      // Restore checkbox checked state
+      el.checked = row.field_value === 'true';
+    } else if (el.tagName === 'TEXTAREA' || el.tagName === 'INPUT') {
+      el.value = row.field_value || '';
+    } else {
+      el.textContent = row.field_value || '';
+    }
+    // Trigger score recalc if it's a score input
+    if (el.classList.contains('dim-score')) updateScore();
+    // Show save indicator
+    showSaved(el);
+  });
+}
+
+// ── SAVE INDICATOR ──
+function showSaved(el) {
+  const indicator = el.closest('.field-input-area, .score-dim-entry, .score-dim-notes, .completion-cell');
+  if (!indicator) return;
+  let dot = indicator.querySelector('.save-dot');
+  if (!dot) {
+    dot = document.createElement('span');
+    dot.className = 'save-dot';
+    dot.style.cssText = 'display:inline-block;width:6px;height:6px;border-radius:50%;background:#B8DDB0;margin-left:8px;opacity:0;transition:opacity 0.3s;vertical-align:middle;';
+    indicator.appendChild(dot);
+  }
+  dot.style.opacity = '1';
+  setTimeout(() => { dot.style.opacity = '0'; }, 2000);
+}
+
+// ── WIRE UP AUTOSAVE ──
+let saveTimers = {};
+
+function wireAutosave(el) {
+  const key = el.getAttribute('data-field');
+  if (!key) return;
+
+  if (el.type === 'checkbox') {
+    el.addEventListener('change', async () => {
+      const value = el.checked ? 'true' : 'false';
+      const ok = await saveField(key, value);
+      if (ok) showSaved(el);
+    });
+    return;
+  }
+
+  // Save ONLY on blur — when client clicks or tabs out of the field
+  // This ensures the full response is captured, not a partial mid-typing snapshot
+  el.addEventListener('blur', async () => {
+    clearTimeout(saveTimers[key]);
+    const value = el.value.trim();
+    if (value) {
+      const ok = await saveField(key, value);
+      if (ok) showSaved(el);
+    }
+  });
+
+  // Also save on Enter key for single-line inputs
+  if (el.tagName === 'INPUT') {
+    el.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        clearTimeout(saveTimers[key]);
+        const value = el.value.trim();
+        if (value) saveField(key, value).then(ok => { if (ok) showSaved(el); });
+      }
+    });
+  }
+}
+
+// ── WIRE UP CONTENTEDITABLE ──
+function wireContentEditable(el) {
+  const key = el.getAttribute('data-field');
+  if (!key) return;
+  // Save only on blur — full value when they click away
+  el.addEventListener('blur', async () => {
+    clearTimeout(saveTimers[key]);
+    const value = el.textContent.trim();
+    if (value) {
+      const ok = await saveField(key, value);
+      if (ok) showSaved(el);
+    }
+  });
+}
+
+// ── INIT ──
+document.addEventListener('DOMContentLoaded', async () => {
+  // Wire all textareas
+  document.querySelectorAll('textarea[data-field]').forEach(wireAutosave);
+  // Wire all inputs
+  document.querySelectorAll('input[data-field]').forEach(wireAutosave);
+  // Wire all contenteditable divs
+  document.querySelectorAll('[contenteditable][data-field]').forEach(wireContentEditable);
+  // Load saved data
+  if (CLIENT_ID !== 'unknown') {
+    await loadFields();
+  }
+});
+
+// ── MANUAL SAVE FUNCTIONS ──
+async function manualSaveField(key, btn) {
+  const el = document.querySelector(`[data-field="${key}"]`);
+  if (!el) return;
+  const value = el.type === 'checkbox' ? (el.checked ? 'true' : 'false') : (el.value || el.textContent);
+  btn.textContent = 'Saving...';
+  btn.disabled = true;
+  const ok = await saveField(key, value);
+  if (ok) {
+    btn.textContent = 'Saved ✓';
+    btn.classList.add('saved');
+    setTimeout(() => {
+      btn.textContent = 'Save';
+      btn.classList.remove('saved');
+      btn.disabled = false;
+    }, 2000);
+  } else {
+    btn.textContent = 'Retry';
+    btn.disabled = false;
+  }
+}
+
+async function saveSectionAll(btn, stage) {
+  const statusEl = document.getElementById(`section-save-status-${stage}`);
+  btn.style.background = '#152E50';
+  if (statusEl) statusEl.textContent = 'Saving...';
+
+  // Get all textareas and inputs that have data-field attributes
+  const allFields = document.querySelectorAll('[data-field]');
+  let saved = 0;
+  let failed = 0;
+
+  for (const el of allFields) {
+    const key = el.getAttribute('data-field');
+    if (!key) continue;
+    const value = el.type === 'checkbox' ? (el.checked ? 'true' : 'false') : (el.value || el.textContent || '');
+    if (!value || value === '&nbsp;') continue;
+    const ok = await saveField(key, value);
+    if (ok) saved++;
+    else failed++;
+  }
+
+  btn.classList.add('saved');
+  if (statusEl) statusEl.textContent = failed === 0 ? `✓ All saved` : `${saved} saved, ${failed} failed`;
+  setTimeout(() => {
+    btn.classList.remove('saved');
+    btn.style.background = '';
+    if (statusEl) statusEl.textContent = '';
+  }, 3000);
+}
+
+</script>
+</body>
+</html>
