@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sign In — Hella Skillz Terminal</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="app.js" type="text/javascript"></script>
+<style>
+:root {
+  --navy:#0D1B3E; --navy2:#0A1020;
+  --gold:#C9A84C; --gold2:#E8C96A;
+  --cyan:#00D4FF; --white:#FFFFFF;
+  --off:#F5F3EE; --text:#1A2B4A; --muted:#7A8BAE;
+  --border:rgba(13,27,62,0.1);
+}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+html,body{height:100%;}
+body{font-family:'Outfit',sans-serif;font-size:16px;line-height:1.6;-webkit-font-smoothing:antialiased;display:grid;grid-template-columns:1fr 1fr;min-height:100vh;}
+
+/* ── LEFT PANEL ── */
+.panel-left{
+  background:var(--navy2);
+  position:relative;
+  display:flex;flex-direction:column;justify-content:space-between;
+  padding:48px;
+  overflow:hidden;
+  min-height:100vh;
+}
+/* grid lines */
+.panel-left::before{
+  content:'';position:absolute;inset:0;
+  background-image:
+    linear-gradient(rgba(0,212,255,.05) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(0,212,255,.05) 1px,transparent 1px);
+  background-size:40px 40px;
+  pointer-events:none;
+}
+/* gold orb */
+.panel-left::after{
+  content:'';position:absolute;
+  bottom:-120px;right:-120px;
+  width:500px;height:500px;border-radius:50%;
+  background:radial-gradient(circle,rgba(201,168,76,.12) 0%,transparent 70%);
+  pointer-events:none;
+}
+/* cyan orb top */
+.left-orb{
+  position:absolute;top:-80px;left:-80px;
+  width:400px;height:400px;border-radius:50%;
+  background:radial-gradient(circle,rgba(0,212,255,.07) 0%,transparent 70%);
+  pointer-events:none;
+}
+.left-brand{
+  position:relative;z-index:1;
+  display:flex;align-items:center;gap:12px;
+  text-decoration:none;
+}
+.left-mark{
+  width:40px;height:40px;border-radius:10px;
+  background:var(--gold);
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Orbitron',sans-serif;font-size:13px;font-weight:800;color:var(--navy);
+}
+.left-brand-name{font-family:'Orbitron',sans-serif;font-size:13px;font-weight:700;color:var(--white);letter-spacing:.1em;}
+.left-brand-sub{font-size:10px;color:rgba(255,255,255,.4);letter-spacing:.1em;text-transform:uppercase;}
+
+/* big headline */
+.left-hero{position:relative;z-index:1;flex:1;display:flex;flex-direction:column;justify-content:center;padding:40px 0;}
+.left-eyebrow{
+  font-family:'Orbitron',sans-serif;font-size:10px;font-weight:600;
+  letter-spacing:.3em;text-transform:uppercase;
+  color:var(--cyan);margin-bottom:20px;
+  animation:glowcyan 2.5s infinite;
+}
+@keyframes glowcyan{0%,100%{opacity:.7}50%{opacity:1;text-shadow:0 0 20px rgba(0,212,255,.7)}}
+.left-h{
+  font-family:'Orbitron',sans-serif;
+  font-size:clamp(36px,4.5vw,58px);
+  font-weight:900;line-height:1.05;
+  color:var(--white);margin-bottom:20px;
+}
+.left-h em{font-style:normal;color:var(--gold);}
+.left-p{
+  font-size:15px;color:rgba(255,255,255,.55);
+  line-height:1.75;max-width:380px;margin-bottom:40px;
+}
+
+/* module preview list */
+.left-modules{display:flex;flex-direction:column;gap:0;}
+.lm-item{
+  display:flex;align-items:center;gap:14px;
+  padding:12px 16px;
+  background:rgba(255,255,255,.03);
+  border:1px solid rgba(255,255,255,.05);
+  border-bottom:none;
+  transition:background .2s;
+}
+.lm-item:first-child{border-radius:10px 10px 0 0;}
+.lm-item:last-child{border-radius:0 0 10px 10px;border-bottom:1px solid rgba(255,255,255,.05);}
+.lm-item:hover{background:rgba(255,255,255,.06);}
+.lm-num{
+  font-family:'Orbitron',sans-serif;font-size:10px;font-weight:700;
+  color:var(--gold);letter-spacing:.12em;min-width:28px;
+}
+.lm-title{font-size:13px;color:rgba(255,255,255,.7);font-weight:500;flex:1;}
+.lm-tag{
+  font-size:10px;color:rgba(255,255,255,.3);
+  letter-spacing:.08em;text-transform:uppercase;
+}
+
+.left-footer{position:relative;z-index:1;}
+.left-footer p{font-size:12px;color:rgba(255,255,255,.25);letter-spacing:.08em;}
+
+/* ── RIGHT PANEL ── */
+.panel-right{
+  background:var(--off);
+  display:flex;flex-direction:column;
+  justify-content:center;align-items:center;
+  padding:60px 48px;
+  position:relative;
+  overflow:hidden;
+}
+/* subtle grid */
+.panel-right::before{
+  content:'';position:absolute;inset:0;
+  background-image:
+    linear-gradient(rgba(13,27,62,.03) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(13,27,62,.03) 1px,transparent 1px);
+  background-size:40px 40px;pointer-events:none;
+}
+/* gold corner glow */
+.panel-right::after{
+  content:'';position:absolute;
+  top:-100px;right:-100px;
+  width:400px;height:400px;border-radius:50%;
+  background:radial-gradient(circle,rgba(201,168,76,.08) 0%,transparent 70%);
+  pointer-events:none;
+}
+
+.auth-box{
+  position:relative;z-index:1;
+  width:100%;max-width:440px;
+}
+
+/* header */
+.auth-eyebrow{
+  font-family:'Orbitron',sans-serif;font-size:10px;font-weight:600;
+  letter-spacing:.3em;text-transform:uppercase;
+  color:var(--gold);margin-bottom:12px;
+}
+.auth-h{
+  font-family:'Orbitron',sans-serif;
+  font-size:clamp(26px,3vw,38px);font-weight:900;
+  line-height:1.1;color:var(--navy);margin-bottom:8px;
+}
+.auth-sub{font-size:14px;color:var(--muted);margin-bottom:36px;}
+
+/* tabs */
+.auth-tabs{
+  display:flex;gap:0;
+  background:white;
+  border:1.5px solid var(--border);
+  border-radius:12px;padding:4px;
+  margin-bottom:32px;
+  box-shadow:0 4px 16px rgba(13,27,62,.06);
+}
+.auth-tab{
+  flex:1;padding:11px;text-align:center;
+  font-family:'Outfit',sans-serif;font-size:13px;font-weight:600;
+  color:var(--muted);cursor:pointer;border-radius:9px;
+  transition:all .2s;letter-spacing:.04em;
+  border:none;background:transparent;
+}
+.auth-tab.active{
+  background:var(--navy);color:var(--gold);
+  box-shadow:0 2px 8px rgba(13,27,62,.25);
+}
+
+/* form */
+.auth-form{display:none;}
+.auth-form.active{display:block;}
+
+.field{display:flex;flex-direction:column;gap:6px;margin-bottom:20px;}
+.field-label{
+  font-family:'Orbitron',sans-serif;
+  font-size:10px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;
+  color:var(--muted);
+}
+.field-input{
+  width:100%;padding:13px 16px;
+  border:1.5px solid var(--border);border-radius:10px;
+  background:white;
+  font-family:'Outfit',sans-serif;font-size:15px;color:var(--text);
+  outline:none;transition:border-color .2s,box-shadow .2s;
+  box-shadow:0 2px 8px rgba(13,27,62,.04);
+}
+.field-input:focus{
+  border-color:var(--gold);
+  box-shadow:0 0 0 3px rgba(201,168,76,.15);
+}
+.field-input::placeholder{color:rgba(13,27,62,.3);}
+
+/* submit btn */
+.auth-btn{
+  width:100%;padding:15px;border-radius:10px;
+  font-family:'Outfit',sans-serif;font-size:15px;font-weight:700;
+  letter-spacing:.05em;border:none;cursor:pointer;
+  transition:all .25s;
+  display:flex;align-items:center;justify-content:center;gap:8px;
+}
+.auth-btn-navy{
+  background:var(--navy);color:var(--gold);
+  box-shadow:0 4px 20px rgba(13,27,62,.2);
+}
+.auth-btn-navy:hover{transform:translateY(-2px);box-shadow:0 8px 28px rgba(13,27,62,.28);}
+.auth-btn-gold{
+  background:var(--gold);color:var(--navy);
+  box-shadow:0 4px 20px rgba(201,168,76,.35);
+}
+.auth-btn-gold:hover{transform:translateY(-2px);box-shadow:0 8px 28px rgba(201,168,76,.45);}
+
+.forgot-link{
+  display:block;text-align:right;margin-top:12px;
+  font-size:13px;color:var(--muted);text-decoration:none;transition:color .2s;
+}
+.forgot-link:hover{color:var(--navy);}
+.terms-note{
+  font-size:12px;color:var(--muted);text-align:center;
+  line-height:1.5;margin-top:16px;
+}
+.terms-note a{color:var(--navy);font-weight:500;}
+
+/* divider */
+.auth-divider{
+  position:relative;text-align:center;margin:24px 0;
+  font-size:11px;font-weight:600;letter-spacing:.15em;
+  text-transform:uppercase;color:var(--muted);
+}
+.auth-divider::before,.auth-divider::after{
+  content:'';position:absolute;top:50%;
+  width:42%;height:1px;background:var(--border);
+}
+.auth-divider::before{left:0;}
+.auth-divider::after{right:0;}
+
+/* back link */
+.back-link{
+  display:flex;align-items:center;justify-content:center;gap:6px;
+  font-size:13px;color:var(--muted);text-decoration:none;
+  margin-top:24px;transition:color .2s;
+}
+.back-link:hover{color:var(--navy);}
+
+/* alert */
+.alert{
+  padding:12px 16px;border-radius:8px;font-size:13px;font-weight:500;
+  margin-bottom:16px;display:none;
+}
+.alert.show{display:block;}
+.alert-err{background:#FEF2F2;color:#B91C1C;border:1px solid #FECACA;}
+.alert-ok {background:#F0FDF4;color:#15803D;border:1px solid #BBF7D0;}
+
+/* spinner */
+.spinner{
+  width:16px;height:16px;border-radius:50%;
+  border:2px solid rgba(201,168,76,.3);
+  border-top-color:var(--gold);
+  animation:spin .7s linear infinite;
+  display:inline-block;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+@media(max-width:900px){
+  body{grid-template-columns:1fr;}
+  .panel-left{display:none;}
+  .panel-right{padding:48px 24px;}
+}
+</style>
+</head>
+<body>
+
+<!-- LEFT PANEL -->
+<div class="panel-left">
+  <div class="left-orb"></div>
+
+  <a href="index.html" class="left-brand">
+    <div class="left-mark">HS</div>
+    <div>
+      <div class="left-brand-name">SKILLZ TERMINAL</div>
+      <div class="left-brand-sub">Jupiter's Lab Creative Studio</div>
+    </div>
+  </a>
+
+  <div class="left-hero">
+    <div class="left-eyebrow">// Welcome Back, Builder</div>
+    <h1 class="left-h">Your work<br>is <em>waiting</em><br>for you.</h1>
+    <p class="left-p">Every worksheet you filled out. Every decision you made. Every module you completed. Still here. Still yours.</p>
+    <div class="left-modules">
+      <div class="lm-item"><div class="lm-num">00</div><div class="lm-title">Orientation — You Aren't Behind</div><div class="lm-tag">Unlock →</div></div>
+      <div class="lm-item"><div class="lm-num">01</div><div class="lm-title">Skill Clarity Without Job Titles</div><div class="lm-tag">Harvest Matrix</div></div>
+      <div class="lm-item"><div class="lm-num">02</div><div class="lm-title">Skill Stacking That Makes Sense</div><div class="lm-tag">Stack Equation</div></div>
+      <div class="lm-item"><div class="lm-num">03</div><div class="lm-title">Choosing Direction Without Pressure</div><div class="lm-tag">Direction Compass</div></div>
+      <div class="lm-item"><div class="lm-num">04–08</div><div class="lm-title">Offer · Workflow · Systems · Scope · Longevity</div><div class="lm-tag">+ Bonus</div></div>
+    </div>
+  </div>
+
+  <div class="left-footer">
+    <p>© 2026 Jupiter's Lab Creative Studio · Jeylechia Kirkland</p>
+  </div>
+</div>
+
+<!-- RIGHT PANEL -->
+<div class="panel-right">
+  <div class="auth-box">
+    <div class="auth-eyebrow">Access Your Workspace</div>
+    <h2 class="auth-h">Sign in to the<br>Skillz Terminal</h2>
+    <p class="auth-sub">Your progress and worksheets are waiting.</p>
+
+    <div class="alert" id="auth-alert"></div>
+
+    <div class="auth-tabs">
+      <button class="auth-tab active" onclick="switchTab('signin')">Sign In</button>
+      <button class="auth-tab" onclick="switchTab('signup')">Create Account</button>
+    </div>
+
+    <!-- SIGN IN -->
+    <div class="auth-form active" id="form-signin">
+      <div class="field">
+        <label class="field-label">Email Address</label>
+        <input type="email" id="signin-email" class="field-input" placeholder="you@example.com" />
+      </div>
+      <div class="field">
+        <label class="field-label">Password</label>
+        <input type="password" id="signin-password" class="field-input" placeholder="Your password" />
+      </div>
+      <button class="auth-btn auth-btn-navy" id="signin-btn" onclick="handleSignIn()">
+        Enter Terminal →
+      </button>
+      <a href="#" class="forgot-link" onclick="handleForgotPassword()">Forgot password?</a>
+    </div>
+
+    <!-- SIGN UP -->
+    <div class="auth-form" id="form-signup">
+      <div class="field">
+        <label class="field-label">Full Name</label>
+        <input type="text" id="signup-name" class="field-input" placeholder="Your name" />
+      </div>
+      <div class="field">
+        <label class="field-label">Email Address</label>
+        <input type="email" id="signup-email" class="field-input" placeholder="you@example.com" />
+      </div>
+      <div class="field">
+        <label class="field-label">Create Password</label>
+        <input type="password" id="signup-password" class="field-input" placeholder="Min. 8 characters" />
+      </div>
+      <button class="auth-btn auth-btn-gold" id="signup-btn" onclick="handleSignUp()">
+        Create My Workspace →
+      </button>
+      <p class="terms-note">By creating an account you agree to our <a href="#">Terms</a> and <a href="#">Privacy Policy</a>.</p>
+    </div>
+
+    <div class="auth-divider">or</div>
+    <a href="index.html" class="back-link">← Back to course info</a>
+  </div>
+</div>
+
+<script>
+  window.addEventListener('load', () => {
+    if (typeof redirectIfLoggedIn === 'function') {
+      redirectIfLoggedIn('orientation.html');
+    }
+  });
+
+  function switchTab(tab) {
+    document.querySelectorAll('.auth-tab').forEach((t, i) => {
+      t.classList.toggle('active', (tab==='signin'&&i===0)||(tab==='signup'&&i===1));
+    });
+    document.getElementById('form-signin').classList.toggle('active', tab==='signin');
+    document.getElementById('form-signup').classList.toggle('active', tab==='signup');
+  }
+
+  function showMsg(msg, type='err') {
+    const el = document.getElementById('auth-alert');
+    el.textContent = msg;
+    el.className = `alert alert-${type} show`;
+    setTimeout(()=>el.classList.remove('show'), 5000);
+  }
+
+  function setLoad(btn, on) {
+    if (on) { btn.dataset.orig = btn.innerHTML; btn.innerHTML = '<span class="spinner"></span> Processing...'; btn.disabled = true; }
+    else { btn.innerHTML = btn.dataset.orig; btn.disabled = false; }
+  }
+
+  async function handleSignIn() {
+    const btn = document.getElementById('signin-btn');
+    const email = document.getElementById('signin-email').value.trim();
+    const pass  = document.getElementById('signin-password').value;
+    if (!email||!pass) return showMsg('Please fill in all fields.');
+    setLoad(btn, true);
+    const { error } = await sb.auth.signInWithPassword({ email, password: pass });
+    if (error) { showMsg(error.message); setLoad(btn, false); }
+    else window.location.href = 'orientation.html';
+  }
+
+  async function handleSignUp() {
+    const btn  = document.getElementById('signup-btn');
+    const name = document.getElementById('signup-name').value.trim();
+    const email= document.getElementById('signup-email').value.trim();
+    const pass = document.getElementById('signup-password').value;
+    if (!name||!email||!pass) return showMsg('Please fill in all fields.');
+    if (pass.length < 8) return showMsg('Password must be at least 8 characters.');
+    setLoad(btn, true);
+    const { error } = await sb.auth.signUp({ email, password: pass, options: { data: { full_name: name } } });
+    if (error) { showMsg(error.message); setLoad(btn, false); }
+    else { showMsg('Check your email to confirm, then sign in.', 'ok'); setLoad(btn, false); }
+  }
+
+  async function handleForgotPassword() {
+    const email = document.getElementById('signin-email').value.trim();
+    if (!email) return showMsg('Enter your email above first.');
+    const { error } = await sb.auth.resetPasswordForEmail(email);
+    if (error) showMsg(error.message);
+    else showMsg('Password reset link sent. Check your email.', 'ok');
+  }
+</script>
+</body>
+</html>
