@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Module 05: Workflow — Hella Build</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="app.js" type="text/javascript"></script>
+<style>
+:root{
+  --navy:#0D1B3E;--navy2:#0A1020;
+  --gold:#C9A84C;--gold2:#E8C96A;
+  --cyan:#00D4FF;--white:#FFFFFF;
+  --off:#F5F3EE;--text:#1A2B4A;--muted:#7A8BAE;
+  --border:rgba(13,27,62,0.1);--gold-border:rgba(201,168,76,0.3);
+}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--off);color:var(--text);font-family:'Outfit',sans-serif;font-size:16px;line-height:1.6;-webkit-font-smoothing:antialiased;}
+body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(13,27,62,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(13,27,62,.03) 1px,transparent 1px);background-size:48px 48px;pointer-events:none;z-index:0;}
+
+nav{position:sticky;top:0;z-index:200;background:rgba(245,243,238,.9);backdrop-filter:blur(24px);border-bottom:1px solid var(--border);padding:0 32px;height:64px;display:flex;align-items:center;justify-content:space-between;}
+.nav-brand{display:flex;align-items:center;gap:10px;text-decoration:none;}
+.nav-mark{width:34px;height:34px;border-radius:8px;background:var(--navy);display:flex;align-items:center;justify-content:center;font-family:'Orbitron',sans-serif;font-size:11px;font-weight:800;color:var(--gold);}
+.nav-name{font-family:'Orbitron',sans-serif;font-size:12px;font-weight:700;color:var(--navy);letter-spacing:.1em;}
+.nav-sub{font-size:10px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;}
+.nav-right{display:flex;align-items:center;gap:12px;}
+.nav-user{font-size:13px;color:var(--muted);}
+.btn-signout{font-family:'Outfit',sans-serif;font-size:13px;font-weight:600;padding:8px 18px;border-radius:8px;border:1.5px solid var(--border);background:transparent;color:var(--text);cursor:pointer;transition:all .2s;}
+.btn-signout:hover{border-color:var(--navy);}
+
+.layout{display:grid;grid-template-columns:260px 1fr;min-height:calc(100vh - 64px);position:relative;z-index:1;}
+
+.sidebar{background:var(--navy2);border-right:1px solid rgba(255,255,255,.05);padding:28px 0;position:sticky;top:64px;height:calc(100vh - 64px);overflow-y:auto;display:flex;flex-direction:column;}
+.sidebar::before{content:'';position:absolute;inset:0;background-image:linear-gradient(rgba(0,212,255,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(0,212,255,.03) 1px,transparent 1px);background-size:32px 32px;pointer-events:none;}
+.sb-section{font-family:'Orbitron',sans-serif;font-size:9px;font-weight:600;letter-spacing:.3em;text-transform:uppercase;color:rgba(255,255,255,.2);padding:0 24px;margin-bottom:8px;margin-top:24px;}
+.sb-item{display:flex;align-items:center;gap:12px;padding:11px 24px;text-decoration:none;transition:background .15s;position:relative;}
+.sb-item:hover{background:rgba(255,255,255,.04);}
+.sb-item.active{background:rgba(201,168,76,.08);}
+.sb-item.active::before{content:'';position:absolute;right:0;top:0;bottom:0;width:2px;background:var(--gold);}
+.sb-num{font-family:'Orbitron',sans-serif;font-size:10px;font-weight:700;color:var(--gold);letter-spacing:.1em;min-width:28px;}
+.sb-text{font-size:13px;font-weight:500;color:rgba(255,255,255,.65);flex:1;line-height:1.3;}
+.sb-item.active .sb-text{color:var(--white);}
+.sb-check{width:18px;height:18px;border-radius:4px;border:1.5px solid rgba(255,255,255,.12);display:flex;align-items:center;justify-content:center;font-size:9px;color:var(--gold);flex-shrink:0;}
+.sb-check.done{background:rgba(201,168,76,.18);border-color:var(--gold);}
+.sb-check.locked{opacity:.35;}
+.sb-footer{margin-top:auto;padding:20px 24px;border-top:1px solid rgba(255,255,255,.05);position:relative;z-index:1;}
+.sb-av{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--gold),#7A5010);display:flex;align-items:center;justify-content:center;font-family:'Orbitron',sans-serif;font-size:11px;font-weight:800;color:var(--navy);flex-shrink:0;}
+.sb-out{font-size:12px;color:rgba(255,255,255,.25);background:none;border:none;cursor:pointer;padding:0;transition:color .2s;margin-top:10px;display:block;}
+.sb-out:hover{color:rgba(255,255,255,.5);}
+
+.progress-strip{margin:0;padding:16px 24px;background:rgba(201,168,76,.06);border-bottom:1px solid var(--gold-border);position:relative;z-index:1;}
+.prog-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
+.prog-label{font-family:'Orbitron',sans-serif;font-size:10px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:var(--muted);}
+.prog-pct{font-family:'Orbitron',sans-serif;font-size:12px;font-weight:700;color:var(--gold);}
+.prog-track{height:5px;background:var(--border);border-radius:100px;overflow:hidden;}
+.prog-fill{height:100%;background:linear-gradient(90deg,var(--gold),var(--cyan));border-radius:100px;transition:width .6s ease;}
+
+.main{padding:48px 56px;max-width:900px;}
+
+.mod-hero{background:var(--navy);border-radius:20px;padding:44px 48px;position:relative;overflow:hidden;margin-bottom:48px;box-shadow:0 16px 48px rgba(13,27,62,.25),0 0 0 1px rgba(201,168,76,.15);}
+.mod-hero::before{content:'05';position:absolute;right:32px;bottom:-16px;font-family:'Orbitron',sans-serif;font-size:140px;font-weight:900;color:rgba(255,255,255,.04);line-height:1;pointer-events:none;}
+.mod-hero::after{content:'';position:absolute;top:-80px;right:-80px;width:300px;height:300px;border-radius:50%;background:radial-gradient(circle,rgba(201,168,76,.1) 0%,transparent 70%);pointer-events:none;}
+.scanline{position:absolute;left:0;right:0;top:0;height:2px;background:linear-gradient(90deg,transparent,rgba(0,212,255,.12),transparent);animation:scan 5s linear infinite;pointer-events:none;}
+@keyframes scan{0%{transform:translateY(0)}100%{transform:translateY(400px)}}
+.mod-eyebrow{font-family:'Orbitron',sans-serif;font-size:10px;font-weight:600;letter-spacing:.3em;text-transform:uppercase;color:var(--cyan);margin-bottom:16px;animation:glowcyan 2.5s infinite;}
+@keyframes glowcyan{0%,100%{opacity:.7}50%{opacity:1;text-shadow:0 0 20px rgba(0,212,255,.7)}}
+.mod-h{font-family:'Orbitron',sans-serif;font-size:clamp(24px,3.5vw,40px);font-weight:900;line-height:1.1;color:var(--white);margin-bottom:16px;}
+.mod-h em{font-style:normal;color:var(--gold);}
+.mod-p{font-size:15px;color:rgba(255,255,255,.55);line-height:1.75;max-width:520px;margin-bottom:24px;}
+.mod-meta{display:flex;gap:20px;flex-wrap:wrap;}
+.meta-chip{display:flex;align-items:center;gap:6px;font-size:12px;color:rgba(255,255,255,.4);}
+.meta-chip span{color:var(--gold);font-weight:600;}
+
+.s-label{font-family:'Orbitron',sans-serif;font-size:10px;font-weight:600;letter-spacing:.3em;text-transform:uppercase;color:var(--gold);margin-bottom:16px;}
+
+.lesson{background:white;border-radius:16px;padding:36px;border:1px solid var(--border);box-shadow:0 4px 16px rgba(13,27,62,.06);margin-bottom:24px;}
+.lesson-num{font-family:'Orbitron',sans-serif;font-size:10px;font-weight:600;letter-spacing:.25em;text-transform:uppercase;color:var(--gold);margin-bottom:8px;}
+.lesson-title{font-family:'Orbitron',sans-serif;font-size:18px;font-weight:700;color:var(--navy);margin-bottom:20px;letter-spacing:.02em;}
+.lesson-p{font-size:15px;color:var(--muted);line-height:1.75;margin-bottom:16px;}
+.lesson-p:last-child{margin-bottom:0;}
+.callout-cyan{padding:18px 22px;background:rgba(0,212,255,.06);border-left:3px solid var(--cyan);border-radius:0 10px 10px 0;margin:20px 0;font-size:14px;color:var(--text);line-height:1.65;}
+.callout-cyan strong{color:var(--navy);}
+.callout-gold{padding:18px 22px;background:rgba(201,168,76,.08);border-left:3px solid var(--gold);border-radius:0 10px 10px 0;margin:20px 0;font-size:14px;color:#6B4E00;line-height:1.65;font-weight:500;}
+
+.audio-player{display:flex;align-items:center;gap:16px;padding:16px 20px;background:var(--navy);border-radius:12px;margin:20px 0;border:1px solid rgba(201,168,76,.15);}
+.play-btn{width:40px;height:40px;border-radius:50%;background:var(--gold);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;transition:transform .2s;}
+.play-btn:hover{transform:scale(1.1);}
+.audio-info{flex:1;}
+.audio-title{font-size:13px;font-weight:600;color:var(--white);margin-bottom:2px;}
+.audio-sub{font-size:11px;color:rgba(255,255,255,.35);}
+.audio-bar{height:3px;background:rgba(255,255,255,.12);border-radius:100px;margin-top:8px;}
+.audio-time{font-family:'Orbitron',sans-serif;font-size:11px;color:rgba(255,255,255,.35);white-space:nowrap;}
+
+/* DELIVERY SYSTEM MAP WORKSHEET */
+.ws-section{margin:48px 0;}
+.ws-header{background:var(--navy);border-radius:16px 16px 0 0;padding:28px 32px;border:1px solid var(--gold-border);border-bottom:none;display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:16px;}
+.ws-eyebrow{font-family:'Orbitron',sans-serif;font-size:9px;font-weight:600;letter-spacing:.3em;text-transform:uppercase;color:var(--cyan);margin-bottom:8px;animation:glowcyan 2.5s infinite;}
+.ws-title{font-family:'Orbitron',sans-serif;font-size:22px;font-weight:900;color:var(--white);}
+.ws-subtitle{font-size:13px;color:rgba(255,255,255,.45);margin-top:4px;}
+.ws-save{display:flex;align-items:center;gap:8px;font-size:12px;color:rgba(255,255,255,.4);}
+.save-dot{width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,.2);transition:background .3s;}
+.save-dot.saving{background:var(--gold);animation:pulsegold 1s infinite;}
+.save-dot.saved{background:#28C840;}
+@keyframes pulsegold{0%,100%{box-shadow:0 0 0 0 rgba(201,168,76,.5)}50%{box-shadow:0 0 0 6px rgba(201,168,76,0)}}
+.ws-instructions{background:rgba(201,168,76,.06);border:1px solid var(--gold-border);border-top:none;border-bottom:none;padding:16px 32px;font-size:13px;color:var(--text);line-height:1.6;}
+.ws-instructions strong{color:var(--navy);}
+.ws-body{background:white;border:1px solid var(--gold-border);border-top:none;border-radius:0 0 16px 16px;padding:32px;}
+
+/* Phase steps */
+.phases-track{display:flex;flex-direction:column;gap:0;margin-bottom:40px;}
+.phase-row{display:grid;grid-template-columns:200px 1fr;border:1.5px solid var(--border);border-radius:0;margin-bottom:-1px;position:relative;}
+.phase-row:first-child{border-radius:12px 12px 0 0;}
+.phase-row:last-child{border-radius:0 0 12px 12px;margin-bottom:0;}
+.phase-label-col{background:var(--navy);padding:20px 20px;display:flex;flex-direction:column;justify-content:flex-start;border-right:1px solid rgba(255,255,255,.06);}
+.phase-num{font-family:'Orbitron',sans-serif;font-size:9px;font-weight:700;color:var(--gold);letter-spacing:.2em;margin-bottom:4px;}
+.phase-name{font-size:13px;font-weight:700;color:var(--white);line-height:1.3;margin-bottom:6px;}
+.phase-hint{font-size:10px;color:rgba(255,255,255,.3);line-height:1.4;}
+.phase-connector{position:absolute;left:100px;bottom:-14px;width:20px;height:20px;background:var(--gold);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9px;color:var(--navy);font-weight:900;z-index:2;border:2px solid var(--off);}
+.phase-input-col{padding:16px 20px;background:white;display:flex;flex-direction:column;gap:10px;}
+
+.phase-field-label{font-family:'Orbitron',sans-serif;font-size:9px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:var(--gold);margin-bottom:4px;}
+.phase-input{width:100%;padding:10px 14px;border:1.5px solid var(--border);border-radius:8px;background:var(--off);font-family:'Outfit',sans-serif;font-size:13px;color:var(--text);outline:none;resize:vertical;min-height:68px;transition:all .2s;line-height:1.55;}
+.phase-input:focus{border-color:var(--gold);background:white;box-shadow:0 0 0 3px rgba(201,168,76,.12);}
+.phase-input::placeholder{color:rgba(13,27,62,.25);font-size:11px;}
+.phase-input.single{min-height:40px;resize:none;}
+.phase-input-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+
+/* Intake form section */
+.intake-section{margin-bottom:32px;}
+.intake-header{background:var(--navy);border-radius:12px 12px 0 0;padding:16px 24px;border:1px solid var(--gold-border);border-bottom:none;}
+.intake-title{font-family:'Orbitron',sans-serif;font-size:14px;font-weight:700;color:var(--white);}
+.intake-sub{font-size:11px;color:rgba(255,255,255,.4);margin-top:2px;}
+.intake-body{border:1px solid var(--gold-border);border-top:none;border-radius:0 0 12px 12px;padding:20px 24px;background:white;}
+.intake-questions{display:flex;flex-direction:column;gap:12px;}
+.intake-q-row{display:grid;grid-template-columns:28px 1fr;gap:12px;align-items:start;}
+.intake-q-num{width:28px;height:28px;border-radius:50%;background:var(--navy);display:flex;align-items:center;justify-content:center;font-family:'Orbitron',sans-serif;font-size:9px;font-weight:700;color:var(--gold);flex-shrink:0;margin-top:8px;}
+.intake-q-input{padding:10px 14px;border:1.5px solid var(--border);border-radius:8px;background:var(--off);font-family:'Outfit',sans-serif;font-size:13px;color:var(--text);outline:none;width:100%;transition:all .2s;}
+.intake-q-input:focus{border-color:var(--gold);background:white;box-shadow:0 0 0 3px rgba(201,168,76,.12);}
+.intake-q-input::placeholder{color:rgba(13,27,62,.25);font-size:12px;}
+.add-question-btn{display:inline-flex;align-items:center;gap:6px;margin-top:8px;padding:8px 16px;border-radius:8px;border:1.5px dashed var(--border);background:transparent;color:var(--muted);font-family:'Outfit',sans-serif;font-size:12px;font-weight:600;cursor:pointer;transition:all .2s;}
+.add-question-btn:hover{border-color:var(--gold);color:var(--navy);}
+
+/* Tools grid */
+.tools-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:32px;}
+.tool-card{border:1.5px solid var(--border);border-radius:10px;overflow:hidden;}
+.tool-header{background:var(--navy);padding:12px 16px;}
+.tool-phase{font-family:'Orbitron',sans-serif;font-size:9px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:var(--gold);}
+.tool-input{padding:11px 14px;border:none;border-top:1px solid var(--border);background:var(--off);font-family:'Outfit',sans-serif;font-size:13px;color:var(--text);outline:none;width:100%;transition:all .2s;resize:vertical;min-height:64px;line-height:1.5;}
+.tool-input:focus{background:white;box-shadow:inset 0 0 0 2px var(--gold);}
+.tool-input::placeholder{color:rgba(13,27,62,.25);font-size:11px;}
+
+/* SOP section */
+.sop-section{margin-bottom:32px;}
+.sop-row{display:grid;grid-template-columns:120px 1fr 1fr;gap:12px;align-items:start;padding:12px 0;border-bottom:1px solid var(--border);}
+.sop-row:last-child{border-bottom:none;}
+.sop-step{font-family:'Orbitron',sans-serif;font-size:10px;font-weight:700;color:var(--gold);}
+.sop-input{padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;background:var(--off);font-family:'Outfit',sans-serif;font-size:12px;color:var(--text);outline:none;width:100%;transition:all .2s;resize:vertical;min-height:56px;line-height:1.5;}
+.sop-input:focus{border-color:var(--gold);background:white;box-shadow:0 0 0 3px rgba(201,168,76,.12);}
+.sop-input::placeholder{color:rgba(13,27,62,.25);font-size:11px;}
+
+/* LOCK-IN */
+.lockin-section{background:var(--navy);border-radius:20px;padding:40px;margin:24px 0;border:1.5px solid var(--gold-border);box-shadow:0 12px 40px rgba(13,27,62,.2);position:relative;overflow:hidden;}
+.lockin-section::after{content:'';position:absolute;bottom:-80px;right:-80px;width:300px;height:300px;border-radius:50%;background:radial-gradient(circle,rgba(201,168,76,.1) 0%,transparent 70%);pointer-events:none;}
+.lockin-tag{font-family:'Orbitron',sans-serif;font-size:10px;font-weight:600;letter-spacing:.3em;text-transform:uppercase;color:var(--gold);margin-bottom:12px;}
+.lockin-title{font-family:'Orbitron',sans-serif;font-size:22px;font-weight:900;color:var(--white);margin-bottom:12px;}
+.lockin-rule{font-size:14px;color:rgba(255,255,255,.6);line-height:1.65;margin-bottom:24px;}
+.lockin-rule strong{color:var(--gold);}
+.lockin-input{width:100%;padding:15px 18px;border:1.5px solid rgba(201,168,76,.4);border-radius:10px;background:rgba(255,255,255,.05);font-family:'Outfit',sans-serif;font-size:14px;color:var(--white);outline:none;transition:all .2s;margin-bottom:12px;resize:vertical;min-height:120px;line-height:1.6;}
+.lockin-input:focus{border-color:var(--gold);background:rgba(255,255,255,.08);box-shadow:0 0 0 3px rgba(201,168,76,.15);}
+.lockin-input::placeholder{color:rgba(255,255,255,.3);}
+.lockin-warn{font-size:13px;color:rgba(201,168,76,.7);display:none;margin-bottom:12px;}
+.lockin-ok{font-size:13px;color:#28C840;display:none;margin-bottom:12px;}
+
+.decl-box{background:linear-gradient(135deg,rgba(201,168,76,.1) 0%,rgba(201,168,76,.05) 100%);border:1.5px solid var(--gold-border);border-radius:20px;padding:40px;text-align:center;margin:24px 0;}
+.decl-label{font-family:'Orbitron',sans-serif;font-size:9px;font-weight:600;letter-spacing:.3em;text-transform:uppercase;color:#8A6B1A;margin-bottom:16px;}
+.decl-text{font-family:'Orbitron',sans-serif;font-size:clamp(16px,2.2vw,22px);font-weight:800;color:var(--navy);line-height:1.25;margin-bottom:12px;}
+.decl-sub{font-size:14px;color:var(--muted);margin-bottom:28px;font-style:italic;}
+.alert-msg{padding:12px 16px;border-radius:8px;font-size:13px;font-weight:500;margin-bottom:16px;display:none;}
+.alert-msg.show{display:block;}
+.alert-err{background:#FEF2F2;color:#B91C1C;border:1px solid #FECACA;}
+.alert-ok{background:#F0FDF4;color:#15803D;border:1px solid #BBF7D0;}
+.btn-decl{display:inline-flex;align-items:center;gap:8px;padding:16px 40px;border-radius:12px;background:var(--navy);color:var(--gold);font-family:'Outfit',sans-serif;font-size:15px;font-weight:700;border:none;cursor:pointer;box-shadow:0 8px 28px rgba(13,27,62,.2);transition:all .25s;}
+.btn-decl:hover{transform:translateY(-3px);box-shadow:0 16px 40px rgba(13,27,62,.3);}
+
+.mod-nav{display:flex;justify-content:space-between;align-items:center;gap:12px;padding-top:40px;border-top:1px solid var(--border);margin-top:40px;}
+.btn-back{display:inline-flex;align-items:center;gap:8px;padding:12px 24px;border-radius:10px;background:transparent;color:var(--text);border:1.5px solid var(--border);font-family:'Outfit',sans-serif;font-size:14px;font-weight:600;text-decoration:none;cursor:pointer;transition:all .2s;}
+.btn-back:hover{border-color:var(--navy);}
+.btn-next{display:inline-flex;align-items:center;gap:8px;padding:12px 24px;border-radius:10px;background:var(--navy);color:var(--gold);border:none;font-family:'Outfit',sans-serif;font-size:14px;font-weight:700;text-decoration:none;cursor:pointer;transition:all .2s;opacity:.4;pointer-events:none;}
+.btn-next.unlocked{opacity:1;pointer-events:auto;}
+.btn-next.unlocked:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(13,27,62,.25);}
+
+@keyframes spin{to{transform:rotate(360deg)}}
+@media(max-width:900px){
+  .layout{grid-template-columns:1fr;}.sidebar{display:none;}.main{padding:32px 24px;}
+  .phase-row{grid-template-columns:1fr;}.phase-label-col{border-right:none;border-bottom:1px solid rgba(255,255,255,.06);}
+  .phase-input-row{grid-template-columns:1fr;}
+  .tools-grid{grid-template-columns:1fr;}
+  .sop-row{grid-template-columns:1fr;}
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="orientation.html" class="nav-brand">
+    <div class="nav-mark">HB</div>
+    <div><div class="nav-name">BUILD TERMINAL</div><div class="nav-sub">Jupiter's Lab</div></div>
+  </a>
+  <div class="nav-right">
+    <span class="nav-user" id="nav-user"></span>
+    <button class="btn-signout" onclick="signOut()">Sign Out</button>
+  </div>
+</nav>
+
+<div class="layout">
+  <aside class="sidebar">
+    <div style="position:relative;z-index:1;flex:1;">
+      <div class="sb-section">Course</div>
+      <a href="orientation.html" class="sb-item"><div class="sb-num">00</div><div class="sb-text">Orientation</div><div class="sb-check done" id="ck-00">✓</div></a>
+      <a href="module1.html" class="sb-item"><div class="sb-num">01</div><div class="sb-text">Skill Clarity</div><div class="sb-check" id="ck-01"></div></a>
+      <a href="module2.html" class="sb-item"><div class="sb-num">02</div><div class="sb-text">Skill Stacking</div><div class="sb-check" id="ck-02"></div></a>
+      <a href="module3.html" class="sb-item"><div class="sb-num">03</div><div class="sb-text">Direction</div><div class="sb-check" id="ck-03"></div></a>
+      <a href="module4.html" class="sb-item"><div class="sb-num">04</div><div class="sb-text">Offer Design</div><div class="sb-check" id="ck-04"></div></a>
+      <a href="module5.html" class="sb-item active"><div class="sb-num">05</div><div class="sb-text">Workflow</div><div class="sb-check" id="ck-05"></div></a>
+      <div class="sb-item" style="opacity:.4;cursor:default;"><div class="sb-num">06</div><div class="sb-text">Systems + Rest</div><div class="sb-check locked">🔒</div></div>
+      <div class="sb-item" style="opacity:.4;cursor:default;"><div class="sb-num">★</div><div class="sb-text">Bonus Module</div><div class="sb-check locked">🔒</div></div>
+    </div>
+    <div class="sb-footer">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+        <div class="sb-av" id="sb-av">?</div>
+        <div><div style="font-size:13px;font-weight:600;color:var(--white);" id="sb-name">—</div><div style="font-size:11px;color:rgba(255,255,255,.3);" id="sb-email">—</div></div>
+      </div>
+      <button class="sb-out" onclick="signOut()">← Sign out</button>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="progress-strip">
+      <div class="prog-row"><span class="prog-label">Course Progress</span><span class="prog-pct" id="prog-pct">70%</span></div>
+      <div class="prog-track"><div class="prog-fill" id="prog-fill" style="width:70%;"></div></div>
+    </div>
+
+    <!-- HERO -->
+    <div class="mod-hero" style="margin-top:40px;">
+      <div class="scanline"></div>
+      <div class="mod-eyebrow">// Module 05 — Phase E: Execute</div>
+      <h1 class="mod-h">Building the System<br><em>Behind the Work</em></h1>
+      <p class="mod-p">You have an offer. Now you need the system that delivers it the same way every time — without carrying it in your head. This module maps your delivery process from first contact to final deliverable and turns it into a documented workflow you can repeat, hand off, or scale.</p>
+      <div class="mod-meta">
+        <div class="meta-chip">⏱ <span>~25 minutes</span></div>
+        <div class="meta-chip">📐 <span>Delivery System Map + SOP</span></div>
+        <div class="meta-chip">🔒 <span>Lock-In: Your documented delivery process</span></div>
+      </div>
+    </div>
+
+    <!-- LESSON 5.1 -->
+    <div class="s-label">Lesson 5.1</div>
+    <div class="lesson">
+      <div class="lesson-num">Lesson 5.1 · Why Skills Fail Without Systems</div>
+      <div class="lesson-title">The Difference Between Doing Work and Designing Work</div>
+      <div class="audio-player">
+        <button class="play-btn" onclick="toggleAudio(this)">▶</button>
+        <div class="audio-info">
+          <div class="audio-title">Lesson 5.1 — Skills vs. Systems</div>
+          <div class="audio-sub">Voiceover · ~5 min · Add audio file to enable playback</div>
+          <div class="audio-bar"></div>
+        </div>
+        <div class="audio-time">0:00</div>
+      </div>
+      <p class="lesson-p">Here's the ceiling every skilled solo operator hits eventually: they can only take on as many clients as they can personally manage in their head. They know what to do — they've done it a hundred times — but it lives in their memory, not in a document. So every new client is a reinvention. Every onboarding is improvised. Every project feels like the first one.</p>
+      <p class="lesson-p">A system doesn't make you less creative or more robotic. It does the opposite. When the logistics are documented and automatic, your brain is free to do the work that actually requires your expertise — the thinking, the insight, the decisions that clients are actually paying for. The system handles everything else.</p>
+      <div class="callout-cyan">
+        <strong>The test:</strong> If you got sick tomorrow and someone else had to run your client work for a week, could they? If the answer is no, you don't have a business — you have a job you can't take a vacation from. This module changes that.
+      </div>
+    </div>
+
+    <!-- LESSON 5.2 -->
+    <div class="s-label">Lesson 5.2</div>
+    <div class="lesson">
+      <div class="lesson-num">Lesson 5.2 · Mapping Your Delivery Process</div>
+      <div class="lesson-title">Breaking Your Work Into Steps That Always Happen</div>
+      <div class="audio-player">
+        <button class="play-btn" onclick="toggleAudio(this)">▶</button>
+        <div class="audio-info">
+          <div class="audio-title">Lesson 5.2 — Mapping Your Process</div>
+          <div class="audio-sub">Voiceover · ~5 min · Add audio file to enable playback</div>
+          <div class="audio-bar"></div>
+        </div>
+        <div class="audio-time">0:00</div>
+      </div>
+      <p class="lesson-p">Think about the last client engagement you completed. Walk backwards from the final deliverable. What happened right before it? And before that? Keep going until you get to the first point of contact. Those are your steps. Every one of them. Now write them down in order. That's your workflow map — it already exists inside you. This module just pulls it out and puts it on paper.</p>
+      <div class="callout-cyan">
+        <strong>Look for three things in every step:</strong> What triggers it (what has to happen first)? What does it produce (what exists when it's done)? What does the client need to provide for it to move forward? Those three answers per step = a real SOP, not just a list.
+      </div>
+      <div class="callout-gold">🔒 Your completed Delivery System Map becomes your Workflow + SOP portfolio document. Write it as if you're training someone to do your job. Because one day you will be.</div>
+    </div>
+
+    <!-- DELIVERY SYSTEM MAP WORKSHEET -->
+    <div class="ws-section">
+      <div class="s-label">Interactive Worksheet</div>
+      <div class="ws-header">
+        <div>
+          <div class="ws-eyebrow">// Phase E — Execute · Worksheet 05</div>
+          <div class="ws-title">Delivery System Map + SOP</div>
+          <div class="ws-subtitle">Your answers save automatically as you type</div>
+        </div>
+        <div class="ws-save">
+          <div class="save-dot" id="save-dot"></div>
+          <span id="save-txt">Ready</span>
+        </div>
+      </div>
+      <div class="ws-instructions">
+        <strong>Instructions:</strong> Map your delivery process across five phases. For each phase, document what happens, what the client needs to provide, and what you produce. Then build your client intake form and list the tools that support each phase. This becomes your SOP — the document you hand to a team member, a VA, or yourself on a bad day.
+      </div>
+      <div class="ws-body">
+
+        <!-- Five Phase Delivery Map -->
+        <div style="font-family:'Orbitron',sans-serif;font-size:13px;font-weight:700;color:var(--navy);margin-bottom:8px;letter-spacing:.02em;">// Five-Phase Delivery Map</div>
+        <p style="font-size:13px;color:var(--muted);margin-bottom:24px;line-height:1.6;">Map what happens in each phase. Be specific enough that someone else could follow these steps without asking you questions.</p>
+
+        <div class="phases-track">
+
+          <div class="phase-row">
+            <div class="phase-label-col">
+              <div class="phase-num">PHASE 01</div>
+              <div class="phase-name">Inquiry & Qualification</div>
+              <div class="phase-hint">From first contact to deciding whether to move forward</div>
+            </div>
+            <div class="phase-input-col">
+              <div>
+                <div class="phase-field-label">What happens in this phase</div>
+                <textarea class="phase-input" id="p1-what" placeholder="e.g. Prospect fills out contact form, receives automated response with discovery call booking link, completes pre-call questionnaire before the call." oninput="autosave()"></textarea>
+              </div>
+              <div class="phase-input-row">
+                <div>
+                  <div class="phase-field-label">What client provides</div>
+                  <textarea class="phase-input" id="p1-client" placeholder="e.g. Pre-call questionnaire answers, scheduled call time" oninput="autosave()"></textarea>
+                </div>
+                <div>
+                  <div class="phase-field-label">What you produce</div>
+                  <textarea class="phase-input" id="p1-produce" placeholder="e.g. Go/no-go decision, proposal if advancing" oninput="autosave()"></textarea>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="phase-row">
+            <div class="phase-label-col">
+              <div class="phase-num">PHASE 02</div>
+              <div class="phase-name">Onboarding & Kickoff</div>
+              <div class="phase-hint">From agreement signed to work beginning</div>
+            </div>
+            <div class="phase-input-col">
+              <div>
+                <div class="phase-field-label">What happens in this phase</div>
+                <textarea class="phase-input" id="p2-what" placeholder="e.g. Contract sent, invoice issued, welcome email with onboarding doc, kickoff call to align on goals, timeline confirmed." oninput="autosave()"></textarea>
+              </div>
+              <div class="phase-input-row">
+                <div>
+                  <div class="phase-field-label">What client provides</div>
+                  <textarea class="phase-input" id="p2-client" placeholder="e.g. Signed contract, deposit payment, completed intake form, access to relevant assets" oninput="autosave()"></textarea>
+                </div>
+                <div>
+                  <div class="phase-field-label">What you produce</div>
+                  <textarea class="phase-input" id="p2-produce" placeholder="e.g. Signed contract, kickoff notes, confirmed project timeline, shared workspace setup" oninput="autosave()"></textarea>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="phase-row">
+            <div class="phase-label-col">
+              <div class="phase-num">PHASE 03</div>
+              <div class="phase-name">Active Delivery</div>
+              <div class="phase-hint">The core work — what you actually do</div>
+            </div>
+            <div class="phase-input-col">
+              <div>
+                <div class="phase-field-label">What happens in this phase</div>
+                <textarea class="phase-input" id="p3-what" placeholder="e.g. Weekly sessions or async work, milestone check-ins, draft reviews and revisions, client feedback loops. List your specific steps." oninput="autosave()"></textarea>
+              </div>
+              <div class="phase-input-row">
+                <div>
+                  <div class="phase-field-label">What client provides</div>
+                  <textarea class="phase-input" id="p3-client" placeholder="e.g. Timely feedback within 48 hours, attendance at scheduled calls, access to information needed for deliverables" oninput="autosave()"></textarea>
+                </div>
+                <div>
+                  <div class="phase-field-label">What you produce</div>
+                  <textarea class="phase-input" id="p3-produce" placeholder="e.g. Session notes, draft deliverables, revision rounds, progress updates" oninput="autosave()"></textarea>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="phase-row">
+            <div class="phase-label-col">
+              <div class="phase-num">PHASE 04</div>
+              <div class="phase-name">Completion & Handoff</div>
+              <div class="phase-hint">Final deliverable to project close</div>
+            </div>
+            <div class="phase-input-col">
+              <div>
+                <div class="phase-field-label">What happens in this phase</div>
+                <textarea class="phase-input" id="p4-what" placeholder="e.g. Final deliverable sent, close call to walk through everything, client confirms receipt and approval, final invoice sent." oninput="autosave()"></textarea>
+              </div>
+              <div class="phase-input-row">
+                <div>
+                  <div class="phase-field-label">What client provides</div>
+                  <textarea class="phase-input" id="p4-client" placeholder="e.g. Final approval, final payment, testimonial request response" oninput="autosave()"></textarea>
+                </div>
+                <div>
+                  <div class="phase-field-label">What you produce</div>
+                  <textarea class="phase-input" id="p4-produce" placeholder="e.g. Final deliverable package, close email, referral request, testimonial form" oninput="autosave()"></textarea>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="phase-row">
+            <div class="phase-label-col">
+              <div class="phase-num">PHASE 05</div>
+              <div class="phase-name">Post-Project Follow-Up</div>
+              <div class="phase-hint">The phase most people skip — and shouldn't</div>
+            </div>
+            <div class="phase-input-col">
+              <div>
+                <div class="phase-field-label">What happens in this phase</div>
+                <textarea class="phase-input" id="p5-what" placeholder="e.g. 30-day check-in email, testimonial collection if not yet received, referral ask, note for future follow-up, add to alumni list." oninput="autosave()"></textarea>
+              </div>
+              <div class="phase-input-row">
+                <div>
+                  <div class="phase-field-label">What client provides</div>
+                  <textarea class="phase-input" id="p5-client" placeholder="e.g. 30-day feedback, testimonial, referrals (if applicable)" oninput="autosave()"></textarea>
+                </div>
+                <div>
+                  <div class="phase-field-label">What you produce</div>
+                  <textarea class="phase-input" id="p5-produce" placeholder="e.g. Case study notes, testimonial added to site, referral follow-up if applicable" oninput="autosave()"></textarea>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Client Intake Form -->
+        <div class="intake-section">
+          <div class="intake-header">
+            <div class="intake-title">Client Intake Form Questions</div>
+            <div class="intake-sub">The questions you need answered before you can start. Document them here so they're always consistent.</div>
+          </div>
+          <div class="intake-body">
+            <div class="intake-questions" id="intake-questions">
+              <div class="intake-q-row">
+                <div class="intake-q-num">01</div>
+                <input type="text" class="intake-q-input" id="iq-1" placeholder="e.g. What specific outcome are you hoping to have at the end of this engagement?" oninput="autosave()">
+              </div>
+              <div class="intake-q-row">
+                <div class="intake-q-num">02</div>
+                <input type="text" class="intake-q-input" id="iq-2" placeholder="e.g. What have you already tried that hasn't worked?" oninput="autosave()">
+              </div>
+              <div class="intake-q-row">
+                <div class="intake-q-num">03</div>
+                <input type="text" class="intake-q-input" id="iq-3" placeholder="e.g. What does success look like to you in 90 days?" oninput="autosave()">
+              </div>
+              <div class="intake-q-row">
+                <div class="intake-q-num">04</div>
+                <input type="text" class="intake-q-input" id="iq-4" placeholder="e.g. What is your availability for calls/check-ins?" oninput="autosave()">
+              </div>
+              <div class="intake-q-row">
+                <div class="intake-q-num">05</div>
+                <input type="text" class="intake-q-input" id="iq-5" placeholder="Add your fifth intake question" oninput="autosave()">
+              </div>
+              <div class="intake-q-row" id="iq-row-6" style="display:none;">
+                <div class="intake-q-num">06</div>
+                <input type="text" class="intake-q-input" id="iq-6" placeholder="Add your sixth intake question" oninput="autosave()">
+              </div>
+              <div class="intake-q-row" id="iq-row-7" style="display:none;">
+                <div class="intake-q-num">07</div>
+                <input type="text" class="intake-q-input" id="iq-7" placeholder="Add your seventh intake question" oninput="autosave()">
+              </div>
+            </div>
+            <button class="add-question-btn" onclick="addQuestion()">+ Add Question</button>
+          </div>
+        </div>
+
+        <!-- Tools by Phase -->
+        <div style="font-family:'Orbitron',sans-serif;font-size:13px;font-weight:700;color:var(--navy);margin-bottom:8px;letter-spacing:.02em;">// Tools That Support Each Phase</div>
+        <p style="font-size:13px;color:var(--muted);margin-bottom:16px;line-height:1.6;">List the software, templates, or tools that support each phase. This becomes the tech stack section of your SOP.</p>
+
+        <div class="tools-grid">
+          <div class="tool-card">
+            <div class="tool-header"><div class="tool-phase">Phase 01 — Inquiry</div></div>
+            <textarea class="tool-input" id="tools-p1" placeholder="e.g. Contact form (website), Calendly, pre-call questionnaire (Google Form or Typeform)" oninput="autosave()"></textarea>
+          </div>
+          <div class="tool-card">
+            <div class="tool-header"><div class="tool-phase">Phase 02 — Onboarding</div></div>
+            <textarea class="tool-input" id="tools-p2" placeholder="e.g. HelloSign or Docusign (contracts), Stripe (invoicing), welcome email template, shared Google Drive or Notion folder" oninput="autosave()"></textarea>
+          </div>
+          <div class="tool-card">
+            <div class="tool-header"><div class="tool-phase">Phase 03 — Active Delivery</div></div>
+            <textarea class="tool-input" id="tools-p3" placeholder="e.g. Zoom (sessions), Loom (async video), Google Docs (drafts), Notion (project tracking), Slack or email (communication)" oninput="autosave()"></textarea>
+          </div>
+          <div class="tool-card">
+            <div class="tool-header"><div class="tool-phase">Phase 04 — Completion</div></div>
+            <textarea class="tool-input" id="tools-p4" placeholder="e.g. Final deliverable folder (Drive), close email template, Stripe (final invoice), testimonial request template" oninput="autosave()"></textarea>
+          </div>
+          <div class="tool-card">
+            <div class="tool-header"><div class="tool-phase">Phase 05 — Follow-Up</div></div>
+            <textarea class="tool-input" id="tools-p5" placeholder="e.g. Email CRM (ActiveCampaign, ConvertKit), 30-day check-in template, case study notes doc" oninput="autosave()"></textarea>
+          </div>
+          <div class="tool-card">
+            <div class="tool-header"><div class="tool-phase">Client Portal / Workspace</div></div>
+            <textarea class="tool-input" id="tools-portal" placeholder="e.g. Foundation OS (jlab-client-portal.netlify.app), Notion, Google Workspace — where the client sees everything in one place" oninput="autosave()"></textarea>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- LOCK-IN -->
+    <div class="s-label">Lock-In Decision</div>
+    <div class="lockin-section">
+      <div class="lockin-tag">🔒 Lock-In Rule — Phase E: Execute</div>
+      <div class="lockin-title">Document Your Delivery Process.</div>
+      <p class="lockin-rule">Write your complete delivery process as a plain-language SOP below. <strong>Write it as if you're training your first hire.</strong> Cover all five phases. Include what triggers each phase, what gets produced, and what the client is responsible for. This is your Workflow + SOP portfolio document. Write it like someone's job depends on it — because eventually it will.</p>
+      <textarea class="lockin-input" id="final-sop" placeholder="Write your full delivery SOP here. Five phases minimum. Include triggers, deliverables, and client responsibilities for each. Write it in plain language — no jargon, just clear steps a real person can follow." oninput="autosave(); checkLockIn();"></textarea>
+      <div class="lockin-warn" id="lockin-warn">⚠ Your SOP must cover all five phases before you can advance. Keep writing.</div>
+      <div class="lockin-ok" id="lockin-ok">✓ Delivery process documented. You may advance to Module 6.</div>
+    </div>
+
+    <!-- DECLARATION -->
+    <div class="decl-box">
+      <div class="decl-label">✦ Declaration Moment — Module 05</div>
+      <div class="decl-text">"I designed my work.<br>Now it works without me."</div>
+      <div class="decl-sub">Your process is documented. That's leverage — not a cage.</div>
+      <div class="alert-msg" id="alert-complete"></div>
+      <button class="btn-decl" id="complete-btn" onclick="completeModule()">Save &amp; Complete Module 5 →</button>
+    </div>
+
+    <div class="mod-nav">
+      <a href="module4.html" class="btn-back">← Back to Module 4</a>
+      <a href="module6.html" class="btn-next" id="next-btn">Module 6 →</a>
+    </div>
+  </main>
+</div>
+
+<script>
+let saveTimer = null;
+let questionCount = 5;
+
+document.addEventListener('DOMContentLoaded', async () => {
+  const session = await requireAuth();
+  if (!session) return;
+  const user = session.user;
+  const name = user.user_metadata?.full_name || user.email.split('@')[0].replace(/[._-]/g,' ').replace(/\b\w/g,c=>c.toUpperCase());
+  const initials = name.split(' ').map(n=>n[0]).join('').slice(0,2).toUpperCase();
+  document.getElementById('nav-user').textContent = name;
+  document.getElementById('sb-name').textContent = name;
+  document.getElementById('sb-email').textContent = user.email;
+  document.getElementById('sb-av').textContent = initials;
+
+  const completed = await getProgress();
+  const pct = Math.max(70, Math.round(((completed.length + 6) / 9) * 100));
+  document.getElementById('prog-fill').style.width = pct + '%';
+  document.getElementById('prog-pct').textContent = pct + '%';
+  ['00','01','02','03','04','05'].forEach(n => {
+    const c = document.getElementById(`ck-${n}`);
+    if (c && (completed.includes(`module-0${n}`) || n === '00')) { c.textContent = '✓'; c.classList.add('done'); }
+  });
+  if (completed.includes('module-05')) {
+    document.getElementById('next-btn').classList.add('unlocked');
+    const c = document.getElementById('ck-05');
+    if (c) { c.textContent = '✓'; c.classList.add('done'); }
+  }
+
+  const saved = await loadWorksheet('delivery-system-map');
+  if (saved) populate(saved);
+});
+
+function addQuestion() {
+  if (questionCount >= 7) return;
+  questionCount++;
+  const row = document.getElementById(`iq-row-${questionCount}`);
+  if (row) row.style.display = 'grid';
+  if (questionCount >= 7) {
+    document.querySelector('.add-question-btn').style.display = 'none';
+  }
+}
+
+function autosave() {
+  clearTimeout(saveTimer);
+  setSave('saving');
+  saveTimer = setTimeout(doSave, 1400);
+}
+
+async function doSave() {
+  const { error } = await saveWorksheet('delivery-system-map', collect());
+  setSave(error ? 'error' : 'saved');
+}
+
+function setSave(s) {
+  const dot = document.getElementById('save-dot');
+  const txt = document.getElementById('save-txt');
+  dot.className = 'save-dot';
+  if (s === 'saving') { dot.classList.add('saving'); txt.textContent = 'Saving...'; }
+  else if (s === 'saved') { dot.classList.add('saved'); txt.textContent = 'Saved ✓'; }
+  else { txt.textContent = 'Error — check connection'; }
+}
+
+function collect() {
+  const ids = [
+    'p1-what','p1-client','p1-produce',
+    'p2-what','p2-client','p2-produce',
+    'p3-what','p3-client','p3-produce',
+    'p4-what','p4-client','p4-produce',
+    'p5-what','p5-client','p5-produce',
+    'iq-1','iq-2','iq-3','iq-4','iq-5','iq-6','iq-7',
+    'tools-p1','tools-p2','tools-p3','tools-p4','tools-p5','tools-portal',
+    'final-sop'
+  ];
+  const data = {};
+  ids.forEach(id => { const el = document.getElementById(id); if (el) data[id] = el.value || ''; });
+  data.questionCount = questionCount;
+  return data;
+}
+
+function populate(saved) {
+  if (saved.questionCount && saved.questionCount > 5) {
+    for (let i = 6; i <= Math.min(saved.questionCount, 7); i++) {
+      questionCount = i;
+      const row = document.getElementById(`iq-row-${i}`);
+      if (row) row.style.display = 'grid';
+    }
+    if (questionCount >= 7) document.querySelector('.add-question-btn').style.display = 'none';
+  }
+  Object.keys(saved).forEach(key => {
+    const el = document.getElementById(key);
+    if (el) el.value = saved[key];
+  });
+  if (saved['final-sop']) checkLockIn();
+  setSave('saved');
+}
+
+function checkLockIn() {
+  const val = document.getElementById('final-sop').value.trim();
+  document.getElementById('lockin-warn').style.display = 'none';
+  document.getElementById('lockin-ok').style.display = val.length > 80 ? 'block' : 'none';
+}
+
+async function completeModule() {
+  const sop = document.getElementById('final-sop').value.trim();
+  if (sop.length < 80) {
+    document.getElementById('lockin-warn').style.display = 'block';
+    document.querySelector('.lockin-section').scrollIntoView({ behavior: 'smooth' });
+    const a = document.getElementById('alert-complete');
+    a.textContent = 'Write your full delivery SOP before advancing.';
+    a.className = 'alert-msg alert-err show';
+    return;
+  }
+  const btn = document.getElementById('complete-btn');
+  btn.innerHTML = '<span style="display:inline-block;width:16px;height:16px;border-radius:50%;border:2px solid rgba(201,168,76,.3);border-top-color:var(--gold);animation:spin .7s linear infinite;"></span> Saving...';
+  btn.disabled = true;
+  await doSave();
+  await markModuleComplete('module-05');
+  const c = document.getElementById('ck-05');
+  if (c) { c.textContent = '✓'; c.classList.add('done'); }
+  document.getElementById('next-btn').classList.add('unlocked');
+  const a = document.getElementById('alert-complete');
+  a.textContent = '✓ Module 5 complete! Your Delivery System Map is saved. Module 6 is now unlocked.';
+  a.className = 'alert-msg alert-ok show';
+  btn.innerHTML = '✓ Module 5 Complete';
+}
+
+function toggleAudio(btn) {
+  const on = btn.dataset.playing === 'true';
+  btn.textContent = on ? '▶' : '⏸';
+  btn.dataset.playing = (!on).toString();
+}
+</script>
+</body>
+</html>
