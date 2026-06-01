@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bonus Module: From Skill to System — Hella Build</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="app.js" type="text/javascript"></script>
+<style>
+:root{--navy:#0D1B3E;--navy2:#0A1020;--gold:#C9A84C;--gold2:#E8C96A;--cyan:#00D4FF;--white:#FFFFFF;--off:#F5F3EE;--text:#1A2B4A;--muted:#7A8BAE;--border:rgba(13,27,62,0.1);--gold-border:rgba(201,168,76,0.3);}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+body{background:#0A1020;color:var(--white);font-family:'Outfit',sans-serif;font-size:16px;line-height:1.6;-webkit-font-smoothing:antialiased;}
+body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(201,168,76,.04) 1px,transparent 1px),linear-gradient(90deg,rgba(201,168,76,.04) 1px,transparent 1px);background-size:48px 48px;pointer-events:none;z-index:0;}
+
+nav{position:sticky;top:0;z-index:200;background:rgba(10,16,32,.92);backdrop-filter:blur(24px);border-bottom:1px solid rgba(201,168,76,.15);padding:0 32px;height:64px;display:flex;align-items:center;justify-content:space-between;}
+.nav-brand{display:flex;align-items:center;gap:10px;text-decoration:none;}
+.nav-mark{width:34px;height:34px;border-radius:8px;background:linear-gradient(135deg,var(--gold),var(--gold2));display:flex;align-items:center;justify-content:center;font-family:'Orbitron',sans-serif;font-size:11px;font-weight:800;color:var(--navy);}
+.nav-name{font-family:'Orbitron',sans-serif;font-size:12px;font-weight:700;color:var(--gold);letter-spacing:.1em;}
+.nav-sub{font-size:10px;color:rgba(255,255,255,.35);letter-spacing:.1em;text-transform:uppercase;}
+.nav-right{display:flex;align-items:center;gap:12px;}
+.nav-user{font-size:13px;color:rgba(255,255,255,.4);}
+.btn-signout{font-family:'Outfit',sans-serif;font-size:13px;font-weight:600;padding:8px 18px;border-radius:8px;border:1.5px solid rgba(255,255,255,.12);background:transparent;color:rgba(255,255,255,.6);cursor:pointer;transition:all .2s;}
+.btn-signout:hover{border-color:var(--gold);color:var(--gold);}
+
+.layout{display:grid;grid-template-columns:260px 1fr;min-height:calc(100vh - 64px);position:relative;z-index:1;}
+
+.sidebar{background:rgba(8,12,24,.8);border-right:1px solid rgba(255,255,255,.05);padding:28px 0;position:sticky;top:64px;height:calc(100vh - 64px);overflow-y:auto;display:flex;flex-direction:column;}
+.sb-section{font-family:'Orbitron',sans-serif;font-size:9px;font-weight:600;letter-spacing:.3em;text-transform:uppercase;color:rgba(255,255,255,.2);padding:0 24px;margin-bottom:8px;margin-top:24px;}
+.sb-item{display:flex;align-items:center;gap:12px;padding:11px 24px;text-decoration:none;transition:background .15s;position:relative;}
+.sb-item:hover{background:rgba(255,255,255,.04);}
+.sb-item.active{background:rgba(201,168,76,.1);}
+.sb-item.active::before{content:'';position:absolute;right:0;top:0;bottom:0;width:2px;background:var(--gold);}
+.sb-num{font-family:'Orbitron',sans-serif;font-size:10px;font-weight:700;color:var(--gold);letter-spacing:.1em;min-width:28px;}
+.sb-text{font-size:13px;font-weight:500;color:rgba(255,255,255,.6);flex:1;line-height:1.3;}
+.sb-item.active .sb-text{color:var(--gold);}
+.sb-check{width:18px;height:18px;border-radius:4px;border:1.5px solid rgba(255,255,255,.12);display:flex;align-items:center;justify-content:center;font-size:9px;color:var(--gold);flex-shrink:0;}
+.sb-check.done{background:rgba(201,168,76,.18);border-color:var(--gold);}
+.sb-footer{margin-top:auto;padding:20px 24px;border-top:1px solid rgba(255,255,255,.05);}
+.sb-av{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--gold),#7A5010);display:flex;align-items:center;justify-content:center;font-family:'Orbitron',sans-serif;font-size:11px;font-weight:800;color:var(--navy);flex-shrink:0;}
+.sb-out{font-size:12px;color:rgba(255,255,255,.25);background:none;border:none;cursor:pointer;padding:0;transition:color .2s;margin-top:10px;display:block;}
+.sb-out:hover{color:rgba(255,255,255,.5);}
+
+.progress-strip{padding:16px 24px;background:rgba(201,168,76,.06);border-bottom:1px solid rgba(201,168,76,.15);}
+.prog-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
+.prog-label{font-family:'Orbitron',sans-serif;font-size:10px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:rgba(255,255,255,.4);}
+.prog-pct{font-family:'Orbitron',sans-serif;font-size:12px;font-weight:700;color:var(--gold);}
+.prog-track{height:5px;background:rgba(255,255,255,.08);border-radius:100px;overflow:hidden;}
+.prog-fill{height:100%;background:linear-gradient(90deg,var(--gold),var(--gold2));border-radius:100px;transition:width .6s ease;}
+
+.main{padding:48px 56px;max-width:900px;}
+
+/* BONUS HERO — Gold dark treatment */
+.bonus-hero{border-radius:20px;padding:56px 48px;position:relative;overflow:hidden;margin-bottom:48px;background:linear-gradient(135deg,var(--navy2) 0%,#0D1B3E 50%,var(--navy2) 100%);border:1.5px solid var(--gold-border);box-shadow:0 24px 80px rgba(201,168,76,.15),0 0 0 1px rgba(201,168,76,.2);}
+.bonus-hero::before{content:'★';position:absolute;right:24px;bottom:-40px;font-size:200px;color:rgba(201,168,76,.06);line-height:1;pointer-events:none;}
+.bonus-hero::after{content:'';position:absolute;top:-100px;left:-100px;width:400px;height:400px;border-radius:50%;background:radial-gradient(circle,rgba(201,168,76,.08) 0%,transparent 70%);pointer-events:none;}
+.scanline{position:absolute;left:0;right:0;top:0;height:2px;background:linear-gradient(90deg,transparent,rgba(201,168,76,.2),transparent);animation:scan 4s linear infinite;pointer-events:none;}
+@keyframes scan{0%{transform:translateY(0)}100%{transform:translateY(600px)}}
+.bonus-tag{display:inline-flex;align-items:center;gap:8px;font-family:'Orbitron',sans-serif;font-size:9px;font-weight:600;letter-spacing:.3em;text-transform:uppercase;color:var(--gold);background:rgba(201,168,76,.1);border:1px solid rgba(201,168,76,.3);border-radius:100px;padding:6px 16px;margin-bottom:20px;}
+.bonus-h{font-family:'Orbitron',sans-serif;font-size:clamp(28px,4vw,48px);font-weight:900;line-height:1.05;color:var(--white);margin-bottom:16px;}
+.bonus-h em{font-style:normal;color:var(--white);}
+.bonus-p{font-size:15px;color:rgba(255,255,255,.75);line-height:1.75;max-width:540px;margin-bottom:24px;}
+.bonus-meta{display:flex;gap:20px;flex-wrap:wrap;}
+.meta-chip{display:flex;align-items:center;gap:6px;font-size:12px;color:rgba(255,255,255,.35);}
+.meta-chip span{color:var(--gold);font-weight:600;}
+
+.s-label{font-family:'Orbitron',sans-serif;font-size:10px;font-weight:600;letter-spacing:.3em;text-transform:uppercase;color:var(--gold);margin-bottom:16px;}
+
+.lesson{background:rgba(13,27,62,.6);border-radius:16px;padding:36px;border:1px solid rgba(255,255,255,.06);margin-bottom:24px;}
+.lesson-num{font-family:'Orbitron',sans-serif;font-size:10px;font-weight:600;letter-spacing:.25em;text-transform:uppercase;color:var(--gold);margin-bottom:8px;}
+.lesson-title{font-family:'Orbitron',sans-serif;font-size:18px;font-weight:700;color:var(--white);margin-bottom:20px;}
+.lesson-p{font-size:15px;color:rgba(255,255,255,.75);line-height:1.75;margin-bottom:16px;}
+.lesson-p:last-child{margin-bottom:0;}
+.callout-gold{padding:18px 22px;background:rgba(201,168,76,.08);border-left:3px solid var(--gold);border-radius:0 10px 10px 0;margin:20px 0;font-size:14px;color:rgba(255,255,255,.85);line-height:1.65;}
+.callout-gold strong{color:var(--gold);}
+.callout-cyan{padding:18px 22px;background:rgba(0,212,255,.06);border-left:3px solid var(--cyan);border-radius:0 10px 10px 0;margin:20px 0;font-size:14px;color:rgba(255,255,255,.85);line-height:1.65;}
+.callout-cyan strong{color:var(--cyan);}
+
+.audio-player{display:flex;align-items:center;gap:16px;padding:16px 20px;background:rgba(255,255,255,.04);border-radius:12px;margin:20px 0;border:1px solid rgba(201,168,76,.2);}
+.play-btn{width:40px;height:40px;border-radius:50%;background:var(--gold);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;transition:transform .2s;}
+.play-btn:hover{transform:scale(1.1);}
+.audio-info{flex:1;}
+.audio-title{font-size:13px;font-weight:600;color:var(--white);margin-bottom:2px;}
+.audio-sub{font-size:11px;color:rgba(255,255,255,.3);}
+.audio-bar{height:3px;background:rgba(255,255,255,.1);border-radius:100px;margin-top:8px;}
+.audio-time{font-family:'Orbitron',sans-serif;font-size:11px;color:rgba(255,255,255,.3);white-space:nowrap;}
+
+/* REVENUE ROADMAP WORKSHEET */
+.ws-section{margin:48px 0;}
+.ws-header{background:linear-gradient(135deg,#0D1B3E,#0A1428);border-radius:16px 16px 0 0;padding:28px 32px;border:1px solid var(--gold-border);border-bottom:none;display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:16px;}
+.ws-eyebrow{font-family:'Orbitron',sans-serif;font-size:9px;font-weight:600;letter-spacing:.3em;text-transform:uppercase;color:var(--gold);margin-bottom:8px;}
+.ws-title{font-family:'Orbitron',sans-serif;font-size:22px;font-weight:900;color:var(--gold);}
+.ws-subtitle{font-size:13px;color:rgba(255,255,255,.4);margin-top:4px;}
+.ws-save{display:flex;align-items:center;gap:8px;font-size:12px;color:rgba(255,255,255,.3);}
+.save-dot{width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,.15);transition:background .3s;}
+.save-dot.saving{background:var(--gold);animation:pulsegold 1s infinite;}
+.save-dot.saved{background:#28C840;}
+@keyframes pulsegold{0%,100%{box-shadow:0 0 0 0 rgba(201,168,76,.5)}50%{box-shadow:0 0 0 6px rgba(201,168,76,0)}}
+.ws-instructions{background:rgba(201,168,76,.06);border:1px solid var(--gold-border);border-top:none;border-bottom:none;padding:16px 32px;font-size:13px;color:rgba(255,255,255,.6);line-height:1.6;}
+.ws-instructions strong{color:var(--gold);}
+.ws-body{background:#0A1020;border:1px solid var(--gold-border);border-top:none;border-radius:0 0 16px 16px;padding:32px;}
+
+.section-title{font-family:'Orbitron',sans-serif;font-size:13px;font-weight:700;color:var(--gold);margin-bottom:8px;margin-top:32px;letter-spacing:.02em;}
+.section-title:first-child{margin-top:0;}
+.section-sub{font-size:13px;color:rgba(255,255,255,.65);margin-bottom:20px;line-height:1.6;}
+
+.field-label{font-family:'Orbitron',sans-serif;font-size:9px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:var(--gold);margin-bottom:6px;margin-top:20px;}
+.field-label:first-child{margin-top:0;}
+.field-hint{font-size:12px;color:rgba(255,255,255,.3);margin-bottom:8px;font-style:italic;line-height:1.5;}
+.field-input{width:100%;padding:12px 14px;border:1.5px solid rgba(255,255,255,.1);border-radius:8px;background:rgba(255,255,255,.05);font-family:'Outfit',sans-serif;font-size:13px;color:var(--white);outline:none;resize:vertical;min-height:72px;transition:all .2s;line-height:1.55;}
+.field-input:focus{border-color:var(--gold);background:rgba(255,255,255,.08);box-shadow:0 0 0 3px rgba(201,168,76,.12);}
+.field-input::placeholder{color:rgba(255,255,255,.2);font-size:12px;}
+.field-input.single{min-height:44px;resize:none;}
+
+/* Income goals */
+.income-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:32px;}
+.income-card{border:1.5px solid rgba(255,255,255,.08);border-radius:12px;overflow:hidden;}
+.income-card-head{padding:14px 18px;background:rgba(201,168,76,.08);border-bottom:1px solid rgba(201,168,76,.15);}
+.income-label{font-family:'Orbitron',sans-serif;font-size:9px;font-weight:700;color:var(--gold);letter-spacing:.2em;text-transform:uppercase;}
+.income-type{font-size:11px;color:rgba(255,255,255,.35);margin-top:2px;}
+.income-card-body{padding:14px 18px;display:flex;flex-direction:column;gap:10px;}
+.income-input{padding:10px 14px;border:1.5px solid rgba(255,255,255,.1);border-radius:8px;background:rgba(255,255,255,.05);font-family:'Outfit',sans-serif;font-size:13px;color:var(--white);outline:none;width:100%;transition:all .2s;}
+.income-input:focus{border-color:var(--gold);background:rgba(255,255,255,.08);}
+.income-input::placeholder{color:rgba(255,255,255,.2);font-size:11px;}
+
+/* Client math */
+.math-row{display:grid;grid-template-columns:1fr auto 1fr auto 1fr;gap:0;align-items:center;background:rgba(201,168,76,.05);border:1.5px solid rgba(201,168,76,.15);border-radius:12px;padding:20px 24px;margin-bottom:32px;}
+.math-box{display:flex;flex-direction:column;gap:6px;}
+.math-label{font-family:'Orbitron',sans-serif;font-size:9px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:var(--gold);}
+.math-input{padding:10px 14px;border:1.5px solid rgba(255,255,255,.1);border-radius:8px;background:rgba(255,255,255,.05);font-family:'Georgia',serif;font-size:18px;font-weight:700;color:var(--white);outline:none;width:100%;transition:all .2s;text-align:center;}
+.math-input:focus{border-color:var(--gold);}
+.math-input::placeholder{color:rgba(255,255,255,.2);font-size:13px;font-family:'Outfit',sans-serif;font-weight:400;}
+.math-op{font-family:'Orbitron',sans-serif;font-size:22px;font-weight:900;color:var(--gold);padding:0 16px;padding-top:20px;text-align:center;}
+
+/* 90-day plan */
+.ninety-grid{display:flex;flex-direction:column;gap:16px;margin-bottom:32px;}
+.day-block{border:1.5px solid rgba(255,255,255,.08);border-radius:12px;overflow:hidden;}
+.day-header{background:rgba(255,255,255,.04);padding:14px 20px;display:flex;align-items:center;gap:12px;border-bottom:1px solid rgba(255,255,255,.06);}
+.day-range{font-family:'Orbitron',sans-serif;font-size:11px;font-weight:700;color:var(--gold);letter-spacing:.1em;min-width:100px;}
+.day-focus-input{flex:1;padding:6px 12px;border:1.5px solid rgba(255,255,255,.1);border-radius:6px;background:rgba(255,255,255,.05);font-family:'Outfit',sans-serif;font-size:13px;font-weight:600;color:var(--white);outline:none;transition:all .2s;}
+.day-focus-input:focus{border-color:var(--gold);}
+.day-focus-input::placeholder{color:rgba(255,255,255,.25);font-weight:400;}
+.day-body{padding:16px 20px;display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.day-sub{font-family:'Orbitron',sans-serif;font-size:9px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:rgba(255,255,255,.3);margin-bottom:6px;}
+.day-input{width:100%;padding:9px 12px;border:1.5px solid rgba(255,255,255,.08);border-radius:8px;background:rgba(255,255,255,.04);font-family:'Outfit',sans-serif;font-size:12px;color:var(--white);outline:none;resize:vertical;min-height:72px;transition:all .2s;line-height:1.5;}
+.day-input:focus{border-color:var(--gold);background:rgba(255,255,255,.07);}
+.day-input::placeholder{color:rgba(255,255,255,.2);font-size:11px;}
+
+/* Metrics */
+.metrics-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:32px;}
+.metric-row{display:grid;grid-template-columns:180px 1fr;gap:0;border:1.5px solid rgba(255,255,255,.08);border-radius:10px;overflow:hidden;}
+.metric-label-cell{background:rgba(255,255,255,.04);padding:12px 16px;display:flex;align-items:center;border-right:1px solid rgba(255,255,255,.06);}
+.metric-label{font-size:12px;font-weight:600;color:rgba(255,255,255,.6);}
+.metric-input{padding:12px 14px;border:none;background:transparent;font-family:'Outfit',sans-serif;font-size:12px;color:var(--white);outline:none;width:100%;}
+.metric-input::placeholder{color:rgba(255,255,255,.2);font-size:11px;}
+.metric-input:focus{background:rgba(255,255,255,.04);}
+
+/* Marketing plan */
+.mkt-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:32px;}
+.mkt-card{border:1.5px solid rgba(255,255,255,.08);border-radius:12px;overflow:hidden;}
+.mkt-head{background:rgba(255,255,255,.04);padding:13px 18px;border-bottom:1px solid rgba(255,255,255,.06);}
+.mkt-title{font-size:12px;font-weight:700;color:var(--white);}
+.mkt-sub{font-size:10px;color:rgba(255,255,255,.3);margin-top:2px;}
+.mkt-body{padding:14px 18px;}
+.mkt-input{width:100%;padding:9px 12px;border:1.5px solid rgba(255,255,255,.08);border-radius:8px;background:rgba(255,255,255,.04);font-family:'Outfit',sans-serif;font-size:12px;color:var(--white);outline:none;resize:vertical;min-height:80px;transition:all .2s;line-height:1.5;}
+.mkt-input:focus{border-color:var(--gold);background:rgba(255,255,255,.07);}
+.mkt-input::placeholder{color:rgba(255,255,255,.2);font-size:11px;}
+
+/* Three actions */
+.actions-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:0;}
+.action-card{border:1.5px solid rgba(201,168,76,.2);border-radius:12px;overflow:hidden;}
+.action-head{background:rgba(201,168,76,.08);padding:12px 16px;display:flex;align-items:center;gap:10px;}
+.action-num{font-family:'Orbitron',sans-serif;font-size:22px;font-weight:900;color:var(--gold);}
+.action-label{font-size:11px;color:rgba(255,255,255,.4);font-weight:600;}
+.action-body{padding:14px 16px;}
+.action-input{width:100%;padding:9px 12px;border:1.5px solid rgba(255,255,255,.08);border-radius:8px;background:rgba(255,255,255,.04);font-family:'Outfit',sans-serif;font-size:12px;color:var(--white);outline:none;resize:vertical;min-height:80px;transition:all .2s;line-height:1.5;}
+.action-input:focus{border-color:var(--gold);background:rgba(255,255,255,.07);}
+.action-input::placeholder{color:rgba(255,255,255,.2);font-size:11px;}
+
+/* LOCK-IN — final module */
+.lockin-section{background:linear-gradient(135deg,#0D1B3E,#0A1428);border-radius:20px;padding:40px;margin:24px 0;border:1.5px solid var(--gold-border);box-shadow:0 12px 40px rgba(201,168,76,.15);position:relative;overflow:hidden;}
+.lockin-section::after{content:'';position:absolute;bottom:-80px;right:-80px;width:300px;height:300px;border-radius:50%;background:radial-gradient(circle,rgba(201,168,76,.15) 0%,transparent 70%);pointer-events:none;}
+.lockin-tag{font-family:'Orbitron',sans-serif;font-size:10px;font-weight:600;letter-spacing:.3em;text-transform:uppercase;color:var(--gold);margin-bottom:12px;}
+.lockin-title{font-family:'Orbitron',sans-serif;font-size:22px;font-weight:900;color:var(--gold);margin-bottom:12px;}
+.lockin-rule{font-size:14px;color:rgba(255,255,255,.75);line-height:1.65;margin-bottom:24px;}
+.lockin-rule strong{color:var(--gold);}
+.lockin-input{width:100%;padding:15px 18px;border:1.5px solid rgba(201,168,76,.4);border-radius:10px;background:rgba(255,255,255,.04);font-family:'Outfit',sans-serif;font-size:14px;color:var(--white);outline:none;transition:all .2s;margin-bottom:12px;resize:vertical;min-height:120px;line-height:1.6;}
+.lockin-input:focus{border-color:var(--gold);background:rgba(255,255,255,.07);box-shadow:0 0 0 3px rgba(201,168,76,.15);}
+.lockin-input::placeholder{color:rgba(255,255,255,.25);}
+.lockin-warn{font-size:13px;color:rgba(201,168,76,.7);display:none;margin-bottom:12px;}
+.lockin-ok{font-size:13px;color:#28C840;display:none;margin-bottom:12px;}
+
+/* FINAL declaration */
+.final-decl{background:var(--navy2);border:1.5px solid var(--gold-border);border-radius:20px;padding:56px 48px;text-align:center;margin:24px 0;position:relative;overflow:hidden;box-shadow:0 24px 80px rgba(201,168,76,.12);}
+.final-decl::before{content:'';position:absolute;inset:0;background-image:linear-gradient(rgba(201,168,76,.04) 1px,transparent 1px),linear-gradient(90deg,rgba(201,168,76,.04) 1px,transparent 1px);background-size:32px 32px;pointer-events:none;}
+.final-decl::after{content:'';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:600px;height:600px;border-radius:50%;background:radial-gradient(circle,rgba(201,168,76,.06) 0%,transparent 60%);pointer-events:none;}
+.final-eyebrow{font-family:'Orbitron',sans-serif;font-size:9px;font-weight:600;letter-spacing:.4em;text-transform:uppercase;color:var(--gold);margin-bottom:20px;position:relative;z-index:1;}
+.final-title{font-family:'Orbitron',sans-serif;font-size:clamp(22px,3.5vw,36px);font-weight:900;color:var(--white);line-height:1.15;margin-bottom:16px;position:relative;z-index:1;}
+.final-title em{font-style:normal;color:var(--gold);}
+.final-sub{font-size:16px;color:rgba(255,255,255,.45);margin-bottom:36px;line-height:1.65;max-width:480px;margin-left:auto;margin-right:auto;position:relative;z-index:1;}
+.alert-msg{padding:12px 16px;border-radius:8px;font-size:13px;font-weight:500;margin-bottom:16px;display:none;position:relative;z-index:1;}
+.alert-msg.show{display:block;}
+.alert-err{background:rgba(185,28,28,.2);color:#FCA5A5;border:1px solid rgba(185,28,28,.4);}
+.alert-ok{background:rgba(21,128,61,.2);color:#86EFAC;border:1px solid rgba(21,128,61,.4);}
+.btn-complete{display:inline-flex;align-items:center;gap:10px;padding:18px 48px;border-radius:14px;background:linear-gradient(135deg,var(--gold),var(--gold2));color:var(--navy);font-family:'Outfit',sans-serif;font-size:16px;font-weight:800;letter-spacing:.05em;border:none;cursor:pointer;box-shadow:0 12px 40px rgba(201,168,76,.4);transition:all .3s;position:relative;z-index:1;}
+.btn-complete:hover{transform:translateY(-4px);box-shadow:0 20px 60px rgba(201,168,76,.5);}
+
+.mod-nav{display:flex;justify-content:space-between;align-items:center;gap:12px;padding-top:40px;border-top:1px solid rgba(255,255,255,.06);margin-top:40px;}
+.btn-back{display:inline-flex;align-items:center;gap:8px;padding:12px 24px;border-radius:10px;background:transparent;color:rgba(255,255,255,.5);border:1.5px solid rgba(255,255,255,.1);font-family:'Outfit',sans-serif;font-size:14px;font-weight:600;text-decoration:none;cursor:pointer;transition:all .2s;}
+.btn-back:hover{border-color:var(--gold);color:var(--gold);}
+.btn-portfolio{display:inline-flex;align-items:center;gap:8px;padding:12px 28px;border-radius:10px;background:linear-gradient(135deg,var(--gold),var(--gold2));color:var(--navy);border:none;font-family:'Outfit',sans-serif;font-size:14px;font-weight:800;text-decoration:none;cursor:pointer;transition:all .2s;opacity:.4;pointer-events:none;}
+.btn-portfolio.unlocked{opacity:1;pointer-events:auto;box-shadow:0 4px 20px rgba(201,168,76,.4);}
+.btn-portfolio.unlocked:hover{transform:translateY(-2px);box-shadow:0 8px 32px rgba(201,168,76,.5);}
+
+@keyframes spin{to{transform:rotate(360deg)}}
+@media(max-width:900px){
+  .layout{grid-template-columns:1fr;}.sidebar{display:none;}.main{padding:32px 24px;}
+  .income-grid{grid-template-columns:1fr;}.math-row{grid-template-columns:1fr;}.math-op{display:none;}
+  .day-body{grid-template-columns:1fr;}.metrics-grid{grid-template-columns:1fr;}.metric-row{grid-template-columns:1fr;}
+  .mkt-grid{grid-template-columns:1fr;}.actions-row{grid-template-columns:1fr;}
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="orientation.html" class="nav-brand">
+    <div class="nav-mark">HB</div>
+    <div><div class="nav-name">BUILD TERMINAL</div><div class="nav-sub">Jupiter's Lab</div></div>
+  </a>
+  <div class="nav-right">
+    <span class="nav-user" id="nav-user"></span>
+    <button class="btn-signout" onclick="signOut()">Sign Out</button>
+  </div>
+</nav>
+
+<div class="layout">
+  <aside class="sidebar">
+    <div style="flex:1;">
+      <div class="sb-section">Course</div>
+      <a href="orientation.html" class="sb-item"><div class="sb-num">00</div><div class="sb-text">Orientation</div><div class="sb-check done" id="ck-00">✓</div></a>
+      <a href="module1.html" class="sb-item"><div class="sb-num">01</div><div class="sb-text">Skill Clarity</div><div class="sb-check" id="ck-01"></div></a>
+      <a href="module2.html" class="sb-item"><div class="sb-num">02</div><div class="sb-text">Skill Stacking</div><div class="sb-check" id="ck-02"></div></a>
+      <a href="module3.html" class="sb-item"><div class="sb-num">03</div><div class="sb-text">Direction</div><div class="sb-check" id="ck-03"></div></a>
+      <a href="module4.html" class="sb-item"><div class="sb-num">04</div><div class="sb-text">Offer Design</div><div class="sb-check" id="ck-04"></div></a>
+      <a href="module5.html" class="sb-item"><div class="sb-num">05</div><div class="sb-text">Workflow</div><div class="sb-check" id="ck-05"></div></a>
+      <a href="module6.html" class="sb-item"><div class="sb-num">06</div><div class="sb-text">Systems + Rest</div><div class="sb-check" id="ck-06"></div></a>
+      <a href="bonus.html" class="sb-item active"><div class="sb-num">★</div><div class="sb-text">Bonus Module</div><div class="sb-check" id="ck-bonus"></div></a>
+    </div>
+    <div class="sb-footer">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+        <div class="sb-av" id="sb-av">?</div>
+        <div><div style="font-size:13px;font-weight:600;color:var(--white);" id="sb-name">—</div><div style="font-size:11px;color:rgba(255,255,255,.3);" id="sb-email">—</div></div>
+      </div>
+      <button class="sb-out" onclick="signOut()">← Sign out</button>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="progress-strip">
+      <div class="prog-row"><span class="prog-label">Course Progress</span><span class="prog-pct" id="prog-pct">95%</span></div>
+      <div class="prog-track"><div class="prog-fill" id="prog-fill" style="width:95%;"></div></div>
+    </div>
+
+    <!-- BONUS HERO -->
+    <div class="bonus-hero" style="margin-top:40px;">
+      <div class="scanline"></div>
+      <div class="bonus-tag">★ Bonus Module</div>
+      <h1 class="bonus-h">From Skill<br>to <em>System to Income</em></h1>
+      <p class="bonus-p">You have a skill stack. A defined offer. A documented process. A protected scope. Now you connect the dots — build your 90-day revenue plan, map your marketing approach, define your metrics, and commit to three actions that start this week. This is the final document. This is where the work becomes real.</p>
+      <div class="bonus-meta">
+        <div class="meta-chip">⏱ <span>~25 minutes</span></div>
+        <div class="meta-chip">📐 <span>Revenue Roadmap + 90-Day Plan</span></div>
+        <div class="meta-chip">🔒 <span>Lock-In: Your launch commitment</span></div>
+      </div>
+    </div>
+
+    <!-- LESSON B.1 -->
+    <div class="s-label">Lesson B.1</div>
+    <div class="lesson">
+      <div class="lesson-num">Lesson B.1 · How Systems Create Predictable Income</div>
+      <div class="lesson-title">Consistent Delivery Leads to Consistent Revenue</div>
+      <div class="audio-player">
+        <button class="play-btn" onclick="toggleAudio(this)">▶</button>
+        <div class="audio-info"><div class="audio-title">Lesson B.1 — Systems to Income</div><div class="audio-sub">Voiceover · ~5 min · Add audio file to enable playback</div><div class="audio-bar"></div></div>
+        <div class="audio-time">0:00</div>
+      </div>
+      <p class="lesson-p">Income inconsistency isn't a marketing problem. For most service providers it's a delivery problem. When your work is inconsistent — different experience for every client, different process every time, different quality depending on how much energy you have that week — clients don't refer you. They don't know what to tell people. They liked working with you but they can't describe what you do clearly enough to send you business.</p>
+      <p class="lesson-p">Consistent delivery creates referrals. Referrals create consistent income. The system you built in modules 4 and 5 is the referral engine you never had. When every client gets the same quality experience from first contact to final deliverable, they become promoters — not just former clients.</p>
+      <div class="callout-gold"><strong>The revenue math:</strong> If your core offer is $1,500 and you need $4,500/month — that's 3 clients. If your conversion rate from discovery call to client is 50% — that's 6 discovery calls/month. If 30% of people who see your content book a call — that's 20 content touchpoints/month. Now you have a marketing plan, not a prayer.</div>
+    </div>
+
+    <!-- LESSON B.2 -->
+    <div class="s-label">Lesson B.2</div>
+    <div class="lesson">
+      <div class="lesson-num">Lesson B.2 · Marketing Without Feeling Gross</div>
+      <div class="lesson-title">Visibility Through Value, Not Hype</div>
+      <div class="audio-player">
+        <button class="play-btn" onclick="toggleAudio(this)">▶</button>
+        <div class="audio-info"><div class="audio-title">Lesson B.2 — Marketing That Doesn't Hurt</div><div class="audio-sub">Voiceover · ~5 min · Add audio file to enable playback</div><div class="audio-bar"></div></div>
+        <div class="audio-time">0:00</div>
+      </div>
+      <p class="lesson-p">Marketing feels gross when you're talking about yourself. It feels natural when you're talking about the problem. There is a version of you telling potential clients about the thing they're already frustrated about — not asking them to hire you, just naming the thing they experience every day. That's content. That's visibility. That's marketing that doesn't require you to pretend you're someone else.</p>
+      <div class="callout-cyan"><strong>One platform. One message. One consistent presence.</strong> Pick the platform where your client already lives. Show up there with content that names their problem and demonstrates that you understand it better than they do. Do that consistently for 90 days. Discovery calls will follow — not because you were louder, but because you were the most specific.</div>
+    </div>
+
+    <!-- LESSON B.3 -->
+    <div class="s-label">Lesson B.3</div>
+    <div class="lesson">
+      <div class="lesson-num">Lesson B.3 · Getting Your First Client</div>
+      <div class="lesson-title">The Sequence Most People Get Backwards</div>
+      <div class="audio-player">
+        <button class="play-btn" onclick="toggleAudio(this)">▶</button>
+        <div class="audio-info"><div class="audio-title">Lesson B.3 — Getting Your First Client</div><div class="audio-sub">Voiceover · ~5 min · Add audio file to enable playback</div><div class="audio-bar"></div></div>
+        <div class="audio-time">0:00</div>
+      </div>
+      <p class="lesson-p">Most people think they need to build an audience before they can get clients. So they post content for months, wait for followers to turn into buyers, and wonder why nothing is moving. That's the wrong sequence. Your first client almost never comes from content. It comes from a direct conversation with someone who already knows you exist.</p>
+      <p class="lesson-p">The correct sequence is: warm outreach first, then referrals, then content. In that order. Every time. Warm outreach means contacting people already in your network — former colleagues, past clients, people who've seen your work — and telling them directly what you now offer and who you help. Not pitching. Informing. "I'm now doing X for Y. If you know anyone who fits that, I'd love an introduction." That's it.</p>
+      <div class="callout-gold"><strong>The first client formula:</strong><br><br>
+        Step 1 — Write your offer in one paragraph. Pull it straight from your Module 4 offer document.<br><br>
+        Step 2 — List 10–15 people in your network who fit your ICP or know people who do.<br><br>
+        Step 3 — Send a personal message to each one. Not a mass email. Not a post. A direct message that sounds like you wrote it specifically to them — because you did.<br><br>
+        Step 4 — Follow up once, seven days later, if no response. After that, move on.<br><br>
+        Step 5 — For everyone who responds with interest, book a discovery call. Use your Module 5 intake questions. Run the call using your offer document as the guide.<br><br>
+        Your first client is in that list. Not on social media. In your existing network.</div>
+      <p class="lesson-p">Content comes after you have a client. Because now you have proof. Now you have something specific to talk about. Now you know what questions your client asked before they said yes — and those questions become your content. Content without client experience is hypothetical. Content after client experience is evidence.</p>
+      <div class="callout-cyan"><strong>Referral timing:</strong> Ask for referrals at two moments — the midpoint of an engagement when the client is excited about the progress, and at the final delivery when they have the complete output in hand. "Do you know anyone who could benefit from this kind of work?" at either of those moments produces a yes far more often than a cold ask weeks later when the momentum has faded.</div>
+    </div>
+
+    <!-- REVENUE ROADMAP WORKSHEET -->
+    <div class="ws-section">
+      <div class="s-label">Interactive Worksheet</div>
+      <div class="ws-header">
+        <div>
+          <div class="ws-eyebrow">// Bonus Module · Final Worksheet</div>
+          <div class="ws-title">Revenue Roadmap + 90-Day Plan</div>
+          <div class="ws-subtitle">Documents 07 + 08 — Client Acquisition Plan + Revenue Roadmap</div>
+        </div>
+        <div class="ws-save"><div class="save-dot" id="save-dot"></div><span id="save-txt">Ready</span></div>
+      </div>
+      <div class="ws-instructions"><strong>Instructions:</strong> Complete all sections. This is your sixth portfolio document — the one that turns everything you built into a launch plan. Every section feeds the next. Be specific. Vague plans produce vague results.</div>
+      <div class="ws-body">
+
+        <!-- Income Goals -->
+        <div class="section-title">// Income Goals</div>
+        <p class="section-sub">Set three tiers of income goals. Be realistic on the baseline — optimistic on the stretch.</p>
+        <div class="income-grid">
+          <div class="income-card">
+            <div class="income-card-head"><div class="income-label">Baseline</div><div class="income-type">Minimum to cover your life</div></div>
+            <div class="income-card-body">
+              <input type="text" class="income-input" id="inc-baseline-mo" placeholder="Monthly: e.g. $3,500/month" oninput="autosave()">
+              <input type="text" class="income-input" id="inc-baseline-yr" placeholder="Annual: e.g. $42,000/year" oninput="autosave()">
+              <input type="text" class="income-input" id="inc-baseline-clients" placeholder="Clients needed: e.g. 2–3 active" oninput="autosave()">
+            </div>
+          </div>
+          <div class="income-card">
+            <div class="income-card-head"><div class="income-label">Realistic</div><div class="income-type">Achievable in 90 days</div></div>
+            <div class="income-card-body">
+              <input type="text" class="income-input" id="inc-real-mo" placeholder="Monthly: e.g. $5,000/month" oninput="autosave()">
+              <input type="text" class="income-input" id="inc-real-yr" placeholder="Annual: e.g. $60,000/year" oninput="autosave()">
+              <input type="text" class="income-input" id="inc-real-clients" placeholder="Clients needed: e.g. 3–4 active" oninput="autosave()">
+            </div>
+          </div>
+          <div class="income-card">
+            <div class="income-card-head"><div class="income-label">Stretch</div><div class="income-type">If everything works right</div></div>
+            <div class="income-card-body">
+              <input type="text" class="income-input" id="inc-stretch-mo" placeholder="Monthly: e.g. $8,000/month" oninput="autosave()">
+              <input type="text" class="income-input" id="inc-stretch-yr" placeholder="Annual: e.g. $96,000/year" oninput="autosave()">
+              <input type="text" class="income-input" id="inc-stretch-clients" placeholder="Clients needed: e.g. 5–6 active" oninput="autosave()">
+            </div>
+          </div>
+        </div>
+
+        <!-- Client Math -->
+        <div class="section-title">// Client Math</div>
+        <p class="section-sub">Work backwards from your realistic income goal. Know the number you need to hit your target.</p>
+        <div class="math-row">
+          <div class="math-box">
+            <div class="math-label">Core Offer Price</div>
+            <input type="text" class="math-input" id="math-price" placeholder="$1,500" oninput="autosave()">
+          </div>
+          <div class="math-op">×</div>
+          <div class="math-box">
+            <div class="math-label">Clients / Month</div>
+            <input type="text" class="math-input" id="math-clients" placeholder="3" oninput="autosave()">
+          </div>
+          <div class="math-op">=</div>
+          <div class="math-box">
+            <div class="math-label">Monthly Revenue</div>
+            <input type="text" class="math-input" id="math-revenue" placeholder="$4,500" oninput="autosave()">
+          </div>
+        </div>
+
+        <!-- 90-Day Plan -->
+        <div class="section-title">// 90-Day Action Plan</div>
+        <p class="section-sub">Three blocks of 30 days. Each has a focus, actions, and a win condition — a specific outcome you'll have by the end of that block.</p>
+        <div class="ninety-grid">
+          <div class="day-block">
+            <div class="day-header">
+              <div class="day-range">DAYS 01–30</div>
+              <input type="text" class="day-focus-input" id="d1-focus" placeholder="Focus theme (e.g. Launch foundation)" oninput="autosave()">
+            </div>
+            <div class="day-body">
+              <div>
+                <div class="day-sub">Actions (what you will do)</div>
+                <textarea class="day-input" id="d1-actions" placeholder="e.g. Publish positioning statement publicly. Send offer to 10 warm contacts. Book 5 discovery calls. Post 3x/week on LinkedIn." oninput="autosave()"></textarea>
+              </div>
+              <div>
+                <div class="day-sub">Win condition (what you'll have)</div>
+                <textarea class="day-input" id="d1-win" placeholder="e.g. First paying client signed. Offer live on website. 5 discovery calls completed." oninput="autosave()"></textarea>
+              </div>
+            </div>
+          </div>
+          <div class="day-block">
+            <div class="day-header">
+              <div class="day-range">DAYS 31–60</div>
+              <input type="text" class="day-focus-input" id="d2-focus" placeholder="Focus theme (e.g. Build momentum)" oninput="autosave()">
+            </div>
+            <div class="day-body">
+              <div>
+                <div class="day-sub">Actions</div>
+                <textarea class="day-input" id="d2-actions" placeholder="e.g. Deliver first engagement. Collect testimonial. Refine offer based on feedback. Maintain content cadence." oninput="autosave()"></textarea>
+              </div>
+              <div>
+                <div class="day-sub">Win condition</div>
+                <textarea class="day-input" id="d2-win" placeholder="e.g. First engagement delivered. Testimonial collected. Second client signed." oninput="autosave()"></textarea>
+              </div>
+            </div>
+          </div>
+          <div class="day-block">
+            <div class="day-header">
+              <div class="day-range">DAYS 61–90</div>
+              <input type="text" class="day-focus-input" id="d3-focus" placeholder="Focus theme (e.g. Stabilize and scale)" oninput="autosave()">
+            </div>
+            <div class="day-body">
+              <div>
+                <div class="day-sub">Actions</div>
+                <textarea class="day-input" id="d3-actions" placeholder="e.g. Review what's working. Adjust pricing or positioning if needed. Raise rate or add premium tier. Ask first client for referrals." oninput="autosave()"></textarea>
+              </div>
+              <div>
+                <div class="day-sub">Win condition</div>
+                <textarea class="day-input" id="d3-win" placeholder="e.g. 3 clients at target price. Referral pipeline active. Revenue at or above baseline goal." oninput="autosave()"></textarea>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Marketing Plan -->
+        <div class="section-title">// Marketing Plan</div>
+        <p class="section-sub">Where you'll show up, what you'll say, and how often. Pick one primary platform and own it.</p>
+        <div class="mkt-grid">
+          <div class="mkt-card">
+            <div class="mkt-head"><div class="mkt-title">Primary Platform</div><div class="mkt-sub">Where your client already lives</div></div>
+            <div class="mkt-body"><textarea class="mkt-input" id="mkt-platform" placeholder="e.g. LinkedIn — where service-based founders and consultants are actively consuming business content and making purchasing decisions." oninput="autosave()"></textarea></div>
+          </div>
+          <div class="mkt-card">
+            <div class="mkt-head"><div class="mkt-title">Content Themes</div><div class="mkt-sub">The problems you'll talk about consistently</div></div>
+            <div class="mkt-body"><textarea class="mkt-input" id="mkt-themes" placeholder="e.g. 1. The cost of unclear positioning. 2. What scope creep actually costs. 3. Why capability isn't the same as business." oninput="autosave()"></textarea></div>
+          </div>
+          <div class="mkt-card">
+            <div class="mkt-head"><div class="mkt-title">Posting Cadence</div><div class="mkt-sub">What you can actually maintain</div></div>
+            <div class="mkt-body"><textarea class="mkt-input" id="mkt-cadence" placeholder="e.g. 3x/week on LinkedIn. 1 newsletter every 2 weeks. No other platforms for the first 90 days." oninput="autosave()"></textarea></div>
+          </div>
+          <div class="mkt-card">
+            <div class="mkt-head"><div class="mkt-title">Warm Outreach Plan</div><div class="mkt-sub">Who you're reaching out to directly</div></div>
+            <div class="mkt-body"><textarea class="mkt-input" id="mkt-outreach" placeholder="e.g. 10 warm contacts in my network who fit my ICP. Personal message explaining what I'm now offering and asking if they know anyone who might benefit." oninput="autosave()"></textarea></div>
+          </div>
+        </div>
+
+        <!-- Metrics -->
+        <div class="section-title">// Metrics to Track</div>
+        <p class="section-sub">The numbers that tell you if this is working. Track weekly.</p>
+        <div class="metrics-grid">
+          <div class="metric-row">
+            <div class="metric-label-cell"><div class="metric-label">Monthly revenue</div></div>
+            <input type="text" class="metric-input" id="met-revenue" placeholder="Target: e.g. $4,500" oninput="autosave()">
+          </div>
+          <div class="metric-row">
+            <div class="metric-label-cell"><div class="metric-label">Discovery calls booked</div></div>
+            <input type="text" class="metric-input" id="met-calls" placeholder="Target: e.g. 4/month" oninput="autosave()">
+          </div>
+          <div class="metric-row">
+            <div class="metric-label-cell"><div class="metric-label">Conversion rate</div></div>
+            <input type="text" class="metric-input" id="met-conversion" placeholder="Target: e.g. 50% call to client" oninput="autosave()">
+          </div>
+          <div class="metric-row">
+            <div class="metric-label-cell"><div class="metric-label">Content touchpoints</div></div>
+            <input type="text" class="metric-input" id="met-content" placeholder="Target: e.g. 12 posts/month" oninput="autosave()">
+          </div>
+          <div class="metric-row">
+            <div class="metric-label-cell"><div class="metric-label">Referrals received</div></div>
+            <input type="text" class="metric-input" id="met-referrals" placeholder="Target: e.g. 1/month by day 60" oninput="autosave()">
+          </div>
+          <div class="metric-row">
+            <div class="metric-label-cell"><div class="metric-label">Active clients</div></div>
+            <input type="text" class="metric-input" id="met-clients" placeholder="Target: e.g. 3 by day 90" oninput="autosave()">
+          </div>
+        </div>
+
+        <!-- Client Acquisition Plan -->
+        <div class="section-title">// Client Acquisition Plan — Document 07</div>
+        <p class="section-sub">Map the specific sequence you'll use to get your first and next clients. This isn't your marketing strategy — it's your direct outreach and conversion plan. Be specific enough that you could execute this tomorrow.</p>
+
+        <div style="background:rgba(201,168,76,.06);border:1.5px solid rgba(201,168,76,.2);border-radius:12px;padding:24px;margin-bottom:20px;">
+          <div style="font-family:'Orbitron',sans-serif;font-size:10px;font-weight:600;letter-spacing:.25em;text-transform:uppercase;color:var(--gold);margin-bottom:16px;">// Step 1 — Your Warm Outreach List</div>
+          <p style="font-size:12px;color:rgba(255,255,255,.55);margin-bottom:16px;line-height:1.6;">List 10–15 people in your existing network who either fit your ICP or know people who do. Name them specifically — don't say "my LinkedIn connections." Name the people.</p>
+          <textarea class="field-input" id="acq-warmlist" placeholder="e.g.&#10;1. Marcus — former client at Sonoco, now freelancing, fits ICP exactly&#10;2. Tiffany B — already a client, ask for referrals at close&#10;3. Lester B — completed engagement, ask for referral introduction&#10;4. Keisha from the LinkedIn group — posted about pricing confusion last week&#10;5. [continue...]" style="min-height:140px;" oninput="autosave()"></textarea>
+        </div>
+
+        <div style="background:rgba(201,168,76,.06);border:1.5px solid rgba(201,168,76,.2);border-radius:12px;padding:24px;margin-bottom:20px;">
+          <div style="font-family:'Orbitron',sans-serif;font-size:10px;font-weight:600;letter-spacing:.25em;text-transform:uppercase;color:var(--gold);margin-bottom:16px;">// Step 2 — Your Outreach Message</div>
+          <p style="font-size:12px;color:rgba(255,255,255,.55);margin-bottom:16px;line-height:1.6;">Write your actual DM or email message. Not a template — your version, in your voice. Short. Direct. No pitch. Just an inform and an ask.</p>
+          <textarea class="field-input" id="acq-message" placeholder="e.g. 'Hey [name] — I wanted to let you know I'm now working with service-based founders who are generating revenue but struggling to systematize how they work and articulate what they do. I build them the business infrastructure and documentation to make it consistent. If you know anyone who might benefit from that kind of work, I'd love an introduction. No pressure either way.'" style="min-height:120px;" oninput="autosave()"></textarea>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px;">
+          <div style="background:rgba(201,168,76,.06);border:1.5px solid rgba(201,168,76,.2);border-radius:12px;padding:20px;">
+            <div style="font-family:'Orbitron',sans-serif;font-size:10px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:var(--gold);margin-bottom:10px;">// Follow-Up Plan</div>
+            <p style="font-size:12px;color:rgba(255,255,255,.55);margin-bottom:12px;line-height:1.5;">When and how you follow up with people who don't respond.</p>
+            <textarea class="field-input" id="acq-followup" placeholder="e.g. If no response after 7 days, send one follow-up: 'Just wanted to make sure this landed — no pressure if it's not the right time.' After that, move on and rotate to next person on the list." style="min-height:100px;" oninput="autosave()"></textarea>
+          </div>
+          <div style="background:rgba(201,168,76,.06);border:1.5px solid rgba(201,168,76,.2);border-radius:12px;padding:20px;">
+            <div style="font-family:'Orbitron',sans-serif;font-size:10px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:var(--gold);margin-bottom:10px;">// Discovery Call Approach</div>
+            <p style="font-size:12px;color:rgba(255,255,255,.55);margin-bottom:12px;line-height:1.5;">How you run the call. Your frame going in.</p>
+            <textarea class="field-input" id="acq-discovery" placeholder="e.g. 20-minute call. I send the pre-call questionnaire first (from Module 5). I listen for 70% of the call. I diagnose, then I present the offer. I don't pitch — I prescribe. If it's a fit, I say so. If not, I say that too." style="min-height:100px;" oninput="autosave()"></textarea>
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:32px;">
+          <div style="background:rgba(201,168,76,.06);border:1.5px solid rgba(201,168,76,.2);border-radius:12px;padding:20px;">
+            <div style="font-family:'Orbitron',sans-serif;font-size:10px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:var(--gold);margin-bottom:10px;">// Referral Ask — Timing and Script</div>
+            <p style="font-size:12px;color:rgba(255,255,255,.55);margin-bottom:12px;line-height:1.5;">When you ask and what you say.</p>
+            <textarea class="field-input" id="acq-referral" placeholder="e.g. I ask at two moments: midpoint check-in when momentum is high, and at final delivery. Script: 'Do you know anyone who could benefit from having this kind of foundation built for their business? I'd love an introduction if so.'" style="min-height:100px;" oninput="autosave()"></textarea>
+          </div>
+          <div style="background:rgba(201,168,76,.06);border:1.5px solid rgba(201,168,76,.2);border-radius:12px;padding:20px;">
+            <div style="font-family:'Orbitron',sans-serif;font-size:10px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:var(--gold);margin-bottom:10px;">// Content as Evidence — Your First 3 Posts</div>
+            <p style="font-size:12px;color:rgba(255,255,255,.55);margin-bottom:12px;line-height:1.5;">What will your first three pieces of content be about? Based on what you now know from building this.</p>
+            <textarea class="field-input" id="acq-content" placeholder="e.g. Post 1: The specific problem I solve — written from their perspective. Post 2: A before/after of what changes when a founder has a documented offer. Post 3: The one thing I wish someone had told me about pricing before I started." style="min-height:100px;" oninput="autosave()"></textarea>
+          </div>
+        </div>
+
+        <!-- Three Actions -->
+        <div class="section-title">// Three Actions Starting This Week</div>
+        <p class="section-sub">Not this month. Not when everything is ready. This week. What three specific things will you do before Sunday?</p>
+        <div class="actions-row">
+          <div class="action-card">
+            <div class="action-head"><div class="action-num">01</div><div class="action-label">Action this week</div></div>
+            <div class="action-body"><textarea class="action-input" id="act-1" placeholder="e.g. Send my positioning statement to 3 people in my network and ask if it resonates." oninput="autosave()"></textarea></div>
+          </div>
+          <div class="action-card">
+            <div class="action-head"><div class="action-num">02</div><div class="action-label">Action this week</div></div>
+            <div class="action-body"><textarea class="action-input" id="act-2" placeholder="e.g. Post my first piece of content on LinkedIn naming the problem I solve." oninput="autosave()"></textarea></div>
+          </div>
+          <div class="action-card">
+            <div class="action-head"><div class="action-num">03</div><div class="action-label">Action this week</div></div>
+            <div class="action-body"><textarea class="action-input" id="act-3" placeholder="e.g. Send my offer document to one warm contact who fits my ICP and ask for a 20-minute call." oninput="autosave()"></textarea></div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- FINAL LOCK-IN -->
+    <div class="s-label">Final Lock-In</div>
+    <div class="lockin-section">
+      <div class="lockin-tag">🔒 Final Lock-In — The Launch Commitment</div>
+      <div class="lockin-title">Write Your Launch Statement.</div>
+      <p class="lockin-rule">This is the last lock-in in the course. <strong>Write a declaration to yourself</strong> — what you're committing to, what you're launching, by when, and what you're willing to do differently than you've done before. This isn't for anyone else. This is the document you come back to when things get hard. Write it like it matters. Because it does.</p>
+      <textarea class="lockin-input" id="final-commitment" placeholder="Write your launch commitment here. What are you launching? By when? What are you willing to do that you haven't done before? What does success look like in 90 days? Write it to yourself, in your voice, with full honesty." oninput="autosave(); checkLockIn();"></textarea>
+      <div class="lockin-warn" id="lockin-warn">⚠ Write your full launch commitment before completing the course.</div>
+      <div class="lockin-ok" id="lockin-ok">✓ Commitment documented. You're ready to graduate.</div>
+    </div>
+
+    <!-- FINAL DECLARATION -->
+    <div class="final-decl">
+      <div class="final-eyebrow">✦ Course Complete — Hella Build</div>
+      <div class="final-title">You didn't just take a course.<br><em>You built a business.</em></div>
+      <p class="final-sub">Six modules. Six documents. One offer. One process. One 90-day plan. Everything you need to start — and nothing you don't. The certificate is waiting.</p>
+      <div class="alert-msg" id="alert-complete"></div>
+      <button class="btn-complete" id="complete-btn" onclick="completeBonus()">
+        Complete Course &amp; View Portfolio →
+      </button>
+    </div>
+
+    <div class="mod-nav">
+      <a href="module6.html" class="btn-back">← Back to Module 6</a>
+      <a href="portfolio.html" class="btn-portfolio" id="next-btn">View My Portfolio →</a>
+    </div>
+  </main>
+</div>
+
+<script>
+let saveTimer = null;
+document.addEventListener('DOMContentLoaded', async () => {
+  const session = await requireAuth();
+  if (!session) return;
+  const user = session.user;
+  const name = user.user_metadata?.full_name || user.email.split('@')[0].replace(/[._-]/g,' ').replace(/\b\w/g,c=>c.toUpperCase());
+  const initials = name.split(' ').map(n=>n[0]).join('').slice(0,2).toUpperCase();
+  document.getElementById('nav-user').textContent = name;
+  document.getElementById('sb-name').textContent = name;
+  document.getElementById('sb-email').textContent = user.email;
+  document.getElementById('sb-av').textContent = initials;
+  const completed = await getProgress();
+  const pct = Math.max(95, Math.round(((completed.length + 8) / 9) * 100));
+  document.getElementById('prog-fill').style.width = pct + '%';
+  document.getElementById('prog-pct').textContent = pct + '%';
+  ['00','01','02','03','04','05','06'].forEach(n => {
+    const c = document.getElementById(`ck-${n}`);
+    if (c && (completed.includes(`module-0${n}`) || n === '00')) { c.textContent = '✓'; c.classList.add('done'); }
+  });
+  if (completed.includes('module-bonus')) {
+    document.getElementById('next-btn').classList.add('unlocked');
+    const c = document.getElementById('ck-bonus');
+    if (c) { c.textContent = '✓'; c.classList.add('done'); }
+  }
+  const saved = await loadWorksheet('revenue-roadmap');
+  if (saved) populate(saved);
+});
+function autosave(){clearTimeout(saveTimer);setSave('saving');saveTimer=setTimeout(doSave,1400);}
+async function doSave(){const{error}=await saveWorksheet('revenue-roadmap',collect());setSave(error?'error':'saved');}
+function setSave(s){const dot=document.getElementById('save-dot');const txt=document.getElementById('save-txt');dot.className='save-dot';if(s==='saving'){dot.classList.add('saving');txt.textContent='Saving...';}else if(s==='saved'){dot.classList.add('saved');txt.textContent='Saved ✓';}else{txt.textContent='Error';}}
+function collect(){
+  const ids=['inc-baseline-mo','inc-baseline-yr','inc-baseline-clients','inc-real-mo','inc-real-yr','inc-real-clients','inc-stretch-mo','inc-stretch-yr','inc-stretch-clients',
+    'math-price','math-clients','math-revenue','d1-focus','d1-actions','d1-win','d2-focus','d2-actions','d2-win','d3-focus','d3-actions','d3-win',
+    'mkt-platform','mkt-themes','mkt-cadence','mkt-outreach','met-revenue','met-calls','met-conversion','met-content','met-referrals','met-clients',
+    'acq-warmlist','acq-message','acq-followup','acq-discovery','acq-referral','acq-content',
+    'act-1','act-2','act-3','final-commitment'];
+  const data={};ids.forEach(id=>{const el=document.getElementById(id);if(el)data[id]=el.value||'';});return data;
+}
+function populate(saved){Object.keys(saved).forEach(key=>{const el=document.getElementById(key);if(el)el.value=saved[key];});if(saved['final-commitment'])checkLockIn();setSave('saved');}
+function checkLockIn(){const val=document.getElementById('final-commitment').value.trim();document.getElementById('lockin-warn').style.display='none';document.getElementById('lockin-ok').style.display=val.length>80?'block':'none';}
+async function completeBonus(){
+  const commitment=document.getElementById('final-commitment').value.trim();
+  if(commitment.length<80){document.getElementById('lockin-warn').style.display='block';document.querySelector('.lockin-section').scrollIntoView({behavior:'smooth'});const a=document.getElementById('alert-complete');a.textContent='Write your launch commitment before completing the course.';a.className='alert-msg alert-err show';return;}
+  const btn=document.getElementById('complete-btn');
+  btn.innerHTML='<span style="display:inline-block;width:16px;height:16px;border-radius:50%;border:2px solid rgba(13,27,62,.3);border-top-color:var(--navy);animation:spin .7s linear infinite;"></span> Saving...';
+  btn.disabled=true;
+  await doSave();
+  await markModuleComplete('module-bonus');
+  const c=document.getElementById('ck-bonus');if(c){c.textContent='✓';c.classList.add('done');}
+  document.getElementById('prog-fill').style.width='100%';
+  document.getElementById('prog-pct').textContent='100%';
+  document.getElementById('next-btn').classList.add('unlocked');
+  const a=document.getElementById('alert-complete');
+  a.textContent='✓ Course complete. Your portfolio is ready. Your certificate is waiting.';
+  a.className='alert-msg alert-ok show';
+  btn.innerHTML='✓ Course Complete — View Portfolio →';
+  btn.onclick=()=>window.location.href='portfolio.html';
+  btn.disabled=false;
+}
+function toggleAudio(btn){const on=btn.dataset.playing==='true';btn.textContent=on?'▶':'⏸';btn.dataset.playing=(!on).toString();}
+</script>
+</body>
+</html>
