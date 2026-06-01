@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Module 06: Systems + Rest — Hella Build</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="app.js" type="text/javascript"></script>
+<style>
+:root{--navy:#0D1B3E;--navy2:#0A1020;--gold:#C9A84C;--gold2:#E8C96A;--cyan:#00D4FF;--white:#FFFFFF;--off:#F5F3EE;--text:#1A2B4A;--muted:#7A8BAE;--border:rgba(13,27,62,0.1);--gold-border:rgba(201,168,76,0.3);}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--off);color:var(--text);font-family:'Outfit',sans-serif;font-size:16px;line-height:1.6;-webkit-font-smoothing:antialiased;}
+body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(13,27,62,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(13,27,62,.03) 1px,transparent 1px);background-size:48px 48px;pointer-events:none;z-index:0;}
+nav{position:sticky;top:0;z-index:200;background:rgba(245,243,238,.9);backdrop-filter:blur(24px);border-bottom:1px solid var(--border);padding:0 32px;height:64px;display:flex;align-items:center;justify-content:space-between;}
+.nav-brand{display:flex;align-items:center;gap:10px;text-decoration:none;}
+.nav-mark{width:34px;height:34px;border-radius:8px;background:var(--navy);display:flex;align-items:center;justify-content:center;font-family:'Orbitron',sans-serif;font-size:11px;font-weight:800;color:var(--gold);}
+.nav-name{font-family:'Orbitron',sans-serif;font-size:12px;font-weight:700;color:var(--navy);letter-spacing:.1em;}
+.nav-sub{font-size:10px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;}
+.nav-right{display:flex;align-items:center;gap:12px;}
+.nav-user{font-size:13px;color:var(--muted);}
+.btn-signout{font-family:'Outfit',sans-serif;font-size:13px;font-weight:600;padding:8px 18px;border-radius:8px;border:1.5px solid var(--border);background:transparent;color:var(--text);cursor:pointer;transition:all .2s;}
+.btn-signout:hover{border-color:var(--navy);}
+.layout{display:grid;grid-template-columns:260px 1fr;min-height:calc(100vh - 64px);position:relative;z-index:1;}
+.sidebar{background:var(--navy2);border-right:1px solid rgba(255,255,255,.05);padding:28px 0;position:sticky;top:64px;height:calc(100vh - 64px);overflow-y:auto;display:flex;flex-direction:column;}
+.sidebar::before{content:'';position:absolute;inset:0;background-image:linear-gradient(rgba(0,212,255,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(0,212,255,.03) 1px,transparent 1px);background-size:32px 32px;pointer-events:none;}
+.sb-section{font-family:'Orbitron',sans-serif;font-size:9px;font-weight:600;letter-spacing:.3em;text-transform:uppercase;color:rgba(255,255,255,.2);padding:0 24px;margin-bottom:8px;margin-top:24px;}
+.sb-item{display:flex;align-items:center;gap:12px;padding:11px 24px;text-decoration:none;transition:background .15s;position:relative;}
+.sb-item:hover{background:rgba(255,255,255,.04);}
+.sb-item.active{background:rgba(201,168,76,.08);}
+.sb-item.active::before{content:'';position:absolute;right:0;top:0;bottom:0;width:2px;background:var(--gold);}
+.sb-num{font-family:'Orbitron',sans-serif;font-size:10px;font-weight:700;color:var(--gold);letter-spacing:.1em;min-width:28px;}
+.sb-text{font-size:13px;font-weight:500;color:rgba(255,255,255,.65);flex:1;line-height:1.3;}
+.sb-item.active .sb-text{color:var(--white);}
+.sb-check{width:18px;height:18px;border-radius:4px;border:1.5px solid rgba(255,255,255,.12);display:flex;align-items:center;justify-content:center;font-size:9px;color:var(--gold);flex-shrink:0;}
+.sb-check.done{background:rgba(201,168,76,.18);border-color:var(--gold);}
+.sb-check.locked{opacity:.35;}
+.sb-footer{margin-top:auto;padding:20px 24px;border-top:1px solid rgba(255,255,255,.05);position:relative;z-index:1;}
+.sb-av{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--gold),#7A5010);display:flex;align-items:center;justify-content:center;font-family:'Orbitron',sans-serif;font-size:11px;font-weight:800;color:var(--navy);flex-shrink:0;}
+.sb-out{font-size:12px;color:rgba(255,255,255,.25);background:none;border:none;cursor:pointer;padding:0;transition:color .2s;margin-top:10px;display:block;}
+.sb-out:hover{color:rgba(255,255,255,.5);}
+.progress-strip{margin:0;padding:16px 24px;background:rgba(201,168,76,.06);border-bottom:1px solid var(--gold-border);position:relative;z-index:1;}
+.prog-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
+.prog-label{font-family:'Orbitron',sans-serif;font-size:10px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:var(--muted);}
+.prog-pct{font-family:'Orbitron',sans-serif;font-size:12px;font-weight:700;color:var(--gold);}
+.prog-track{height:5px;background:var(--border);border-radius:100px;overflow:hidden;}
+.prog-fill{height:100%;background:linear-gradient(90deg,var(--gold),var(--cyan));border-radius:100px;transition:width .6s ease;}
+.main{padding:48px 56px;max-width:900px;}
+.mod-hero{background:var(--navy);border-radius:20px;padding:44px 48px;position:relative;overflow:hidden;margin-bottom:48px;box-shadow:0 16px 48px rgba(13,27,62,.25),0 0 0 1px rgba(201,168,76,.15);}
+.mod-hero::before{content:'06';position:absolute;right:32px;bottom:-16px;font-family:'Orbitron',sans-serif;font-size:140px;font-weight:900;color:rgba(255,255,255,.04);line-height:1;pointer-events:none;}
+.mod-hero::after{content:'';position:absolute;top:-80px;right:-80px;width:300px;height:300px;border-radius:50%;background:radial-gradient(circle,rgba(201,168,76,.1) 0%,transparent 70%);pointer-events:none;}
+.scanline{position:absolute;left:0;right:0;top:0;height:2px;background:linear-gradient(90deg,transparent,rgba(0,212,255,.12),transparent);animation:scan 5s linear infinite;pointer-events:none;}
+@keyframes scan{0%{transform:translateY(0)}100%{transform:translateY(400px)}}
+.mod-eyebrow{font-family:'Orbitron',sans-serif;font-size:10px;font-weight:600;letter-spacing:.3em;text-transform:uppercase;color:var(--cyan);margin-bottom:16px;animation:glowcyan 2.5s infinite;}
+@keyframes glowcyan{0%,100%{opacity:.7}50%{opacity:1;text-shadow:0 0 20px rgba(0,212,255,.7)}}
+.mod-h{font-family:'Orbitron',sans-serif;font-size:clamp(24px,3.5vw,40px);font-weight:900;line-height:1.1;color:var(--white);margin-bottom:16px;}
+.mod-h em{font-style:normal;color:var(--gold);}
+.mod-p{font-size:15px;color:rgba(255,255,255,.55);line-height:1.75;max-width:520px;margin-bottom:24px;}
+.mod-meta{display:flex;gap:20px;flex-wrap:wrap;}
+.meta-chip{display:flex;align-items:center;gap:6px;font-size:12px;color:rgba(255,255,255,.4);}
+.meta-chip span{color:var(--gold);font-weight:600;}
+.s-label{font-family:'Orbitron',sans-serif;font-size:10px;font-weight:600;letter-spacing:.3em;text-transform:uppercase;color:var(--gold);margin-bottom:16px;}
+.lesson{background:white;border-radius:16px;padding:36px;border:1px solid var(--border);box-shadow:0 4px 16px rgba(13,27,62,.06);margin-bottom:24px;}
+.lesson-num{font-family:'Orbitron',sans-serif;font-size:10px;font-weight:600;letter-spacing:.25em;text-transform:uppercase;color:var(--gold);margin-bottom:8px;}
+.lesson-title{font-family:'Orbitron',sans-serif;font-size:18px;font-weight:700;color:var(--navy);margin-bottom:20px;letter-spacing:.02em;}
+.lesson-p{font-size:15px;color:var(--muted);line-height:1.75;margin-bottom:16px;}
+.lesson-p:last-child{margin-bottom:0;}
+.callout-cyan{padding:18px 22px;background:rgba(0,212,255,.06);border-left:3px solid var(--cyan);border-radius:0 10px 10px 0;margin:20px 0;font-size:14px;color:var(--text);line-height:1.65;}
+.callout-cyan strong{color:var(--navy);}
+.callout-gold{padding:18px 22px;background:rgba(201,168,76,.08);border-left:3px solid var(--gold);border-radius:0 10px 10px 0;margin:20px 0;font-size:14px;color:#6B4E00;line-height:1.65;font-weight:500;}
+.audio-player{display:flex;align-items:center;gap:16px;padding:16px 20px;background:var(--navy);border-radius:12px;margin:20px 0;border:1px solid rgba(201,168,76,.15);}
+.play-btn{width:40px;height:40px;border-radius:50%;background:var(--gold);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;transition:transform .2s;}
+.play-btn:hover{transform:scale(1.1);}
+.audio-info{flex:1;}
+.audio-title{font-size:13px;font-weight:600;color:var(--white);margin-bottom:2px;}
+.audio-sub{font-size:11px;color:rgba(255,255,255,.35);}
+.audio-bar{height:3px;background:rgba(255,255,255,.12);border-radius:100px;margin-top:8px;}
+.audio-time{font-family:'Orbitron',sans-serif;font-size:11px;color:rgba(255,255,255,.35);white-space:nowrap;}
+.ws-section{margin:48px 0;}
+.ws-header{background:var(--navy);border-radius:16px 16px 0 0;padding:28px 32px;border:1px solid var(--gold-border);border-bottom:none;display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:16px;}
+.ws-eyebrow{font-family:'Orbitron',sans-serif;font-size:9px;font-weight:600;letter-spacing:.3em;text-transform:uppercase;color:var(--cyan);margin-bottom:8px;animation:glowcyan 2.5s infinite;}
+.ws-title{font-family:'Orbitron',sans-serif;font-size:22px;font-weight:900;color:var(--white);}
+.ws-subtitle{font-size:13px;color:rgba(255,255,255,.45);margin-top:4px;}
+.ws-save{display:flex;align-items:center;gap:8px;font-size:12px;color:rgba(255,255,255,.4);}
+.save-dot{width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,.2);transition:background .3s;}
+.save-dot.saving{background:var(--gold);animation:pulsegold 1s infinite;}
+.save-dot.saved{background:#28C840;}
+@keyframes pulsegold{0%,100%{box-shadow:0 0 0 0 rgba(201,168,76,.5)}50%{box-shadow:0 0 0 6px rgba(201,168,76,0)}}
+.ws-instructions{background:rgba(201,168,76,.06);border:1px solid var(--gold-border);border-top:none;border-bottom:none;padding:16px 32px;font-size:13px;color:var(--text);line-height:1.6;}
+.ws-instructions strong{color:var(--navy);}
+.ws-body{background:white;border:1px solid var(--gold-border);border-top:none;border-radius:0 0 16px 16px;padding:32px;}
+.field-label{font-family:'Orbitron',sans-serif;font-size:9px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:var(--gold);margin-bottom:6px;margin-top:20px;}
+.field-label:first-child{margin-top:0;}
+.field-hint{font-size:12px;color:var(--muted);margin-bottom:8px;font-style:italic;line-height:1.5;}
+.field-input{width:100%;padding:11px 14px;border:1.5px solid var(--border);border-radius:8px;background:var(--off);font-family:'Outfit',sans-serif;font-size:13px;color:var(--text);outline:none;resize:vertical;min-height:80px;transition:all .2s;line-height:1.55;}
+.field-input:focus{border-color:var(--gold);background:white;box-shadow:0 0 0 3px rgba(201,168,76,.12);}
+.field-input::placeholder{color:rgba(13,27,62,.25);font-size:12px;}
+.field-input.single{min-height:44px;resize:none;}
+.section-title{font-family:'Orbitron',sans-serif;font-size:13px;font-weight:700;color:var(--navy);margin-bottom:8px;letter-spacing:.02em;margin-top:32px;}
+.section-title:first-child{margin-top:0;}
+.section-sub{font-size:13px;color:var(--muted);margin-bottom:20px;line-height:1.6;}
+.script-card{border:1.5px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:16px;}
+.script-header{background:var(--navy);padding:14px 20px;display:flex;align-items:flex-start;gap:12px;}
+.script-num{font-family:'Orbitron',sans-serif;font-size:10px;font-weight:700;color:var(--gold);letter-spacing:.15em;min-width:28px;margin-top:2px;}
+.script-scenario{font-size:13px;font-weight:700;color:var(--white);}
+.script-hint{font-size:11px;color:rgba(255,255,255,.35);margin-top:2px;}
+.script-body{padding:16px 20px;background:white;display:flex;flex-direction:column;gap:12px;}
+.script-sub{font-family:'Orbitron',sans-serif;font-size:9px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:var(--gold);margin-bottom:4px;}
+.script-input{width:100%;padding:10px 14px;border:1.5px solid var(--border);border-radius:8px;background:var(--off);font-family:'Outfit',sans-serif;font-size:13px;color:var(--text);outline:none;resize:vertical;min-height:72px;transition:all .2s;line-height:1.55;}
+.script-input:focus{border-color:var(--gold);background:white;box-shadow:0 0 0 3px rgba(201,168,76,.12);}
+.script-input::placeholder{color:rgba(13,27,62,.25);font-size:12px;}
+.change-box{background:rgba(201,168,76,.06);border:1.5px solid var(--gold-border);border-radius:12px;padding:24px;margin-bottom:0;}
+.change-steps{display:flex;flex-direction:column;gap:12px;margin-top:16px;}
+.change-step-row{display:grid;grid-template-columns:32px 1fr;gap:12px;align-items:center;}
+.step-num{width:32px;height:32px;border-radius:50%;background:var(--navy);display:flex;align-items:center;justify-content:center;font-family:'Orbitron',sans-serif;font-size:10px;font-weight:700;color:var(--gold);flex-shrink:0;}
+.step-input{padding:10px 14px;border:1.5px solid var(--border);border-radius:8px;background:white;font-family:'Outfit',sans-serif;font-size:13px;color:var(--text);outline:none;width:100%;transition:all .2s;}
+.step-input:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(201,168,76,.12);}
+.step-input::placeholder{color:rgba(13,27,62,.25);font-size:12px;}
+.audit-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:0;}
+.audit-card{border:1.5px solid var(--border);border-radius:12px;overflow:hidden;}
+.audit-head{background:var(--navy);padding:13px 18px;}
+.audit-head-title{font-size:12px;font-weight:700;color:var(--white);}
+.audit-head-sub{font-size:10px;color:rgba(255,255,255,.35);margin-top:2px;}
+.audit-body{padding:14px 18px;}
+.audit-input{width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;background:var(--off);font-family:'Outfit',sans-serif;font-size:12px;color:var(--text);outline:none;resize:vertical;min-height:72px;transition:all .2s;line-height:1.55;}
+.audit-input:focus{border-color:var(--gold);background:white;box-shadow:0 0 0 3px rgba(201,168,76,.12);}
+.audit-input::placeholder{color:rgba(13,27,62,.25);font-size:11px;}
+.lockin-section{background:var(--navy);border-radius:20px;padding:40px;margin:24px 0;border:1.5px solid var(--gold-border);box-shadow:0 12px 40px rgba(13,27,62,.2);position:relative;overflow:hidden;}
+.lockin-section::after{content:'';position:absolute;bottom:-80px;right:-80px;width:300px;height:300px;border-radius:50%;background:radial-gradient(circle,rgba(201,168,76,.1) 0%,transparent 70%);pointer-events:none;}
+.lockin-tag{font-family:'Orbitron',sans-serif;font-size:10px;font-weight:600;letter-spacing:.3em;text-transform:uppercase;color:var(--gold);margin-bottom:12px;}
+.lockin-title{font-family:'Orbitron',sans-serif;font-size:22px;font-weight:900;color:var(--white);margin-bottom:12px;}
+.lockin-rule{font-size:14px;color:rgba(255,255,255,.6);line-height:1.65;margin-bottom:24px;}
+.lockin-rule strong{color:var(--gold);}
+.lockin-input{width:100%;padding:15px 18px;border:1.5px solid rgba(201,168,76,.4);border-radius:10px;background:rgba(255,255,255,.05);font-family:'Outfit',sans-serif;font-size:14px;color:var(--white);outline:none;transition:all .2s;margin-bottom:12px;resize:vertical;min-height:110px;line-height:1.6;}
+.lockin-input:focus{border-color:var(--gold);background:rgba(255,255,255,.08);box-shadow:0 0 0 3px rgba(201,168,76,.15);}
+.lockin-input::placeholder{color:rgba(255,255,255,.3);}
+.lockin-warn{font-size:13px;color:rgba(201,168,76,.7);display:none;margin-bottom:12px;}
+.lockin-ok{font-size:13px;color:#28C840;display:none;margin-bottom:12px;}
+.almost-banner{background:linear-gradient(135deg,var(--navy) 0%,#1A2B5E 100%);border:1.5px solid var(--gold-border);border-radius:16px;padding:32px;margin-bottom:32px;text-align:center;position:relative;overflow:hidden;}
+.almost-banner::before{content:'';position:absolute;inset:0;background-image:linear-gradient(rgba(201,168,76,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(201,168,76,.05) 1px,transparent 1px);background-size:32px 32px;pointer-events:none;}
+.almost-eyebrow{font-family:'Orbitron',sans-serif;font-size:9px;font-weight:600;letter-spacing:.3em;text-transform:uppercase;color:var(--cyan);margin-bottom:8px;position:relative;z-index:1;}
+.almost-title{font-family:'Orbitron',sans-serif;font-size:20px;font-weight:900;color:var(--white);margin-bottom:8px;position:relative;z-index:1;}
+.almost-sub{font-size:13px;color:rgba(255,255,255,.5);position:relative;z-index:1;}
+.decl-box{background:linear-gradient(135deg,rgba(201,168,76,.1) 0%,rgba(201,168,76,.05) 100%);border:1.5px solid var(--gold-border);border-radius:20px;padding:40px;text-align:center;margin:24px 0;}
+.decl-label{font-family:'Orbitron',sans-serif;font-size:9px;font-weight:600;letter-spacing:.3em;text-transform:uppercase;color:#8A6B1A;margin-bottom:16px;}
+.decl-text{font-family:'Orbitron',sans-serif;font-size:clamp(16px,2.2vw,22px);font-weight:800;color:var(--navy);line-height:1.25;margin-bottom:12px;}
+.decl-sub{font-size:14px;color:var(--muted);margin-bottom:28px;font-style:italic;}
+.alert-msg{padding:12px 16px;border-radius:8px;font-size:13px;font-weight:500;margin-bottom:16px;display:none;}
+.alert-msg.show{display:block;}
+.alert-err{background:#FEF2F2;color:#B91C1C;border:1px solid #FECACA;}
+.alert-ok{background:#F0FDF4;color:#15803D;border:1px solid #BBF7D0;}
+.btn-decl{display:inline-flex;align-items:center;gap:8px;padding:16px 40px;border-radius:12px;background:var(--navy);color:var(--gold);font-family:'Outfit',sans-serif;font-size:15px;font-weight:700;border:none;cursor:pointer;box-shadow:0 8px 28px rgba(13,27,62,.2);transition:all .25s;}
+.btn-decl:hover{transform:translateY(-3px);box-shadow:0 16px 40px rgba(13,27,62,.3);}
+.mod-nav{display:flex;justify-content:space-between;align-items:center;gap:12px;padding-top:40px;border-top:1px solid var(--border);margin-top:40px;}
+.btn-back{display:inline-flex;align-items:center;gap:8px;padding:12px 24px;border-radius:10px;background:transparent;color:var(--text);border:1.5px solid var(--border);font-family:'Outfit',sans-serif;font-size:14px;font-weight:600;text-decoration:none;cursor:pointer;transition:all .2s;}
+.btn-back:hover{border-color:var(--navy);}
+.btn-next{display:inline-flex;align-items:center;gap:8px;padding:12px 24px;border-radius:10px;background:linear-gradient(135deg,var(--gold),var(--gold2));color:var(--navy);border:none;font-family:'Outfit',sans-serif;font-size:14px;font-weight:800;text-decoration:none;cursor:pointer;transition:all .2s;opacity:.4;pointer-events:none;}
+.btn-next.unlocked{opacity:1;pointer-events:auto;box-shadow:0 4px 20px rgba(201,168,76,.4);}
+.btn-next.unlocked:hover{transform:translateY(-2px);box-shadow:0 8px 32px rgba(201,168,76,.5);}
+@keyframes spin{to{transform:rotate(360deg)}}
+@media(max-width:900px){.layout{grid-template-columns:1fr;}.sidebar{display:none;}.main{padding:32px 24px;}.audit-grid{grid-template-columns:1fr;}}
+</style>
+</head>
+<body>
+<nav>
+  <a href="orientation.html" class="nav-brand">
+    <div class="nav-mark">HB</div>
+    <div><div class="nav-name">BUILD TERMINAL</div><div class="nav-sub">Jupiter's Lab</div></div>
+  </a>
+  <div class="nav-right">
+    <span class="nav-user" id="nav-user"></span>
+    <button class="btn-signout" onclick="signOut()">Sign Out</button>
+  </div>
+</nav>
+<div class="layout">
+  <aside class="sidebar">
+    <div style="position:relative;z-index:1;flex:1;">
+      <div class="sb-section">Course</div>
+      <a href="orientation.html" class="sb-item"><div class="sb-num">00</div><div class="sb-text">Orientation</div><div class="sb-check done" id="ck-00">✓</div></a>
+      <a href="module1.html" class="sb-item"><div class="sb-num">01</div><div class="sb-text">Skill Clarity</div><div class="sb-check" id="ck-01"></div></a>
+      <a href="module2.html" class="sb-item"><div class="sb-num">02</div><div class="sb-text">Skill Stacking</div><div class="sb-check" id="ck-02"></div></a>
+      <a href="module3.html" class="sb-item"><div class="sb-num">03</div><div class="sb-text">Direction</div><div class="sb-check" id="ck-03"></div></a>
+      <a href="module4.html" class="sb-item"><div class="sb-num">04</div><div class="sb-text">Offer Design</div><div class="sb-check" id="ck-04"></div></a>
+      <a href="module5.html" class="sb-item"><div class="sb-num">05</div><div class="sb-text">Workflow</div><div class="sb-check" id="ck-05"></div></a>
+      <a href="module6.html" class="sb-item active"><div class="sb-num">06</div><div class="sb-text">Systems + Rest</div><div class="sb-check" id="ck-06"></div></a>
+      <div class="sb-item" style="opacity:.4;cursor:default;"><div class="sb-num">★</div><div class="sb-text">Bonus Module</div><div class="sb-check locked">🔒</div></div>
+    </div>
+    <div class="sb-footer">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+        <div class="sb-av" id="sb-av">?</div>
+        <div><div style="font-size:13px;font-weight:600;color:var(--white);" id="sb-name">—</div><div style="font-size:11px;color:rgba(255,255,255,.3);" id="sb-email">—</div></div>
+      </div>
+      <button class="sb-out" onclick="signOut()">← Sign out</button>
+    </div>
+  </aside>
+  <main class="main">
+    <div class="progress-strip">
+      <div class="prog-row"><span class="prog-label">Course Progress</span><span class="prog-pct" id="prog-pct">85%</span></div>
+      <div class="prog-track"><div class="prog-fill" id="prog-fill" style="width:85%;"></div></div>
+    </div>
+
+    <div class="mod-hero" style="margin-top:40px;">
+      <div class="scanline"></div>
+      <div class="mod-eyebrow">// Module 06 — Phase E: Execute (Protection)</div>
+      <h1 class="mod-h">Protecting What<br><em>You've Built</em></h1>
+      <p class="mod-p">You built the offer. You mapped the system. Now you need the structures that keep both intact when the work gets hard, when clients push, when you're tired, and when someone asks for just one more thing. This module builds your protection layer.</p>
+      <div class="mod-meta">
+        <div class="meta-chip">⏱ <span>~20 minutes</span></div>
+        <div class="meta-chip">📐 <span>Scope Protection Toolkit</span></div>
+        <div class="meta-chip">🔒 <span>Lock-In: Client agreement terms</span></div>
+      </div>
+    </div>
+
+    <div class="s-label">Lesson 6.1</div>
+    <div class="lesson">
+      <div class="lesson-num">Lesson 6.1 · Why Capable People Struggle With Boundaries</div>
+      <div class="lesson-title">The Generosity Trap — And How to Get Out of It</div>
+      <div class="audio-player">
+        <button class="play-btn" onclick="toggleAudio(this)">▶</button>
+        <div class="audio-info"><div class="audio-title">Lesson 6.1 — The Generosity Trap</div><div class="audio-sub">Voiceover · ~5 min · Add audio file to enable playback</div><div class="audio-bar"></div></div>
+        <div class="audio-time">0:00</div>
+      </div>
+      <p class="lesson-p">Here's the pattern. You're good at what you do. A client asks for something small — just a quick tweak, just one more revision, just a quick call outside of your normal structure. You say yes because you're capable and you want to help. Then it happens again. And again. Six weeks in, you've done 40% more work than you agreed to and you're resentful and exhausted. That's not a client problem. That's a structure problem.</p>
+      <p class="lesson-p">Scope creep doesn't come from bad clients. It comes from undefined agreements. When the scope isn't written down, there is no scope — there's just a conversation that each party remembers differently. The client isn't testing you. They just don't know where the line is because you never drew it.</p>
+      <div class="callout-cyan"><strong>Structural boundaries vs. emotional ones:</strong> An emotional boundary is something you feel and enforce through willpower. A structural boundary is built into the agreement before the work starts. One requires you to fight for it every time. The other fights for itself.</div>
+    </div>
+
+    <div class="s-label">Lesson 6.2</div>
+    <div class="lesson">
+      <div class="lesson-num">Lesson 6.2 · Designing for Long-Term Sustainability</div>
+      <div class="lesson-title">Building Capacity, Not Just Hustle</div>
+      <div class="audio-player">
+        <button class="play-btn" onclick="toggleAudio(this)">▶</button>
+        <div class="audio-info"><div class="audio-title">Lesson 6.2 — Sustainability Over Hustle</div><div class="audio-sub">Voiceover · ~5 min · Add audio file to enable playback</div><div class="audio-bar"></div></div>
+        <div class="audio-time">0:00</div>
+      </div>
+      <p class="lesson-p">Most business advice tells you to work harder, take on more, and sleep less. That's not a business strategy — it's a burn rate. A sustainable business isn't one that works when you're running at 100%. It's one that still works when you're running at 60%.</p>
+      <p class="lesson-p">Sustainability means you've designed your offers, your systems, and your client relationships to support your life — not replace it. It means knowing your capacity limit, protecting your off time the same way you protect your client time, and building income that doesn't require you to be in motion every single day.</p>
+      <div class="callout-gold">🔒 This module ends with your Client Agreement terms — the last portfolio document before the Bonus Module.</div>
+    </div>
+
+    <div class="ws-section">
+      <div class="s-label">Interactive Worksheet</div>
+      <div class="ws-header">
+        <div>
+          <div class="ws-eyebrow">// Phase E — Execute · Worksheet 06</div>
+          <div class="ws-title">Scope Protection Toolkit</div>
+          <div class="ws-subtitle">Your answers save automatically as you type</div>
+        </div>
+        <div class="ws-save"><div class="save-dot" id="save-dot"></div><span id="save-txt">Ready</span></div>
+      </div>
+      <div class="ws-instructions"><strong>Instructions:</strong> Build four protection tools — your Scope Agreement, Boundary Scripts, Change Request Process, and Sustainability Audit. Together they form your Client Agreement portfolio document.</div>
+      <div class="ws-body">
+
+        <div class="section-title">// Part 1 — Scope Agreement Template</div>
+        <p class="section-sub">These terms go into every client agreement. Write them in plain language a client can understand without a lawyer.</p>
+
+        <div class="field-label">Project scope (what you are agreeing to do)</div>
+        <div class="field-hint">Reference your offer document from Module 4. Specific deliverables, sessions, and timeline.</div>
+        <textarea class="field-input" id="sa-scope" placeholder="e.g. This agreement covers one 30-day Brand Infrastructure engagement including: 4 x 60-minute strategy sessions, a completed positioning statement, and one signature offer document." oninput="autosave()"></textarea>
+
+        <div class="field-label">What is NOT included</div>
+        <div class="field-hint">Copy from your Module 4 exclusions. These must be explicit.</div>
+        <textarea class="field-input" id="sa-excluded" placeholder="e.g. Website design, copywriting beyond the documents listed, social media content, ongoing retainer support beyond the engagement period." oninput="autosave()"></textarea>
+
+        <div class="field-label">Client responsibilities</div>
+        <div class="field-hint">What the client must provide. Late or missing information = paused timeline.</div>
+        <textarea class="field-input" id="sa-client-resp" placeholder="e.g. Client agrees to: complete intake questionnaire within 3 business days of signing, attend all scheduled sessions, provide requested materials within 48 hours." oninput="autosave()"></textarea>
+
+        <div class="field-label">Revision policy</div>
+        <div class="field-hint">How many rounds are included and what happens when that limit is reached.</div>
+        <textarea class="field-input single" id="sa-revisions" placeholder="e.g. 2 rounds of revisions per deliverable included. Additional revisions billed at $150/hour with 2-hour minimum." oninput="autosave()"></textarea>
+
+        <div class="field-label">Payment terms</div>
+        <div class="field-hint">Deposit, final payment, late fees.</div>
+        <textarea class="field-input single" id="sa-payment" placeholder="e.g. 50% deposit before work begins. Remaining 50% upon delivery. Late payments subject to 5% monthly fee after 10 business days." oninput="autosave()"></textarea>
+
+        <div class="field-label">Cancellation policy</div>
+        <div class="field-hint">What happens if either party ends early.</div>
+        <textarea class="field-input single" id="sa-cancel" placeholder="e.g. Client may cancel with 7 business days written notice. Deposit is non-refundable. Completed work invoiced at agreed rate prorated by deliverables." oninput="autosave()"></textarea>
+
+        <div class="section-title">// Part 2 — Boundary-Holding Scripts</div>
+        <p class="section-sub">Write your actual words for the three most common scenarios. Professional, direct, no apology.</p>
+
+        <div class="script-card">
+          <div class="script-header">
+            <div class="script-num">01</div>
+            <div><div class="script-scenario">Scope Creep Request</div><div class="script-hint">Client asks for something outside the agreed scope</div></div>
+          </div>
+          <div class="script-body">
+            <div><div class="script-sub">The Situation</div><textarea class="script-input" id="scr1-sit" placeholder="Describe the specific situation this script is for." oninput="autosave()"></textarea></div>
+            <div><div class="script-sub">Your Script (word for word)</div><textarea class="script-input" id="scr1-script" placeholder="e.g. 'Thank you for thinking of me — that falls outside our current scope. I can put together a separate proposal for it. Want me to send that over?'" oninput="autosave()"></textarea></div>
+          </div>
+        </div>
+
+        <div class="script-card">
+          <div class="script-header">
+            <div class="script-num">02</div>
+            <div><div class="script-scenario">Revision Limit Reached</div><div class="script-hint">Client requests a revision beyond what's included</div></div>
+          </div>
+          <div class="script-body">
+            <div><div class="script-sub">The Situation</div><textarea class="script-input" id="scr2-sit" placeholder="Describe the specific situation." oninput="autosave()"></textarea></div>
+            <div><div class="script-sub">Your Script (word for word)</div><textarea class="script-input" id="scr2-script" placeholder="e.g. 'We've reached our included revisions. I'm happy to continue — additional revisions are billed at my revision rate. Want me to send a quick invoice before we proceed?'" oninput="autosave()"></textarea></div>
+          </div>
+        </div>
+
+        <div class="script-card">
+          <div class="script-header">
+            <div class="script-num">03</div>
+            <div><div class="script-scenario">Off-Hours Contact</div><div class="script-hint">Client contacts you outside your working hours</div></div>
+          </div>
+          <div class="script-body">
+            <div><div class="script-sub">The Situation</div><textarea class="script-input" id="scr3-sit" placeholder="Describe the specific situation." oninput="autosave()"></textarea></div>
+            <div><div class="script-sub">Your Script (word for word)</div><textarea class="script-input" id="scr3-script" placeholder="e.g. 'Got your message — I'll respond during my working hours Mon–Fri 9am–5pm. If it's urgent please mark it and I'll prioritize it first thing.'" oninput="autosave()"></textarea></div>
+          </div>
+        </div>
+
+        <div class="section-title" style="margin-top:32px;">// Part 3 — Change Request Process</div>
+        <div class="change-box">
+          <p style="font-size:13px;color:var(--text);line-height:1.6;">When a client wants to add or change something, this is your documented process. A process makes it professional, not confrontational.</p>
+          <div class="change-steps">
+            <div class="change-step-row"><div class="step-num">01</div><input type="text" class="step-input" id="cr-1" placeholder="e.g. Client submits change request via email describing what they want to add or change." oninput="autosave()"></div>
+            <div class="change-step-row"><div class="step-num">02</div><input type="text" class="step-input" id="cr-2" placeholder="e.g. I review and assess whether it falls within current scope or requires additional billing." oninput="autosave()"></div>
+            <div class="change-step-row"><div class="step-num">03</div><input type="text" class="step-input" id="cr-3" placeholder="e.g. I send a Change Request Summary with the additional cost and timeline impact." oninput="autosave()"></div>
+            <div class="change-step-row"><div class="step-num">04</div><input type="text" class="step-input" id="cr-4" placeholder="e.g. Client approves in writing. Invoice sent and paid before new work begins." oninput="autosave()"></div>
+            <div class="change-step-row"><div class="step-num">05</div><input type="text" class="step-input" id="cr-5" placeholder="e.g. Work proceeds on updated timeline." oninput="autosave()"></div>
+          </div>
+        </div>
+
+        <div class="section-title" style="margin-top:32px;">// Part 4 — Sustainability Audit</div>
+        <p class="section-sub">Honest answers only. This tells you whether the business you're building actually supports your life.</p>
+        <div class="audit-grid">
+          <div class="audit-card">
+            <div class="audit-head"><div class="audit-head-title">Monthly income needed to cover your life</div><div class="audit-head-sub">Bills, food, housing, everything. Be specific.</div></div>
+            <div class="audit-body"><textarea class="audit-input" id="aud-need" placeholder="e.g. $4,200/month covers all fixed and variable expenses." oninput="autosave()"></textarea></div>
+          </div>
+          <div class="audit-card">
+            <div class="audit-head"><div class="audit-head-title">Monthly income your offer generates</div><div class="audit-head-sub">Realistic client volume — not best case.</div></div>
+            <div class="audit-body"><textarea class="audit-input" id="aud-gen" placeholder="e.g. 2 clients at $1,500 = $3,000. $1,200 gap to close." oninput="autosave()"></textarea></div>
+          </div>
+          <div class="audit-card">
+            <div class="audit-head"><div class="audit-head-title">Maximum clients at one time</div><div class="audit-head-sub">Without compromising quality or wellbeing.</div></div>
+            <div class="audit-body"><textarea class="audit-input" id="aud-cap" placeholder="e.g. 3 active clients is my realistic capacity. More and quality drops." oninput="autosave()"></textarea></div>
+          </div>
+          <div class="audit-card">
+            <div class="audit-head"><div class="audit-head-title">What is currently unsustainable</div><div class="audit-head-sub">Be honest. This is for you.</div></div>
+            <div class="audit-body"><textarea class="audit-input" id="aud-unsust" placeholder="e.g. Responding on weekends. Taking misaligned projects. Underpricing." oninput="autosave()"></textarea></div>
+          </div>
+          <div class="audit-card">
+            <div class="audit-head"><div class="audit-head-title">Three changes in the next 30 days</div><div class="audit-head-sub">Executable, not aspirational.</div></div>
+            <div class="audit-body"><textarea class="audit-input" id="aud-changes" placeholder="e.g. 1. Auto-reply after 6pm. 2. Raise base rate $200. 3. Require pre-call questionnaire." oninput="autosave()"></textarea></div>
+          </div>
+          <div class="audit-card">
+            <div class="audit-head"><div class="audit-head-title">What this looks like when it's working</div><div class="audit-head-sub">One year from now. Specific.</div></div>
+            <div class="audit-body"><textarea class="audit-input" id="aud-vision" placeholder="e.g. 3 retainer clients, 4-day weeks, $8K/month, one team member handling admin." oninput="autosave()"></textarea></div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="s-label">Lock-In Decision</div>
+    <div class="lockin-section">
+      <div class="lockin-tag">🔒 Lock-In Rule — Phase E: Execute (Protection)</div>
+      <div class="lockin-title">Write Your Client Agreement Terms.</div>
+      <p class="lockin-rule">Using everything from Part 1 above, write your complete client agreement terms. <strong>Plain language. Professional tone. No ambiguity.</strong> This is your Client Agreement portfolio document — one of the six documents you graduate with.</p>
+      <textarea class="lockin-input" id="final-agreement" placeholder="Write your complete client agreement terms here. Cover: scope, exclusions, client responsibilities, revision policy, payment terms, and cancellation policy. Write it like you'd send it to a client tomorrow." oninput="autosave(); checkLockIn();"></textarea>
+      <div class="lockin-warn" id="lockin-warn">⚠ Your client agreement must cover all six areas before you can advance.</div>
+      <div class="lockin-ok" id="lockin-ok">✓ Client agreement documented. Bonus Module is now unlocked.</div>
+    </div>
+
+    <div class="almost-banner">
+      <div class="almost-eyebrow">// You are almost done</div>
+      <div class="almost-title">Six modules. Six documents. One foundation.</div>
+      <div class="almost-sub">Complete this module and the Bonus Module is waiting. Your portfolio is almost ready.</div>
+    </div>
+
+    <div class="decl-box">
+      <div class="decl-label">✦ Declaration Moment — Module 06</div>
+      <div class="decl-text">"I protect what I build<br>because I built it."</div>
+      <div class="decl-sub">Boundaries aren't walls. They're the perimeter of something worth protecting.</div>
+      <div class="alert-msg" id="alert-complete"></div>
+      <button class="btn-decl" id="complete-btn" onclick="completeModule()">Save &amp; Complete Module 6 →</button>
+    </div>
+
+    <div class="mod-nav">
+      <a href="module5.html" class="btn-back">← Back to Module 5</a>
+      <a href="bonus.html" class="btn-next" id="next-btn">★ Bonus Module →</a>
+    </div>
+  </main>
+</div>
+
+<script>
+let saveTimer = null;
+document.addEventListener('DOMContentLoaded', async () => {
+  const session = await requireAuth();
+  if (!session) return;
+  const user = session.user;
+  const name = user.user_metadata?.full_name || user.email.split('@')[0].replace(/[._-]/g,' ').replace(/\b\w/g,c=>c.toUpperCase());
+  const initials = name.split(' ').map(n=>n[0]).join('').slice(0,2).toUpperCase();
+  document.getElementById('nav-user').textContent = name;
+  document.getElementById('sb-name').textContent = name;
+  document.getElementById('sb-email').textContent = user.email;
+  document.getElementById('sb-av').textContent = initials;
+  const completed = await getProgress();
+  const pct = Math.max(85, Math.round(((completed.length + 7) / 9) * 100));
+  document.getElementById('prog-fill').style.width = pct + '%';
+  document.getElementById('prog-pct').textContent = pct + '%';
+  ['00','01','02','03','04','05','06'].forEach(n => {
+    const c = document.getElementById(`ck-${n}`);
+    if (c && (completed.includes(`module-0${n}`) || n === '00')) { c.textContent = '✓'; c.classList.add('done'); }
+  });
+  if (completed.includes('module-06')) {
+    document.getElementById('next-btn').classList.add('unlocked');
+    const c = document.getElementById('ck-06');
+    if (c) { c.textContent = '✓'; c.classList.add('done'); }
+  }
+  const saved = await loadWorksheet('scope-protection-toolkit');
+  if (saved) populate(saved);
+});
+function autosave(){clearTimeout(saveTimer);setSave('saving');saveTimer=setTimeout(doSave,1400);}
+async function doSave(){const{error}=await saveWorksheet('scope-protection-toolkit',collect());setSave(error?'error':'saved');}
+function setSave(s){const dot=document.getElementById('save-dot');const txt=document.getElementById('save-txt');dot.className='save-dot';if(s==='saving'){dot.classList.add('saving');txt.textContent='Saving...';}else if(s==='saved'){dot.classList.add('saved');txt.textContent='Saved ✓';}else{txt.textContent='Error — check connection';}}
+function collect(){const ids=['sa-scope','sa-excluded','sa-client-resp','sa-revisions','sa-payment','sa-cancel','scr1-sit','scr1-script','scr2-sit','scr2-script','scr3-sit','scr3-script','cr-1','cr-2','cr-3','cr-4','cr-5','aud-need','aud-gen','aud-cap','aud-unsust','aud-changes','aud-vision','final-agreement'];const data={};ids.forEach(id=>{const el=document.getElementById(id);if(el)data[id]=el.value||'';});return data;}
+function populate(saved){Object.keys(saved).forEach(key=>{const el=document.getElementById(key);if(el)el.value=saved[key];});if(saved['final-agreement'])checkLockIn();setSave('saved');}
+function checkLockIn(){const val=document.getElementById('final-agreement').value.trim();document.getElementById('lockin-warn').style.display='none';document.getElementById('lockin-ok').style.display=val.length>80?'block':'none';}
+async function completeModule(){
+  const agreement=document.getElementById('final-agreement').value.trim();
+  if(agreement.length<80){document.getElementById('lockin-warn').style.display='block';document.querySelector('.lockin-section').scrollIntoView({behavior:'smooth'});const a=document.getElementById('alert-complete');a.textContent='Write your complete client agreement before advancing.';a.className='alert-msg alert-err show';return;}
+  const btn=document.getElementById('complete-btn');
+  btn.innerHTML='<span style="display:inline-block;width:16px;height:16px;border-radius:50%;border:2px solid rgba(201,168,76,.3);border-top-color:var(--gold);animation:spin .7s linear infinite;"></span> Saving...';
+  btn.disabled=true;
+  await doSave();
+  await markModuleComplete('module-06');
+  const c=document.getElementById('ck-06');if(c){c.textContent='✓';c.classList.add('done');}
+  document.getElementById('next-btn').classList.add('unlocked');
+  const a=document.getElementById('alert-complete');
+  a.textContent='✓ Module 6 complete! Your Scope Protection Toolkit is saved. The Bonus Module is now unlocked.';
+  a.className='alert-msg alert-ok show';
+  btn.innerHTML='✓ Module 6 Complete';
+}
+function toggleAudio(btn){const on=btn.dataset.playing==='true';btn.textContent=on?'▶':'⏸';btn.dataset.playing=(!on).toString();}
+</script>
+</body>
+</html>
