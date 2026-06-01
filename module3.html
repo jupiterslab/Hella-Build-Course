@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Module 03: Direction — Hella Build</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="app.js" type="text/javascript"></script>
+<style>
+:root{
+  --navy:#0D1B3E;--navy2:#0A1020;
+  --gold:#C9A84C;--gold2:#E8C96A;
+  --cyan:#00D4FF;--white:#FFFFFF;
+  --off:#F5F3EE;--text:#1A2B4A;--muted:#7A8BAE;
+  --border:rgba(13,27,62,0.1);--gold-border:rgba(201,168,76,0.3);
+}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--off);color:var(--text);font-family:'Outfit',sans-serif;font-size:16px;line-height:1.6;-webkit-font-smoothing:antialiased;}
+body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(13,27,62,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(13,27,62,.03) 1px,transparent 1px);background-size:48px 48px;pointer-events:none;z-index:0;}
+
+nav{position:sticky;top:0;z-index:200;background:rgba(245,243,238,.9);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border-bottom:1px solid var(--border);padding:0 32px;height:64px;display:flex;align-items:center;justify-content:space-between;}
+.nav-brand{display:flex;align-items:center;gap:10px;text-decoration:none;}
+.nav-mark{width:34px;height:34px;border-radius:8px;background:var(--navy);display:flex;align-items:center;justify-content:center;font-family:'Orbitron',sans-serif;font-size:11px;font-weight:800;color:var(--gold);}
+.nav-name{font-family:'Orbitron',sans-serif;font-size:12px;font-weight:700;color:var(--navy);letter-spacing:.1em;}
+.nav-sub{font-size:10px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;}
+.nav-right{display:flex;align-items:center;gap:12px;}
+.nav-user{font-size:13px;color:var(--muted);}
+.btn-signout{font-family:'Outfit',sans-serif;font-size:13px;font-weight:600;padding:8px 18px;border-radius:8px;border:1.5px solid var(--border);background:transparent;color:var(--text);cursor:pointer;transition:all .2s;}
+.btn-signout:hover{border-color:var(--navy);}
+
+.layout{display:grid;grid-template-columns:260px 1fr;min-height:calc(100vh - 64px);position:relative;z-index:1;}
+
+.sidebar{background:var(--navy2);border-right:1px solid rgba(255,255,255,.05);padding:28px 0;position:sticky;top:64px;height:calc(100vh - 64px);overflow-y:auto;display:flex;flex-direction:column;}
+.sidebar::before{content:'';position:absolute;inset:0;background-image:linear-gradient(rgba(0,212,255,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(0,212,255,.03) 1px,transparent 1px);background-size:32px 32px;pointer-events:none;}
+.sb-section{font-family:'Orbitron',sans-serif;font-size:9px;font-weight:600;letter-spacing:.3em;text-transform:uppercase;color:rgba(255,255,255,.2);padding:0 24px;margin-bottom:8px;margin-top:24px;}
+.sb-item{display:flex;align-items:center;gap:12px;padding:11px 24px;text-decoration:none;transition:background .15s;position:relative;}
+.sb-item:hover{background:rgba(255,255,255,.04);}
+.sb-item.active{background:rgba(201,168,76,.08);}
+.sb-item.active::before{content:'';position:absolute;right:0;top:0;bottom:0;width:2px;background:var(--gold);}
+.sb-num{font-family:'Orbitron',sans-serif;font-size:10px;font-weight:700;color:var(--gold);letter-spacing:.1em;min-width:28px;}
+.sb-text{font-size:13px;font-weight:500;color:rgba(255,255,255,.65);flex:1;line-height:1.3;}
+.sb-item.active .sb-text{color:var(--white);}
+.sb-check{width:18px;height:18px;border-radius:4px;border:1.5px solid rgba(255,255,255,.12);display:flex;align-items:center;justify-content:center;font-size:9px;color:var(--gold);flex-shrink:0;}
+.sb-check.done{background:rgba(201,168,76,.18);border-color:var(--gold);}
+.sb-check.locked{opacity:.35;}
+.sb-footer{margin-top:auto;padding:20px 24px;border-top:1px solid rgba(255,255,255,.05);position:relative;z-index:1;}
+.sb-av{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--gold),#7A5010);display:flex;align-items:center;justify-content:center;font-family:'Orbitron',sans-serif;font-size:11px;font-weight:800;color:var(--navy);flex-shrink:0;}
+.sb-out{font-size:12px;color:rgba(255,255,255,.25);background:none;border:none;cursor:pointer;padding:0;transition:color .2s;margin-top:10px;display:block;}
+.sb-out:hover{color:rgba(255,255,255,.5);}
+
+.progress-strip{margin:0;padding:16px 24px;background:rgba(201,168,76,.06);border-bottom:1px solid var(--gold-border);position:relative;z-index:1;}
+.prog-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
+.prog-label{font-family:'Orbitron',sans-serif;font-size:10px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:var(--muted);}
+.prog-pct{font-family:'Orbitron',sans-serif;font-size:12px;font-weight:700;color:var(--gold);}
+.prog-track{height:5px;background:var(--border);border-radius:100px;overflow:hidden;}
+.prog-fill{height:100%;background:linear-gradient(90deg,var(--gold),var(--cyan));border-radius:100px;transition:width .6s ease;}
+
+.main{padding:48px 56px;max-width:900px;}
+
+.mod-hero{background:var(--navy);border-radius:20px;padding:44px 48px;position:relative;overflow:hidden;margin-bottom:48px;box-shadow:0 16px 48px rgba(13,27,62,.25),0 0 0 1px rgba(201,168,76,.15);}
+.mod-hero::before{content:'03';position:absolute;right:32px;bottom:-16px;font-family:'Orbitron',sans-serif;font-size:140px;font-weight:900;color:rgba(255,255,255,.04);line-height:1;pointer-events:none;}
+.mod-hero::after{content:'';position:absolute;top:-80px;right:-80px;width:300px;height:300px;border-radius:50%;background:radial-gradient(circle,rgba(201,168,76,.1) 0%,transparent 70%);pointer-events:none;}
+.scanline{position:absolute;left:0;right:0;top:0;height:2px;background:linear-gradient(90deg,transparent,rgba(0,212,255,.12),transparent);animation:scan 5s linear infinite;pointer-events:none;}
+@keyframes scan{0%{transform:translateY(0)}100%{transform:translateY(400px)}}
+.mod-eyebrow{font-family:'Orbitron',sans-serif;font-size:10px;font-weight:600;letter-spacing:.3em;text-transform:uppercase;color:var(--cyan);margin-bottom:16px;animation:glowcyan 2.5s infinite;}
+@keyframes glowcyan{0%,100%{opacity:.7}50%{opacity:1;text-shadow:0 0 20px rgba(0,212,255,.7)}}
+.mod-h{font-family:'Orbitron',sans-serif;font-size:clamp(24px,3.5vw,40px);font-weight:900;line-height:1.1;color:var(--white);margin-bottom:16px;}
+.mod-h em{font-style:normal;color:var(--gold);}
+.mod-p{font-size:15px;color:rgba(255,255,255,.55);line-height:1.75;max-width:520px;margin-bottom:24px;}
+.mod-meta{display:flex;gap:20px;flex-wrap:wrap;}
+.meta-chip{display:flex;align-items:center;gap:6px;font-size:12px;color:rgba(255,255,255,.4);}
+.meta-chip span{color:var(--gold);font-weight:600;}
+
+.s-label{font-family:'Orbitron',sans-serif;font-size:10px;font-weight:600;letter-spacing:.3em;text-transform:uppercase;color:var(--gold);margin-bottom:16px;}
+
+.lesson{background:white;border-radius:16px;padding:36px;border:1px solid var(--border);box-shadow:0 4px 16px rgba(13,27,62,.06);margin-bottom:24px;}
+.lesson-num{font-family:'Orbitron',sans-serif;font-size:10px;font-weight:600;letter-spacing:.25em;text-transform:uppercase;color:var(--gold);margin-bottom:8px;}
+.lesson-title{font-family:'Orbitron',sans-serif;font-size:18px;font-weight:700;color:var(--navy);margin-bottom:20px;letter-spacing:.02em;}
+.lesson-p{font-size:15px;color:var(--muted);line-height:1.75;margin-bottom:16px;}
+.lesson-p:last-child{margin-bottom:0;}
+.callout-cyan{padding:18px 22px;background:rgba(0,212,255,.06);border-left:3px solid var(--cyan);border-radius:0 10px 10px 0;margin:20px 0;font-size:14px;color:var(--text);line-height:1.65;}
+.callout-cyan strong{color:var(--navy);}
+.callout-gold{padding:18px 22px;background:rgba(201,168,76,.08);border-left:3px solid var(--gold);border-radius:0 10px 10px 0;margin:20px 0;font-size:14px;color:#6B4E00;line-height:1.65;font-weight:500;}
+
+.audio-player{display:flex;align-items:center;gap:16px;padding:16px 20px;background:var(--navy);border-radius:12px;margin:20px 0;border:1px solid rgba(201,168,76,.15);}
+.play-btn{width:40px;height:40px;border-radius:50%;background:var(--gold);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;transition:transform .2s,background .2s;}
+.play-btn:hover{transform:scale(1.1);background:var(--gold2);}
+.audio-info{flex:1;}
+.audio-title{font-size:13px;font-weight:600;color:var(--white);margin-bottom:2px;}
+.audio-sub{font-size:11px;color:rgba(255,255,255,.35);}
+.audio-bar{height:3px;background:rgba(255,255,255,.12);border-radius:100px;margin-top:8px;}
+.audio-time{font-family:'Orbitron',sans-serif;font-size:11px;color:rgba(255,255,255,.35);white-space:nowrap;}
+
+/* DIRECTION COMPASS WORKSHEET */
+.ws-section{margin:48px 0;}
+.ws-header{background:var(--navy);border-radius:16px 16px 0 0;padding:28px 32px;border:1px solid var(--gold-border);border-bottom:none;display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:16px;}
+.ws-eyebrow{font-family:'Orbitron',sans-serif;font-size:9px;font-weight:600;letter-spacing:.3em;text-transform:uppercase;color:var(--cyan);margin-bottom:8px;animation:glowcyan 2.5s infinite;}
+.ws-title{font-family:'Orbitron',sans-serif;font-size:22px;font-weight:900;color:var(--white);}
+.ws-subtitle{font-size:13px;color:rgba(255,255,255,.45);margin-top:4px;}
+.ws-save{display:flex;align-items:center;gap:8px;font-size:12px;color:rgba(255,255,255,.4);}
+.save-dot{width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,.2);transition:background .3s;}
+.save-dot.saving{background:var(--gold);animation:pulsegold 1s infinite;}
+.save-dot.saved{background:#28C840;}
+@keyframes pulsegold{0%,100%{box-shadow:0 0 0 0 rgba(201,168,76,.5)}50%{box-shadow:0 0 0 6px rgba(201,168,76,0)}}
+.ws-instructions{background:rgba(201,168,76,.06);border:1px solid var(--gold-border);border-top:none;border-bottom:none;padding:16px 32px;font-size:13px;color:var(--text);line-height:1.6;}
+.ws-instructions strong{color:var(--navy);}
+.ws-body{background:white;border:1px solid var(--gold-border);border-top:none;border-radius:0 0 16px 16px;padding:32px;}
+
+/* Compass sections */
+.compass-grid{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-bottom:32px;}
+.compass-card{border:1.5px solid var(--border);border-radius:12px;overflow:hidden;}
+.compass-card-header{background:var(--navy);padding:14px 20px;}
+.cc-num{font-family:'Orbitron',sans-serif;font-size:10px;font-weight:700;color:var(--gold);letter-spacing:.15em;margin-bottom:4px;}
+.cc-title{font-size:13px;font-weight:700;color:var(--white);}
+.cc-hint{font-size:11px;color:rgba(255,255,255,.4);margin-top:2px;line-height:1.4;}
+.compass-card-body{padding:16px 20px;}
+.field-input{width:100%;padding:11px 14px;border:1.5px solid var(--border);border-radius:8px;background:var(--off);font-family:'Outfit',sans-serif;font-size:13px;color:var(--text);outline:none;resize:vertical;min-height:80px;transition:all .2s;line-height:1.55;}
+.field-input:focus{border-color:var(--gold);background:white;box-shadow:0 0 0 3px rgba(201,168,76,.12);}
+.field-input::placeholder{color:rgba(13,27,62,.25);font-size:12px;}
+.field-input.single{min-height:44px;resize:none;}
+
+/* Problem fit section */
+.problem-section{margin-bottom:32px;}
+.prob-label{font-family:'Orbitron',sans-serif;font-size:10px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:var(--gold);margin-bottom:6px;margin-top:20px;}
+.prob-label:first-child{margin-top:0;}
+.prob-hint{font-size:12px;color:var(--muted);margin-bottom:8px;font-style:italic;}
+
+/* Positioning statement */
+.pos-statement{background:rgba(201,168,76,.06);border:1.5px solid var(--gold-border);border-radius:12px;padding:28px;margin-bottom:0;}
+.pos-label{font-family:'Orbitron',sans-serif;font-size:10px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:var(--gold);margin-bottom:12px;}
+.pos-builder{display:grid;grid-template-columns:auto 1fr;gap:8px 12px;align-items:center;margin-bottom:20px;}
+.pos-prefix{font-size:15px;font-weight:600;color:var(--navy);white-space:nowrap;}
+.pos-input{padding:10px 14px;border:1.5px solid var(--border);border-radius:8px;background:white;font-family:'Outfit',sans-serif;font-size:14px;color:var(--text);outline:none;transition:all .2s;width:100%;}
+.pos-input:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(201,168,76,.12);}
+.pos-input::placeholder{color:rgba(13,27,62,.25);font-size:12px;}
+.pos-preview{background:var(--navy);border-radius:10px;padding:20px 24px;margin-top:16px;}
+.pos-preview-label{font-family:'Orbitron',sans-serif;font-size:9px;font-weight:600;letter-spacing:.25em;text-transform:uppercase;color:var(--cyan);margin-bottom:10px;}
+.pos-preview-text{font-size:15px;color:var(--white);line-height:1.65;font-style:italic;}
+.pos-preview-text span{color:var(--gold);font-style:normal;font-weight:600;}
+
+/* LOCK-IN */
+.lockin-section{background:var(--navy);border-radius:20px;padding:40px;margin:24px 0;border:1.5px solid var(--gold-border);box-shadow:0 12px 40px rgba(13,27,62,.2),0 0 24px rgba(201,168,76,.1);position:relative;overflow:hidden;}
+.lockin-section::after{content:'';position:absolute;bottom:-80px;right:-80px;width:300px;height:300px;border-radius:50%;background:radial-gradient(circle,rgba(201,168,76,.1) 0%,transparent 70%);pointer-events:none;}
+.lockin-tag{font-family:'Orbitron',sans-serif;font-size:10px;font-weight:600;letter-spacing:.3em;text-transform:uppercase;color:var(--gold);margin-bottom:12px;}
+.lockin-title{font-family:'Orbitron',sans-serif;font-size:22px;font-weight:900;color:var(--white);margin-bottom:12px;}
+.lockin-rule{font-size:14px;color:rgba(255,255,255,.6);line-height:1.65;margin-bottom:24px;}
+.lockin-rule strong{color:var(--gold);}
+.lockin-input{width:100%;padding:15px 18px;border:1.5px solid rgba(201,168,76,.4);border-radius:10px;background:rgba(255,255,255,.05);font-family:'Outfit',sans-serif;font-size:15px;font-weight:600;color:var(--white);outline:none;transition:all .2s;margin-bottom:12px;}
+.lockin-input:focus{border-color:var(--gold);background:rgba(255,255,255,.08);box-shadow:0 0 0 3px rgba(201,168,76,.15);}
+.lockin-input::placeholder{color:rgba(255,255,255,.3);font-weight:400;}
+.lockin-warn{font-size:13px;color:rgba(201,168,76,.7);display:none;margin-bottom:12px;}
+.lockin-ok{font-size:13px;color:#28C840;display:none;margin-bottom:12px;}
+
+.decl-box{background:linear-gradient(135deg,rgba(201,168,76,.1) 0%,rgba(201,168,76,.05) 100%);border:1.5px solid var(--gold-border);border-radius:20px;padding:40px;text-align:center;margin:24px 0;box-shadow:0 8px 32px rgba(201,168,76,.1);}
+.decl-label{font-family:'Orbitron',sans-serif;font-size:9px;font-weight:600;letter-spacing:.3em;text-transform:uppercase;color:#8A6B1A;margin-bottom:16px;}
+.decl-text{font-family:'Orbitron',sans-serif;font-size:clamp(16px,2.2vw,22px);font-weight:800;color:var(--navy);line-height:1.25;margin-bottom:12px;}
+.decl-sub{font-size:14px;color:var(--muted);margin-bottom:28px;font-style:italic;}
+.alert-msg{padding:12px 16px;border-radius:8px;font-size:13px;font-weight:500;margin-bottom:16px;display:none;}
+.alert-msg.show{display:block;}
+.alert-err{background:#FEF2F2;color:#B91C1C;border:1px solid #FECACA;}
+.alert-ok{background:#F0FDF4;color:#15803D;border:1px solid #BBF7D0;}
+.btn-decl{display:inline-flex;align-items:center;gap:8px;padding:16px 40px;border-radius:12px;background:var(--navy);color:var(--gold);font-family:'Outfit',sans-serif;font-size:15px;font-weight:700;letter-spacing:.05em;border:none;cursor:pointer;box-shadow:0 8px 28px rgba(13,27,62,.2);transition:all .25s;}
+.btn-decl:hover{transform:translateY(-3px);box-shadow:0 16px 40px rgba(13,27,62,.3),0 0 24px rgba(201,168,76,.2);}
+
+.mod-nav{display:flex;justify-content:space-between;align-items:center;gap:12px;padding-top:40px;border-top:1px solid var(--border);margin-top:40px;}
+.btn-back{display:inline-flex;align-items:center;gap:8px;padding:12px 24px;border-radius:10px;background:transparent;color:var(--text);border:1.5px solid var(--border);font-family:'Outfit',sans-serif;font-size:14px;font-weight:600;text-decoration:none;cursor:pointer;transition:all .2s;}
+.btn-back:hover{border-color:var(--navy);background:rgba(13,27,62,.04);}
+.btn-next{display:inline-flex;align-items:center;gap:8px;padding:12px 24px;border-radius:10px;background:var(--navy);color:var(--gold);border:none;font-family:'Outfit',sans-serif;font-size:14px;font-weight:700;text-decoration:none;cursor:pointer;transition:all .2s;opacity:.4;pointer-events:none;}
+.btn-next.unlocked{opacity:1;pointer-events:auto;}
+.btn-next.unlocked:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(13,27,62,.25);}
+
+@keyframes spin{to{transform:rotate(360deg)}}
+@media(max-width:900px){.layout{grid-template-columns:1fr;}.sidebar{display:none;}.main{padding:32px 24px;}.compass-grid{grid-template-columns:1fr;}}
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="orientation.html" class="nav-brand">
+    <div class="nav-mark">HB</div>
+    <div>
+      <div class="nav-name">BUILD TERMINAL</div>
+      <div class="nav-sub">Jupiter's Lab</div>
+    </div>
+  </a>
+  <div class="nav-right">
+    <span class="nav-user" id="nav-user"></span>
+    <button class="btn-signout" onclick="signOut()">Sign Out</button>
+  </div>
+</nav>
+
+<div class="layout">
+  <aside class="sidebar">
+    <div style="position:relative;z-index:1;flex:1;">
+      <div class="sb-section">Course</div>
+      <a href="orientation.html" class="sb-item"><div class="sb-num">00</div><div class="sb-text">Orientation</div><div class="sb-check done" id="ck-00">✓</div></a>
+      <a href="module1.html" class="sb-item"><div class="sb-num">01</div><div class="sb-text">Skill Clarity</div><div class="sb-check" id="ck-01"></div></a>
+      <a href="module2.html" class="sb-item"><div class="sb-num">02</div><div class="sb-text">Skill Stacking</div><div class="sb-check" id="ck-02"></div></a>
+      <a href="module3.html" class="sb-item active"><div class="sb-num">03</div><div class="sb-text">Direction</div><div class="sb-check" id="ck-03"></div></a>
+      <div class="sb-item" style="opacity:.4;cursor:default;"><div class="sb-num">04</div><div class="sb-text">Offer Design</div><div class="sb-check locked">🔒</div></div>
+      <div class="sb-item" style="opacity:.4;cursor:default;"><div class="sb-num">05</div><div class="sb-text">Workflow</div><div class="sb-check locked">🔒</div></div>
+      <div class="sb-item" style="opacity:.4;cursor:default;"><div class="sb-num">06</div><div class="sb-text">Systems + Rest</div><div class="sb-check locked">🔒</div></div>
+      <div class="sb-item" style="opacity:.4;cursor:default;"><div class="sb-num">★</div><div class="sb-text">Bonus Module</div><div class="sb-check locked">🔒</div></div>
+    </div>
+    <div class="sb-footer">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+        <div class="sb-av" id="sb-av">?</div>
+        <div><div style="font-size:13px;font-weight:600;color:var(--white);" id="sb-name">—</div><div style="font-size:11px;color:rgba(255,255,255,.3);" id="sb-email">—</div></div>
+      </div>
+      <button class="sb-out" onclick="signOut()">← Sign out</button>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="progress-strip">
+      <div class="prog-row"><span class="prog-label">Course Progress</span><span class="prog-pct" id="prog-pct">40%</span></div>
+      <div class="prog-track"><div class="prog-fill" id="prog-fill" style="width:40%;"></div></div>
+    </div>
+
+    <!-- HERO -->
+    <div class="mod-hero" style="margin-top:40px;">
+      <div class="scanline"></div>
+      <div class="mod-eyebrow">// Module 03 — Phase O: Order (continued)</div>
+      <h1 class="mod-h">Choosing Direction<br><em>Without Pressure</em></h1>
+      <p class="mod-p">Skills without direction are motion without momentum. You've identified what you can do. Now you're going to decide — for right now, not forever — what problem you want those skills to solve, and who you want to solve it for.</p>
+      <div class="mod-meta">
+        <div class="meta-chip">⏱ <span>~20 minutes</span></div>
+        <div class="meta-chip">📐 <span>Direction Compass Worksheet</span></div>
+        <div class="meta-chip">🔒 <span>Lock-In: Your positioning statement</span></div>
+      </div>
+    </div>
+
+    <!-- LESSON 3.1 -->
+    <div class="s-label">Lesson 3.1</div>
+    <div class="lesson">
+      <div class="lesson-num">Lesson 3.1 · Skills Without Direction = Motion Without Momentum</div>
+      <div class="lesson-title">Why Saying Yes to Everything Is Saying No to Growth</div>
+      <div class="audio-player">
+        <button class="play-btn" onclick="toggleAudio(this)">▶</button>
+        <div class="audio-info">
+          <div class="audio-title">Lesson 3.1 — Direction vs. Motion</div>
+          <div class="audio-sub">Voiceover · ~5 min · Add your audio file to enable playback</div>
+          <div class="audio-bar"></div>
+        </div>
+        <div class="audio-time">0:00</div>
+      </div>
+      <p class="lesson-p">Here's what happens when you have skills but no direction: you attract random work. You say yes to whatever comes in because it pays. You end up with a portfolio of disconnected projects, a client base with no throughline, and a business that looks different every time someone asks what you do. That's not a business. That's freelancing on accident.</p>
+      <p class="lesson-p">Direction is different from identity. This is not about who you are as a person or what you're committed to for the rest of your life. Direction is a decision filter. It answers one question: "Is this the kind of problem I've decided to solve?" If yes, take it. If no, refer it out. That filter alone makes you more efficient, more referable, and more expensive.</p>
+      <div class="callout-cyan">
+        <strong>The cost of saying yes to everything:</strong> When you serve everyone, no one knows who to send you. Referrals dry up because nobody can explain what you do. Your best clients — the ones who'd pay the most — pass because your positioning doesn't match their problem. Direction isn't limiting. It's the mechanism by which you become known.
+      </div>
+    </div>
+
+    <!-- LESSON 3.2 -->
+    <div class="s-label">Lesson 3.2</div>
+    <div class="lesson">
+      <div class="lesson-num">Lesson 3.2 · Starting With the Problem, Not the Skill</div>
+      <div class="lesson-title">The Market Pays for Problems Solved, Not Skills Performed</div>
+      <div class="audio-player">
+        <button class="play-btn" onclick="toggleAudio(this)">▶</button>
+        <div class="audio-info">
+          <div class="audio-title">Lesson 3.2 — Problem-First Thinking</div>
+          <div class="audio-sub">Voiceover · ~5 min · Add your audio file to enable playback</div>
+          <div class="audio-bar"></div>
+        </div>
+        <div class="audio-time">0:00</div>
+      </div>
+      <p class="lesson-p">Nobody hires a "writer." They hire someone to fix their conversion copy because their landing page isn't converting. Nobody hires a "strategist." They hire someone to help them figure out why their revenue is inconsistent and what to do about it. The skill is the tool. The problem is why they call you.</p>
+      <p class="lesson-p">When you lead with the problem instead of the skill, two things happen. First, the right people recognize themselves immediately — "that's me, that's my problem." Second, you stop competing on skill level and start competing on relevance. Relevance is harder to commoditize than skill.</p>
+      <div class="callout-cyan">
+        <strong>From your Module 2 stacks</strong> — look at the Stack Advantage you wrote. Buried in that sentence is the problem you naturally solve. Extract it. Name it specifically. That's what the Direction Compass maps.
+      </div>
+      <div class="callout-gold">🔒 This module ends with your Positioning Statement — one sentence that names who you help, what problem you solve, and how you solve it. That sentence becomes the foundation of your offer in Module 4.</div>
+    </div>
+
+    <!-- DIRECTION COMPASS WORKSHEET -->
+    <div class="ws-section">
+      <div class="s-label">Interactive Worksheet</div>
+      <div class="ws-header">
+        <div>
+          <div class="ws-eyebrow">// Phase O — Order · Worksheet 03</div>
+          <div class="ws-title">The Direction Compass</div>
+          <div class="ws-subtitle">Your answers save automatically as you type</div>
+        </div>
+        <div class="ws-save">
+          <div class="save-dot" id="save-dot"></div>
+          <span id="save-txt">Ready</span>
+        </div>
+      </div>
+      <div class="ws-instructions">
+        <strong>Instructions:</strong> Map the four compass points — the problems your skills solve, who experiences them most urgently, where those problems show up, and what you're choosing to focus on right now. Then build your positioning statement using the sentence builder at the bottom. Every field saves automatically.
+      </div>
+      <div class="ws-body">
+
+        <!-- Four compass quadrants -->
+        <div class="compass-grid">
+          <div class="compass-card">
+            <div class="compass-card-header">
+              <div class="cc-num">NORTH</div>
+              <div class="cc-title">Problems Your Skills Solve</div>
+              <div class="cc-hint">From your experience — what keeps going wrong that you keep fixing?</div>
+            </div>
+            <div class="compass-card-body">
+              <textarea class="field-input" id="compass-north" placeholder="List the specific problems you've solved across your career. Be concrete — not 'communication issues' but 'founders who can't explain what they do without losing the room.'" oninput="autosave(); updatePreview()"></textarea>
+            </div>
+          </div>
+
+          <div class="compass-card">
+            <div class="compass-card-header">
+              <div class="cc-num">SOUTH</div>
+              <div class="cc-title">Who Experiences These Problems Most</div>
+              <div class="cc-hint">Name an audience specific enough that a stranger could identify them</div>
+            </div>
+            <div class="compass-card-body">
+              <textarea class="field-input" id="compass-south" placeholder="Not 'small business owners' — 'service-based founders with 1–5 years in business who are generating revenue but have no documented systems and can't explain their offer in one sentence.'" oninput="autosave(); updatePreview()"></textarea>
+            </div>
+          </div>
+
+          <div class="compass-card">
+            <div class="compass-card-header">
+              <div class="cc-num">EAST</div>
+              <div class="cc-title">Contexts Where This Problem Shows Up</div>
+              <div class="cc-hint">Industries, situations, business stages, life moments</div>
+            </div>
+            <div class="compass-card-body">
+              <textarea class="field-input" id="compass-east" placeholder="Where does this problem surface? At what point in a business does it become urgent? What triggers someone to finally look for help?" oninput="autosave()"></textarea>
+            </div>
+          </div>
+
+          <div class="compass-card">
+            <div class="compass-card-header">
+              <div class="cc-num">WEST</div>
+              <div class="cc-title">What You're Choosing to Focus On Right Now</div>
+              <div class="cc-hint">Not forever. For the next 12 months. One direction.</div>
+            </div>
+            <div class="compass-card-body">
+              <textarea class="field-input" id="compass-west" placeholder="Based on your North, South, and East — what specific problem, for which specific audience, are you committing to solve right now? This is a direction, not a life sentence." oninput="autosave(); updatePreview()"></textarea>
+            </div>
+          </div>
+        </div>
+
+        <!-- Problem fit -->
+        <div class="problem-section">
+          <div style="font-family:'Orbitron',sans-serif;font-size:13px;font-weight:700;color:var(--navy);margin-bottom:20px;letter-spacing:.03em;">// Problem Fit Check</div>
+
+          <div class="prob-label">How expensive is this problem?</div>
+          <div class="prob-hint">Quantify the cost — lost revenue, wasted time, failed clients, delayed growth. If you can't put a number on it, the problem isn't specific enough yet.</div>
+          <textarea class="field-input" id="prob-cost" placeholder="e.g. Service-based founders with unclear positioning lose an estimated 30–40% of potential clients because prospects can't understand what they do. That's measurable revenue walking out the door every month." oninput="autosave()"></textarea>
+
+          <div class="prob-label">How often does it recur?</div>
+          <div class="prob-hint">One-time problems justify one-time projects. Recurring problems justify recurring engagements and retainers.</div>
+          <textarea class="field-input" id="prob-recur" placeholder="e.g. This problem doesn't resolve itself — it compounds. Every new client, every new offer, every new hire creates a new layer of confusion without a foundation in place." oninput="autosave()"></textarea>
+
+          <div class="prob-label">What happens if it remains unsolved?</div>
+          <div class="prob-hint">This is your urgency engine. If nothing changes by ignoring it, there's no compelling reason to hire you.</div>
+          <textarea class="field-input" id="prob-unsolved" placeholder="e.g. The founder continues to take on misaligned clients, undercharge, over-deliver, burn out, and eventually either plateau or quit — never building the business they actually envisioned." oninput="autosave()"></textarea>
+        </div>
+
+        <!-- POSITIONING STATEMENT BUILDER -->
+        <div class="pos-statement">
+          <div class="pos-label">// Positioning Statement Builder</div>
+          <p style="font-size:13px;color:var(--muted);margin-bottom:20px;line-height:1.6;">Fill in each piece. Your completed statement will appear below as you type. This is the sentence you refine and test. It becomes the foundation of your offer in Module 4.</p>
+
+          <div class="pos-builder">
+            <span class="pos-prefix">I help</span>
+            <input type="text" class="pos-input" id="pos-who" placeholder="[specific audience]" oninput="autosave(); updatePreview()">
+
+            <span class="pos-prefix">solve</span>
+            <input type="text" class="pos-input" id="pos-problem" placeholder="[specific problem]" oninput="autosave(); updatePreview()">
+
+            <span class="pos-prefix">by</span>
+            <input type="text" class="pos-input" id="pos-how" placeholder="[your specific approach or method]" oninput="autosave(); updatePreview()">
+
+            <span class="pos-prefix">so they can</span>
+            <input type="text" class="pos-input" id="pos-outcome" placeholder="[the result they actually want]" oninput="autosave(); updatePreview()">
+          </div>
+
+          <div class="pos-preview">
+            <div class="pos-preview-label">// Your Positioning Statement — Live Preview</div>
+            <div class="pos-preview-text" id="pos-preview-text">
+              Fill in the fields above to see your statement build in real time.
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ICP BUILDER -->
+    <div class="s-label" style="margin-top:48px;">ICP Builder — Document 02</div>
+    <div style="background:white;border-radius:16px;padding:36px;border:1px solid var(--border);box-shadow:0 4px 16px rgba(13,27,62,.06);margin-bottom:24px;">
+      <div style="font-family:'Orbitron',sans-serif;font-size:18px;font-weight:700;color:var(--navy);margin-bottom:8px;">Ideal Client Profile</div>
+      <p style="font-size:15px;color:var(--muted);line-height:1.75;margin-bottom:24px;">Your positioning statement names who you serve. The ICP document goes deeper — it describes that person so specifically that when they find you, they feel like you read their diary. This becomes Document 02 in your portfolio.</p>
+
+      <div class="callout-cyan" style="margin-bottom:24px;"><strong>Why this matters:</strong> Vague targeting produces vague clients. When you know exactly who you're talking to — what they Google at midnight, what they've already tried, what embarrasses them about their current situation — your content, your offer, and your conversations all sharpen automatically.</div>
+
+      <!-- ICP fields -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+
+        <div>
+          <div class="prob-label">Who they are (demographics)</div>
+          <div class="prob-hint">Age range, professional background, how long they've been in business, revenue stage, team size.</div>
+          <textarea class="field-input" id="icp-who" placeholder="e.g. Service-based founders, 28–45, solo operators or 1–3 person teams, 1–5 years in business, generating $2K–$8K/month but inconsistently. Background in creative, consulting, or professional services." oninput="autosave()"></textarea>
+        </div>
+
+        <div>
+          <div class="prob-label">What they want (goals)</div>
+          <div class="prob-hint">What does success look like to them in 12 months? What are they working toward?</div>
+          <textarea class="field-input" id="icp-goals" placeholder="e.g. Consistent $5K–$10K months. Clients who respect their time. A business that doesn't require them to be on call 24/7. A clear explanation of what they do that makes people refer them." oninput="autosave()"></textarea>
+        </div>
+
+        <div>
+          <div class="prob-label">What they struggle with (pain points)</div>
+          <div class="prob-hint">The specific frustrations they experience regularly. Be concrete — not 'they're stressed' but what specifically stresses them.</div>
+          <textarea class="field-input" id="icp-pain" placeholder="e.g. They can't explain what they do without rambling. Every client engagement feels like starting over. They undercharge and then resent the work. They say yes to everything because they're afraid of saying no." oninput="autosave()"></textarea>
+        </div>
+
+        <div>
+          <div class="prob-label">What they've already tried</div>
+          <div class="prob-hint">Solutions they've attempted that didn't fully work. This tells you what NOT to sound like.</div>
+          <textarea class="field-input" id="icp-tried" placeholder="e.g. Generic business courses that gave them frameworks but not execution. Coaches who motivated them but didn't give them documents. DIY-ing their contracts and pricing and constantly second-guessing both." oninput="autosave()"></textarea>
+        </div>
+
+        <div>
+          <div class="prob-label">Where they live online</div>
+          <div class="prob-hint">Which platforms, communities, podcasts, newsletters. Where do they look for answers?</div>
+          <textarea class="field-input" id="icp-online" placeholder="e.g. LinkedIn. Business Facebook groups. They listen to How I Built This, The Goal Digger Podcast. They Google things like 'how to write a scope of work' and 'how to price consulting services.'" oninput="autosave()"></textarea>
+        </div>
+
+        <div>
+          <div class="prob-label">What keeps them up at night</div>
+          <div class="prob-hint">The 2am thought. The thing they haven't told anyone. This is the emotional core of why they need you.</div>
+          <textarea class="field-input" id="icp-fear" placeholder="e.g. That they'll never figure out how to make this consistent. That they're not a 'real' business. That someone will ask them how their business works and they won't have a good answer. That they'll have to go back to a 9-5." oninput="autosave()"></textarea>
+        </div>
+
+        <div>
+          <div class="prob-label">What they say vs. what they mean</div>
+          <div class="prob-hint">"I need help with my brand" often means something else entirely. What's the surface ask vs. the real need?</div>
+          <textarea class="field-input" id="icp-says" placeholder="e.g. They say: 'I need a better website.' They mean: 'Nobody understands what I do and I don't know how to fix that.' They say: 'I need to get organized.' They mean: 'I'm drowning and I'm afraid to admit it.'" oninput="autosave()"></textarea>
+        </div>
+
+        <div>
+          <div class="prob-label">What makes them ready to invest</div>
+          <div class="prob-hint">The trigger event. What happens in their life or business that makes them finally take action?</div>
+          <textarea class="field-input" id="icp-trigger" placeholder="e.g. They just lost a client to someone who looked more professional. They just had a scope creep nightmare. They just hit a revenue plateau for the third month in a row. They just got asked to speak somewhere and realized they can't explain what they do." oninput="autosave()"></textarea>
+        </div>
+
+      </div>
+
+      <!-- ICP one-liner -->
+      <div style="background:var(--navy);border-radius:12px;padding:24px;margin-top:24px;">
+        <div style="font-family:'Orbitron',sans-serif;font-size:9px;font-weight:600;letter-spacing:.25em;text-transform:uppercase;color:var(--cyan);margin-bottom:10px;">// ICP One-Liner — Live Build</div>
+        <div style="font-size:12px;color:rgba(255,255,255,.4);margin-bottom:16px;line-height:1.6;">Combine everything above into one sentence that describes your ideal client so specifically they'd say "that's me."</div>
+        <textarea class="field-input" id="icp-oneliner" placeholder="e.g. My ideal client is a solo service-based founder, 1–3 years in business, generating income but inconsistently, who knows they're capable but can't articulate what they do, has tried generic courses, and is finally ready to build something that actually works." style="background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.12);color:var(--white);min-height:80px;" oninput="autosave()"></textarea>
+      </div>
+    </div>
+
+    <!-- LOCK-IN -->
+    <div class="s-label">Lock-In Decision</div>
+    <div class="lockin-section">
+      <div class="lockin-tag">🔒 Lock-In Rule — Phase O: Order (Direction)</div>
+      <div class="lockin-title">Confirm Your Positioning Statement.</div>
+      <p class="lockin-rule">Copy your completed positioning statement from the builder above and paste it here. <strong>If it's still vague — go back and tighten it.</strong> "I help entrepreneurs grow their business" is not a positioning statement. "I help service-based founders with revenue but no systems build the operational infrastructure that lets them scale without burning out" is a positioning statement. The difference is specificity.</p>
+      <textarea class="lockin-input" id="final-positioning" style="min-height:80px;resize:vertical;" placeholder="I help [specific audience] solve [specific problem] by [your approach] so they can [the outcome]." oninput="autosave(); checkLockIn();"></textarea>
+      <div class="lockin-warn" id="lockin-warn">⚠ Your positioning statement must be specific enough to describe a real person with a real problem. Tighten it before advancing.</div>
+      <div class="lockin-ok" id="lockin-ok">✓ Positioning statement confirmed. You may advance to Module 4.</div>
+    </div>
+
+    <!-- DECLARATION -->
+    <div class="decl-box">
+      <div class="decl-label">✦ Declaration Moment — Module 03</div>
+      <div class="decl-text">"This is a direction,<br>not a life sentence."</div>
+      <div class="decl-sub">You chose. That's the hardest part. Everything else is execution.</div>
+      <div class="alert-msg" id="alert-complete"></div>
+      <button class="btn-decl" id="complete-btn" onclick="completeModule()">
+        Save &amp; Complete Module 3 →
+      </button>
+    </div>
+
+    <div class="mod-nav">
+      <a href="module2.html" class="btn-back">← Back to Module 2</a>
+      <a href="module4.html" class="btn-next" id="next-btn">Module 4 →</a>
+    </div>
+  </main>
+</div>
+
+<script>
+let saveTimer = null;
+
+document.addEventListener('DOMContentLoaded', async () => {
+  const session = await requireAuth();
+  if (!session) return;
+  const user = session.user;
+  const name = user.user_metadata?.full_name || user.email.split('@')[0].replace(/[._-]/g,' ').replace(/\b\w/g,c=>c.toUpperCase());
+  const initials = name.split(' ').map(n=>n[0]).join('').slice(0,2).toUpperCase();
+  document.getElementById('nav-user').textContent = name;
+  document.getElementById('sb-name').textContent = name;
+  document.getElementById('sb-email').textContent = user.email;
+  document.getElementById('sb-av').textContent = initials;
+
+  const completed = await getProgress();
+  const pct = Math.max(40, Math.round(((completed.length + 4) / 9) * 100));
+  document.getElementById('prog-fill').style.width = pct + '%';
+  document.getElementById('prog-pct').textContent = pct + '%';
+  ['00','01','02','03'].forEach(n => {
+    const c = document.getElementById(`ck-${n}`);
+    if (c && completed.includes(`module-0${n}`)) { c.textContent = '✓'; c.classList.add('done'); }
+  });
+  if (completed.includes('module-03')) {
+    document.getElementById('next-btn').classList.add('unlocked');
+    const c = document.getElementById('ck-03');
+    if (c) { c.textContent = '✓'; c.classList.add('done'); }
+  }
+
+  const saved = await loadWorksheet('direction-compass');
+  if (saved) populate(saved);
+});
+
+function updatePreview() {
+  const who     = document.getElementById('pos-who')?.value.trim()     || '[specific audience]';
+  const problem = document.getElementById('pos-problem')?.value.trim() || '[specific problem]';
+  const how     = document.getElementById('pos-how')?.value.trim()     || '[your approach]';
+  const outcome = document.getElementById('pos-outcome')?.value.trim() || '[the outcome they want]';
+  const preview = document.getElementById('pos-preview-text');
+  const allFilled = document.getElementById('pos-who').value && document.getElementById('pos-problem').value;
+  if (allFilled) {
+    preview.innerHTML = `I help <span>${who}</span> solve <span>${problem}</span> by <span>${how}</span> so they can <span>${outcome}</span>.`;
+  } else {
+    preview.textContent = 'Fill in the fields above to see your statement build in real time.';
+  }
+}
+
+function autosave() {
+  clearTimeout(saveTimer);
+  setSave('saving');
+  saveTimer = setTimeout(doSave, 1400);
+}
+
+async function doSave() {
+  const { error } = await saveWorksheet('direction-compass', collect());
+  setSave(error ? 'error' : 'saved');
+}
+
+function setSave(s) {
+  const dot = document.getElementById('save-dot');
+  const txt = document.getElementById('save-txt');
+  dot.className = 'save-dot';
+  if (s === 'saving') { dot.classList.add('saving'); txt.textContent = 'Saving...'; }
+  else if (s === 'saved') { dot.classList.add('saved'); txt.textContent = 'Saved ✓'; }
+  else { txt.textContent = 'Error — check connection'; }
+}
+
+function collect() {
+  const ids = ['compass-north','compass-south','compass-east','compass-west',
+               'prob-cost','prob-recur','prob-unsolved',
+               'pos-who','pos-problem','pos-how','pos-outcome','final-positioning',
+               'icp-who','icp-goals','icp-pain','icp-tried','icp-online',
+               'icp-fear','icp-says','icp-trigger','icp-oneliner'];
+  const data = {};
+  ids.forEach(id => { data[id] = document.getElementById(id)?.value || ''; });
+  return data;
+}
+
+function populate(saved) {
+  Object.keys(saved).forEach(key => {
+    const el = document.getElementById(key);
+    if (el) el.value = saved[key];
+  });
+  updatePreview();
+  if (saved['final-positioning']) checkLockIn();
+  setSave('saved');
+}
+
+function checkLockIn() {
+  const val = document.getElementById('final-positioning').value.trim();
+  document.getElementById('lockin-warn').style.display = 'none';
+  document.getElementById('lockin-ok').style.display = val.length > 20 ? 'block' : 'none';
+}
+
+async function completeModule() {
+  const pos = document.getElementById('final-positioning').value.trim();
+  if (pos.length < 20) {
+    document.getElementById('lockin-warn').style.display = 'block';
+    document.querySelector('.lockin-section').scrollIntoView({ behavior: 'smooth' });
+    const a = document.getElementById('alert-complete');
+    a.textContent = 'Confirm your positioning statement before completing this module.';
+    a.className = 'alert-msg alert-err show';
+    return;
+  }
+  const btn = document.getElementById('complete-btn');
+  btn.innerHTML = '<span style="display:inline-block;width:16px;height:16px;border-radius:50%;border:2px solid rgba(201,168,76,.3);border-top-color:var(--gold);animation:spin .7s linear infinite;"></span> Saving...';
+  btn.disabled = true;
+  await doSave();
+  await markModuleComplete('module-03');
+  const c = document.getElementById('ck-03');
+  if (c) { c.textContent = '✓'; c.classList.add('done'); }
+  document.getElementById('next-btn').classList.add('unlocked');
+  const a = document.getElementById('alert-complete');
+  a.textContent = '✓ Module 3 complete! Your Direction Compass is saved. Module 4 is now unlocked.';
+  a.className = 'alert-msg alert-ok show';
+  btn.innerHTML = '✓ Module 3 Complete';
+}
+
+function toggleAudio(btn) {
+  const on = btn.dataset.playing === 'true';
+  btn.textContent = on ? '▶' : '⏸';
+  btn.dataset.playing = (!on).toString();
+}
+</script>
+</body>
+</html>
