@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Certificate of Completion — Hella Build</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Outfit:wght@300;400;500;600;700&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="app.js"></script>
+<style>
+:root{
+  --navy:#0D1B3E;--navy2:#0A1020;
+  --gold:#C9A84C;--gold2:#E8C96A;--gold3:#F5E09A;
+  --cyan:#00D4FF;--white:#FFFFFF;
+  --off:#F5F3EE;--text:#1A2B4A;--muted:#7A8BAE;
+  --border:rgba(13,27,62,0.1);--gold-border:rgba(201,168,76,0.3);
+}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+body{background:#060C18;color:var(--white);font-family:'Outfit',sans-serif;font-size:16px;line-height:1.6;-webkit-font-smoothing:antialiased;min-height:100vh;}
+body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(201,168,76,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(201,168,76,.03) 1px,transparent 1px);background-size:48px 48px;pointer-events:none;z-index:0;}
+
+nav{position:sticky;top:0;z-index:200;background:rgba(6,12,24,.95);backdrop-filter:blur(24px);border-bottom:1px solid rgba(201,168,76,.1);padding:0 32px;height:64px;display:flex;align-items:center;justify-content:space-between;}
+.nav-brand{display:flex;align-items:center;gap:10px;text-decoration:none;}
+.nav-mark{width:34px;height:34px;border-radius:8px;background:linear-gradient(135deg,var(--gold),var(--gold2));display:flex;align-items:center;justify-content:center;font-family:'Orbitron',sans-serif;font-size:11px;font-weight:800;color:var(--navy);}
+.nav-name{font-family:'Orbitron',sans-serif;font-size:12px;font-weight:700;color:var(--gold);letter-spacing:.1em;}
+.nav-sub{font-size:10px;color:rgba(255,255,255,.3);letter-spacing:.1em;text-transform:uppercase;}
+.nav-right{display:flex;align-items:center;gap:12px;}
+.nav-user{font-size:13px;color:rgba(255,255,255,.4);}
+.btn-so{font-family:'Outfit',sans-serif;font-size:13px;font-weight:600;padding:8px 18px;border-radius:8px;border:1.5px solid rgba(255,255,255,.1);background:transparent;color:rgba(255,255,255,.5);cursor:pointer;transition:all .2s;}
+.btn-so:hover{border-color:var(--gold);color:var(--gold);}
+
+/* LOCKED STATE */
+#locked-screen{flex-direction:column;align-items:center;justify-content:center;min-height:calc(100vh - 64px);text-align:center;padding:48px;position:relative;z-index:1;}
+.locked-icon{font-size:56px;margin-bottom:24px;}
+.locked-title{font-family:'Orbitron',sans-serif;font-size:22px;font-weight:800;color:rgba(255,255,255,.4);margin-bottom:12px;}
+.locked-sub{font-size:15px;color:rgba(255,255,255,.3);max-width:400px;line-height:1.7;margin-bottom:28px;}
+.btn-back{display:inline-flex;align-items:center;gap:8px;padding:12px 28px;border-radius:10px;background:rgba(201,168,76,.1);border:1.5px solid rgba(201,168,76,.3);color:var(--gold);font-family:'Outfit',sans-serif;font-size:14px;font-weight:700;text-decoration:none;cursor:pointer;transition:all .2s;}
+.btn-back:hover{background:rgba(201,168,76,.2);}
+
+/* MAIN */
+#cert-screen{display:none;position:relative;z-index:1;}
+.page{max-width:900px;margin:0 auto;padding:48px 32px;}
+
+/* INTRO */
+.cert-intro{text-align:center;margin-bottom:48px;}
+.intro-eyebrow{font-family:'Orbitron',sans-serif;font-size:9px;font-weight:600;letter-spacing:.5em;text-transform:uppercase;color:var(--gold);margin-bottom:16px;animation:glow 3s infinite;}
+@keyframes glow{0%,100%{opacity:.7;text-shadow:none}50%{opacity:1;text-shadow:0 0 20px rgba(201,168,76,.5)}}
+.intro-title{font-family:'Cormorant Garamond',serif;font-size:clamp(32px,4vw,52px);font-weight:600;color:var(--white);line-height:1.15;margin-bottom:12px;}
+.intro-title em{font-style:italic;color:var(--gold);}
+.intro-sub{font-size:15px;color:rgba(255,255,255,.5);max-width:480px;margin:0 auto;line-height:1.7;}
+
+/* CERTIFICATE */
+.cert-wrapper{margin-bottom:40px;}
+.certificate{background:linear-gradient(135deg,#F9F6EE 0%,#FAF7F0 50%,#F5F1E8 100%);border-radius:4px;padding:56px 64px;position:relative;box-shadow:0 32px 80px rgba(0,0,0,.5),0 0 0 1px rgba(201,168,76,.4),0 0 60px rgba(201,168,76,.08);}
+
+/* Decorative corner marks */
+.certificate::before{content:'';position:absolute;top:16px;left:16px;right:16px;bottom:16px;border:1px solid rgba(201,168,76,.3);border-radius:2px;pointer-events:none;}
+
+.cert-top-border{width:100%;height:6px;background:linear-gradient(90deg,var(--navy),var(--gold),var(--navy2),var(--gold),var(--navy));border-radius:2px;margin-bottom:48px;}
+.cert-bottom-border{width:100%;height:6px;background:linear-gradient(90deg,var(--navy),var(--gold),var(--navy2),var(--gold),var(--navy));border-radius:2px;margin-top:48px;}
+
+.cert-logo-row{display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:32px;}
+.cert-logo-mark{width:44px;height:44px;border-radius:8px;background:var(--navy);display:flex;align-items:center;justify-content:center;font-family:'Orbitron',sans-serif;font-size:13px;font-weight:900;color:var(--gold);}
+.cert-logo-text{font-family:'Orbitron',sans-serif;font-size:11px;font-weight:700;color:var(--navy);letter-spacing:.15em;line-height:1.4;}
+.cert-logo-sub{font-size:10px;color:var(--muted);letter-spacing:.1em;}
+
+.cert-eyebrow{font-family:'Orbitron',sans-serif;font-size:9px;font-weight:600;letter-spacing:.5em;text-transform:uppercase;color:var(--muted);text-align:center;margin-bottom:16px;}
+
+.cert-declares{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:400;color:var(--text);text-align:center;margin-bottom:24px;font-style:italic;}
+
+.cert-name{font-family:'Cormorant Garamond',serif;font-size:clamp(36px,5vw,60px);font-weight:700;color:var(--navy);text-align:center;margin-bottom:8px;letter-spacing:.01em;line-height:1.1;}
+.cert-name-line{width:60%;height:1px;background:linear-gradient(90deg,transparent,rgba(201,168,76,.6),transparent);margin:0 auto 24px;}
+
+.cert-statement{font-family:'Cormorant Garamond',serif;font-size:17px;font-weight:400;color:var(--text);text-align:center;max-width:480px;margin:0 auto 32px;line-height:1.7;font-style:italic;}
+
+/* Gold seal */
+.cert-seal-row{display:flex;align-items:center;justify-content:center;gap:24px;margin-bottom:32px;}
+.cert-divider{flex:1;height:1px;background:linear-gradient(90deg,transparent,rgba(201,168,76,.4));}
+.cert-divider.right{background:linear-gradient(90deg,rgba(201,168,76,.4),transparent);}
+.cert-seal{width:80px;height:80px;border-radius:50%;background:linear-gradient(135deg,var(--navy),#1A2B5E);border:2px solid var(--gold);display:flex;flex-direction:column;align-items:center;justify-content:center;box-shadow:0 0 24px rgba(201,168,76,.2);}
+.seal-text{font-family:'Orbitron',sans-serif;font-size:8px;font-weight:800;color:var(--gold);letter-spacing:.1em;text-align:center;line-height:1.4;}
+
+/* Signature area */
+.cert-sig-row{display:grid;grid-template-columns:1fr auto 1fr;gap:32px;align-items:end;margin-bottom:0;}
+.sig-block{text-align:center;}
+.sig-line{height:1px;background:rgba(13,27,62,.2);margin-bottom:8px;}
+.sig-name{font-family:'Cormorant Garamond',serif;font-size:16px;font-weight:600;color:var(--navy);}
+.sig-title{font-size:10px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;}
+.sig-signature{font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:600;color:var(--navy);font-style:italic;margin-bottom:4px;line-height:1;}
+.cert-date-block{text-align:center;}
+.cert-date-label{font-family:'Orbitron',sans-serif;font-size:8px;font-weight:600;letter-spacing:.25em;text-transform:uppercase;color:var(--muted);margin-bottom:4px;}
+.cert-date-value{font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:600;color:var(--navy);}
+
+/* ACTIONS */
+.cert-actions{display:flex;align-items:center;justify-content:center;gap:16px;margin-bottom:56px;flex-wrap:wrap;}
+.btn-download-cert{display:inline-flex;align-items:center;gap:8px;padding:14px 36px;border-radius:12px;background:linear-gradient(135deg,var(--gold),var(--gold2));color:var(--navy);font-family:'Outfit',sans-serif;font-size:15px;font-weight:800;border:none;cursor:pointer;transition:all .3s;box-shadow:0 8px 32px rgba(201,168,76,.3);}
+.btn-download-cert:hover{transform:translateY(-3px);box-shadow:0 16px 48px rgba(201,168,76,.5);}
+.btn-share{display:inline-flex;align-items:center;gap:8px;padding:14px 28px;border-radius:12px;background:transparent;color:var(--gold);font-family:'Outfit',sans-serif;font-size:15px;font-weight:700;border:1.5px solid rgba(201,168,76,.4);cursor:pointer;transition:all .2s;}
+.btn-share:hover{background:rgba(201,168,76,.08);}
+
+/* NEXT STEP CTA */
+.next-cta{background:linear-gradient(135deg,#0D1B3E 0%,#0A1428 100%);border:1.5px solid var(--gold-border);border-radius:20px;padding:48px;text-align:center;margin-bottom:40px;position:relative;overflow:hidden;}
+.next-cta::before{content:'';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:500px;height:500px;border-radius:50%;background:radial-gradient(circle,rgba(201,168,76,.06) 0%,transparent 60%);pointer-events:none;}
+.next-eyebrow{font-family:'Orbitron',sans-serif;font-size:9px;font-weight:600;letter-spacing:.4em;text-transform:uppercase;color:var(--gold);margin-bottom:12px;position:relative;z-index:1;}
+.next-title{font-family:'Cormorant Garamond',serif;font-size:clamp(24px,3vw,38px);font-weight:600;color:var(--white);margin-bottom:12px;position:relative;z-index:1;line-height:1.2;}
+.next-title em{font-style:italic;color:var(--gold);}
+.next-sub{font-size:14px;color:rgba(255,255,255,.5);max-width:520px;margin:0 auto 32px;line-height:1.75;position:relative;z-index:1;}
+
+/* Offer cards */
+.offers-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:32px;position:relative;z-index:1;}
+.offer-card{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:20px;text-align:left;transition:all .2s;}
+.offer-card:hover{border-color:rgba(201,168,76,.25);background:rgba(201,168,76,.04);}
+.offer-price{font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:700;color:var(--gold);margin-bottom:4px;}
+.offer-name{font-family:'Orbitron',sans-serif;font-size:10px;font-weight:700;color:rgba(255,255,255,.7);letter-spacing:.1em;margin-bottom:8px;}
+.offer-desc{font-size:12px;color:rgba(255,255,255,.4);line-height:1.55;}
+.offer-card.featured{border-color:rgba(201,168,76,.4);background:rgba(201,168,76,.06);}
+.offer-card.featured .offer-price{font-size:34px;}
+
+.btn-work-with-me{display:inline-flex;align-items:center;gap:8px;padding:16px 48px;border-radius:12px;background:linear-gradient(135deg,var(--gold),var(--gold2));color:var(--navy);font-family:'Outfit',sans-serif;font-size:15px;font-weight:800;border:none;cursor:pointer;transition:all .3s;box-shadow:0 8px 32px rgba(201,168,76,.3);text-decoration:none;position:relative;z-index:1;}
+.btn-work-with-me:hover{transform:translateY(-3px);box-shadow:0 16px 48px rgba(201,168,76,.5);}
+
+/* SHARE SNIPPET */
+.share-snippet{background:rgba(13,27,62,.5);border:1px solid rgba(255,255,255,.06);border-radius:12px;padding:20px 24px;margin-bottom:40px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;}
+.share-text{font-size:13px;color:rgba(255,255,255,.5);line-height:1.5;}
+.share-text strong{color:var(--white);}
+.btn-copy{padding:8px 18px;border-radius:8px;background:rgba(201,168,76,.1);border:1px solid rgba(201,168,76,.3);color:var(--gold);font-family:'Outfit',sans-serif;font-size:12px;font-weight:700;cursor:pointer;transition:all .2s;}
+.btn-copy:hover{background:rgba(201,168,76,.2);}
+
+@keyframes spin{to{transform:rotate(360deg)}}
+.spinner{display:inline-block;width:14px;height:14px;border-radius:50%;border:2px solid rgba(13,27,62,.3);border-top-color:var(--navy);animation:spin .7s linear infinite;}
+.toast{position:fixed;bottom:24px;right:24px;padding:12px 20px;border-radius:10px;font-size:13px;font-weight:600;z-index:999;transform:translateY(100px);opacity:0;transition:all .3s;background:rgba(34,197,94,.15);border:1px solid rgba(34,197,94,.3);color:#86EFAC;}
+.toast.show{transform:translateY(0);opacity:1;}
+
+@media(max-width:700px){
+  .certificate{padding:32px 24px;}
+  .cert-sig-row{grid-template-columns:1fr;gap:20px;}
+  .offers-row{grid-template-columns:1fr;}
+  .page{padding:32px 20px;}
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="orientation.html" class="nav-brand">
+    <div class="nav-mark">HB</div>
+    <div><div class="nav-name">BUILD TERMINAL</div><div class="nav-sub">Jupiter's Lab</div></div>
+  </a>
+  <div class="nav-right">
+    <span class="nav-user" id="nav-user"></span>
+    <button class="btn-so" onclick="signOut()">Sign Out</button>
+  </div>
+</nav>
+
+<!-- LOCKED -->
+<div id="locked-screen" style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:calc(100vh - 64px);text-align:center;padding:48px;position:relative;z-index:1;">
+  <div class="locked-icon">🔒</div>
+  <div class="locked-title">Certificate Locked</div>
+  <p class="locked-sub">Complete all eight portfolio documents and the Bonus Module to unlock your certificate.</p>
+  <a href="portfolio.html" class="btn-back">← View My Portfolio</a>
+</div>
+
+<!-- CERTIFICATE -->
+<div id="cert-screen">
+<div class="page">
+
+  <!-- INTRO -->
+  <div class="cert-intro">
+    <div class="intro-eyebrow">✦ Hella Build — Certificate of Completion</div>
+    <h1 class="intro-title">You did the work.<br><em>Now you have the proof.</em></h1>
+    <p class="intro-sub">This certificate belongs to you. Download it, share it, frame it. You built a real business foundation — eight documents that most founders never create.</p>
+  </div>
+
+  <!-- THE CERTIFICATE -->
+  <div class="cert-wrapper">
+    <div class="certificate" id="certificate">
+      <div class="cert-top-border"></div>
+
+      <div class="cert-logo-row">
+        <div class="cert-logo-mark">HB</div>
+        <div>
+          <div class="cert-logo-text">JUPITER'S LAB CREATIVE STUDIO</div>
+          <div class="cert-logo-sub">HELLA BUILD · BUILD TERMINAL</div>
+        </div>
+      </div>
+
+      <div class="cert-eyebrow">Certificate of Completion</div>
+
+      <div class="cert-declares">This certifies that</div>
+
+      <div class="cert-name" id="cert-name">—</div>
+      <div class="cert-name-line"></div>
+
+      <div class="cert-statement">has successfully completed the <strong>Hella Build</strong> program — a rigorous, self-paced business launch curriculum — and has produced a complete, executable business foundation including eight original portfolio documents.</div>
+
+      <div class="cert-seal-row">
+        <div class="cert-divider"></div>
+        <div class="cert-seal">
+          <div class="seal-text">HELLA<br>BUILD<br>★</div>
+        </div>
+        <div class="cert-divider right"></div>
+      </div>
+
+      <div class="cert-sig-row">
+        <div class="sig-block">
+          <div class="sig-signature">Jeylechia Kirkland</div>
+          <div class="sig-line"></div>
+          <div class="sig-name">Jeylechia Kirkland</div>
+          <div class="sig-title">Founder · Jupiter's Lab Creative Studio</div>
+        </div>
+        <div class="cert-date-block">
+          <div class="cert-date-label">Date of Completion</div>
+          <div class="cert-date-value" id="cert-date">—</div>
+        </div>
+        <div class="sig-block">
+          <div class="sig-signature" style="font-size:20px;color:var(--muted);">Build Terminal</div>
+          <div class="sig-line"></div>
+          <div class="sig-name">Hella Build</div>
+          <div class="sig-title">Course Platform · jupiterslab.com</div>
+        </div>
+      </div>
+
+      <div class="cert-bottom-border"></div>
+    </div>
+  </div>
+
+  <!-- ACTIONS -->
+  <div class="cert-actions">
+    <button class="btn-download-cert" onclick="downloadCertificate()">⬇ Download Certificate PDF</button>
+    <button class="btn-share" onclick="copyShareText()">Share on LinkedIn →</button>
+  </div>
+
+  <!-- SHARE SNIPPET -->
+  <div class="share-snippet">
+    <div class="share-text"><strong>LinkedIn post template:</strong> I just completed Hella Build by Jupiter's Lab Creative Studio — a business launch program that produced 8 real, executable business documents including my offer, SOP, client agreement, pricing strategy, and 90-day plan. If you're building a service-based business and want the foundation right from the start — check it out. #HellaBuild #JupitersLab #BusinessFoundation</div>
+    <button class="btn-copy" onclick="copyShareText()">Copy</button>
+  </div>
+
+  <!-- NEXT STEP CTA -->
+  <div class="next-cta">
+    <div class="next-eyebrow">// The next step</div>
+    <h2 class="next-title">You built the foundation.<br><em>Now let's launch it.</em></h2>
+    <p class="next-sub">You have the documents. You have the plan. The next step is execution — with direct support from the person who taught you how to build it. Three ways to work together.</p>
+
+    <div class="offers-row">
+      <div class="offer-card">
+        <div class="offer-price">$197</div>
+        <div class="offer-name">Brand & Business Assessment</div>
+        <div class="offer-desc">A focused review of your eight documents and where to start. Ideal if you want a second set of eyes before you launch.</div>
+      </div>
+      <div class="offer-card featured">
+        <div class="offer-price">$1,500</div>
+        <div class="offer-name">Revenue Structure Intensive</div>
+        <div class="offer-desc">30-day intensive to take your Hella Build foundation and launch it — offer live, first client conversations running, systems activated.</div>
+      </div>
+      <div class="offer-card">
+        <div class="offer-price">$3,000<span style="font-size:14px;font-weight:400;">/mo</span></div>
+        <div class="offer-name">Ongoing Strategic Advisory</div>
+        <div class="offer-desc">Monthly retainer for founders who want ongoing strategy support as the business grows. Full access to Jey's expertise.</div>
+      </div>
+    </div>
+
+    <a href="https://jupiterslab.com" target="_blank" class="btn-work-with-me">Work With Jey → jupiterslab.com</a>
+  </div>
+
+</div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const { jsPDF } = window.jspdf;
+let studentName = '';
+let completionDate = '';
+
+document.addEventListener('DOMContentLoaded', async () => {
+  const session = await requireAuth();
+  if (!session) return;
+
+  const user = session.user;
+  studentName = user.user_metadata?.full_name || user.email.split('@')[0].replace(/[._-]/g,' ').replace(/\b\w/g,c=>c.toUpperCase());
+  document.getElementById('nav-user').textContent = studentName;
+
+  // Check completion
+  const completed = await getProgress();
+  const required = ['module-01','module-02','module-03','module-04','module-05','module-06','module-bonus'];
+  const allDone = required.every(m => completed.includes(m));
+
+  if (!allDone) {
+    // locked screen is already visible by default
+    return;
+  }
+
+  // Hide locked, show certificate
+  document.getElementById('locked-screen').style.display = 'none';
+
+  // Get completion date from bonus module
+  try {
+    const { data } = await sb.from('progress')
+      .select('completed_at')
+      .eq('user_id', user.id)
+      .eq('module_id', 'module-bonus')
+      .single();
+    completionDate = data?.completed_at
+      ? new Date(data.completed_at).toLocaleDateString('en-US', {year:'numeric',month:'long',day:'numeric'})
+      : new Date().toLocaleDateString('en-US', {year:'numeric',month:'long',day:'numeric'});
+  } catch(e) {
+    completionDate = new Date().toLocaleDateString('en-US', {year:'numeric',month:'long',day:'numeric'});
+  }
+
+  document.getElementById('cert-name').textContent = studentName;
+  document.getElementById('cert-date').textContent = completionDate;
+  document.getElementById('cert-screen').style.display = 'block';
+});
+
+// ── DOWNLOAD CERTIFICATE PDF ─────────────────────────────────────
+function downloadCertificate() {
+  const btn = document.querySelector('.btn-download-cert');
+  btn.innerHTML = '<span class="spinner"></span> Generating...';
+  btn.disabled = true;
+
+  setTimeout(() => {
+    try {
+      const pdf = new jsPDF({ orientation:'landscape', unit:'mm', format:'a4' });
+      const W = 297;
+      const H = 210;
+      const cx = W / 2;
+
+      // Background — cream
+      pdf.setFillColor(249, 246, 238);
+      pdf.rect(0, 0, W, H, 'F');
+
+      // Outer border
+      pdf.setDrawColor(201, 168, 76);
+      pdf.setLineWidth(0.4);
+      pdf.rect(8, 8, W - 16, H - 16);
+
+      // Inner border
+      pdf.setDrawColor(201, 168, 76);
+      pdf.setLineWidth(0.2);
+      pdf.rect(12, 12, W - 24, H - 24);
+
+      // Top gradient bar (simulated with navy rect)
+      pdf.setFillColor(13, 27, 62);
+      pdf.rect(12, 12, W - 24, 8, 'F');
+
+      // Gold accent lines
+      pdf.setFillColor(201, 168, 76);
+      pdf.rect(12, 20, W - 24, 2, 'F');
+      pdf.rect(12, H - 22, W - 24, 2, 'F');
+
+      // Bottom navy bar
+      pdf.setFillColor(13, 27, 62);
+      pdf.rect(12, H - 20, W - 24, 8, 'F');
+
+      // Logo area
+      pdf.setFillColor(13, 27, 62);
+      pdf.roundedRect(cx - 16, 28, 32, 14, 2, 2, 'F');
+      pdf.setFontSize(8);
+      pdf.setFont('helvetica','bold');
+      pdf.setTextColor(201, 168, 76);
+      pdf.text('HB', cx, 37, {align:'center'});
+
+      // Company name
+      pdf.setFontSize(9);
+      pdf.setFont('helvetica','bold');
+      pdf.setTextColor(13, 27, 62);
+      pdf.text("JUPITER'S LAB CREATIVE STUDIO", cx, 50, {align:'center'});
+      pdf.setFontSize(7.5);
+      pdf.setFont('helvetica','normal');
+      pdf.setTextColor(120, 139, 174);
+      pdf.text('HELLA BUILD  ·  BUILD TERMINAL', cx, 56, {align:'center'});
+
+      // Eyebrow
+      pdf.setFontSize(8);
+      pdf.setFont('helvetica','bold');
+      pdf.setTextColor(120, 139, 174);
+      pdf.text('CERTIFICATE OF COMPLETION', cx, 68, {align:'center'});
+
+      // Declares
+      pdf.setFontSize(14);
+      pdf.setFont('times','italic');
+      pdf.setTextColor(80, 80, 100);
+      pdf.text('This certifies that', cx, 79, {align:'center'});
+
+      // Name
+      pdf.setFontSize(36);
+      pdf.setFont('times','bold');
+      pdf.setTextColor(13, 27, 62);
+      pdf.text(studentName, cx, 96, {align:'center'});
+
+      // Name underline
+      const nameW = pdf.getTextWidth(studentName);
+      pdf.setDrawColor(201, 168, 76);
+      pdf.setLineWidth(0.5);
+      pdf.line(cx - nameW/2 - 10, 99, cx + nameW/2 + 10, 99);
+
+      // Statement
+      pdf.setFontSize(11);
+      pdf.setFont('times','italic');
+      pdf.setTextColor(60, 80, 120);
+      const stmt = 'has successfully completed the Hella Build program and produced a complete,';
+      const stmt2 = 'executable business foundation — including eight original portfolio documents.';
+      pdf.text(stmt, cx, 109, {align:'center'});
+      pdf.text(stmt2, cx, 116, {align:'center'});
+
+      // Seal circle
+      pdf.setDrawColor(201, 168, 76);
+      pdf.setLineWidth(0.8);
+      pdf.circle(cx, 135, 12);
+      pdf.setFillColor(13, 27, 62);
+      pdf.circle(cx, 135, 11, 'F');
+      pdf.setFontSize(6.5);
+      pdf.setFont('helvetica','bold');
+      pdf.setTextColor(201, 168, 76);
+      pdf.text('HELLA', cx, 132, {align:'center'});
+      pdf.text('BUILD', cx, 137, {align:'center'});
+      pdf.text('★', cx, 142, {align:'center'});
+
+      // Signature lines
+      const sig1x = 60;
+      const sig2x = cx;
+      const sig3x = W - 60;
+      const sigY = 162;
+
+      // Left sig
+      pdf.setFontSize(16);
+      pdf.setFont('times','italic');
+      pdf.setTextColor(13, 27, 62);
+      pdf.text('Jeylechia Kirkland', sig1x, sigY - 6, {align:'center'});
+      pdf.setDrawColor(180, 180, 200);
+      pdf.setLineWidth(0.3);
+      pdf.line(sig1x - 35, sigY, sig1x + 35, sigY);
+      pdf.setFontSize(9);
+      pdf.setFont('helvetica','bold');
+      pdf.setTextColor(13, 27, 62);
+      pdf.text('Jeylechia Kirkland', sig1x, sigY + 5, {align:'center'});
+      pdf.setFontSize(7.5);
+      pdf.setFont('helvetica','normal');
+      pdf.setTextColor(120, 139, 174);
+      pdf.text('Founder · Jupiter\'s Lab Creative Studio', sig1x, sigY + 10, {align:'center'});
+
+      // Center date
+      pdf.setFontSize(7.5);
+      pdf.setFont('helvetica','bold');
+      pdf.setTextColor(150, 150, 170);
+      pdf.text('DATE OF COMPLETION', sig2x, sigY - 6, {align:'center'});
+      pdf.setFontSize(14);
+      pdf.setFont('times','bold');
+      pdf.setTextColor(13, 27, 62);
+      pdf.text(completionDate, sig2x, sigY + 2, {align:'center'});
+
+      // Right sig
+      pdf.setFontSize(16);
+      pdf.setFont('times','italic');
+      pdf.setTextColor(120, 139, 174);
+      pdf.text('Build Terminal', sig3x, sigY - 6, {align:'center'});
+      pdf.setDrawColor(180, 180, 200);
+      pdf.setLineWidth(0.3);
+      pdf.line(sig3x - 35, sigY, sig3x + 35, sigY);
+      pdf.setFontSize(9);
+      pdf.setFont('helvetica','bold');
+      pdf.setTextColor(13, 27, 62);
+      pdf.text('Hella Build', sig3x, sigY + 5, {align:'center'});
+      pdf.setFontSize(7.5);
+      pdf.setFont('helvetica','normal');
+      pdf.setTextColor(120, 139, 174);
+      pdf.text('Course Platform · jupiterslab.com', sig3x, sigY + 10, {align:'center'});
+
+      // Footer text in bottom bar
+      pdf.setFontSize(7);
+      pdf.setFont('helvetica','normal');
+      pdf.setTextColor(180, 180, 180);
+      pdf.text('jupiterslab.com  ·  Hella Build  ·  Jupiter\'s Lab Creative Studio  ·  Columbia, South Carolina', cx, H - 14, {align:'center'});
+
+      pdf.save(`HellaBuild_Certificate_${studentName.replace(/\s+/g,'_')}.pdf`);
+      showToast('Certificate downloaded ✓');
+    } catch(e) {
+      showToast('Error generating certificate');
+    }
+    btn.innerHTML = '⬇ Download Certificate PDF';
+    btn.disabled = false;
+  }, 150);
+}
+
+// ── SHARE ─────────────────────────────────────────────────────────
+function copyShareText() {
+  const text = `I just completed Hella Build by Jupiter's Lab Creative Studio — a business launch program that produced 8 real, executable business documents including my offer, SOP, client agreement, pricing strategy, and 90-day plan. If you're building a service-based business and want the foundation right from the start — check it out at jupiterslab.com #HellaBuild #JupitersLab #BusinessFoundation`;
+  navigator.clipboard.writeText(text).then(() => showToast('Copied to clipboard ✓'));
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+</script>
+</body>
+</html>
