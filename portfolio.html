@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Your Portfolio — Hella Build</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="app.js"></script>
+<style>
+:root{
+  --navy:#0D1B3E;--navy2:#0A1020;
+  --gold:#C9A84C;--gold2:#E8C96A;
+  --cyan:#00D4FF;--white:#FFFFFF;
+  --off:#F5F3EE;--text:#1A2B4A;--muted:#7A8BAE;
+  --border:rgba(13,27,62,0.1);--gold-border:rgba(201,168,76,0.3);
+}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+body{background:#060C18;color:var(--white);font-family:'Outfit',sans-serif;font-size:16px;line-height:1.6;-webkit-font-smoothing:antialiased;min-height:100vh;}
+body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(201,168,76,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(201,168,76,.03) 1px,transparent 1px);background-size:48px 48px;pointer-events:none;z-index:0;}
+
+nav{position:sticky;top:0;z-index:200;background:rgba(10,16,32,.92);backdrop-filter:blur(24px);border-bottom:1px solid rgba(201,168,76,.1);padding:0 32px;height:64px;display:flex;align-items:center;justify-content:space-between;}
+.nav-brand{display:flex;align-items:center;gap:10px;text-decoration:none;}
+.nav-mark{width:34px;height:34px;border-radius:8px;background:linear-gradient(135deg,var(--gold),var(--gold2));display:flex;align-items:center;justify-content:center;font-family:'Orbitron',sans-serif;font-size:11px;font-weight:800;color:var(--navy);}
+.nav-name{font-family:'Orbitron',sans-serif;font-size:12px;font-weight:700;color:var(--gold);letter-spacing:.1em;}
+.nav-sub{font-size:10px;color:rgba(255,255,255,.3);letter-spacing:.1em;text-transform:uppercase;}
+.nav-right{display:flex;align-items:center;gap:12px;}
+.nav-user{font-size:13px;color:rgba(255,255,255,.4);}
+.btn-signout{font-family:'Outfit',sans-serif;font-size:13px;font-weight:600;padding:8px 18px;border-radius:8px;border:1.5px solid rgba(255,255,255,.1);background:transparent;color:rgba(255,255,255,.5);cursor:pointer;transition:all .2s;}
+.btn-signout:hover{border-color:var(--gold);color:var(--gold);}
+
+.page{max-width:1000px;margin:0 auto;padding:48px 32px;position:relative;z-index:1;}
+
+/* HERO */
+.portfolio-hero{text-align:center;margin-bottom:56px;padding:56px 48px;background:linear-gradient(135deg,#0D1B3E 0%,#0A1428 100%);border:1.5px solid var(--gold-border);border-radius:24px;position:relative;overflow:hidden;}
+.portfolio-hero::before{content:'';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:600px;height:600px;border-radius:50%;background:radial-gradient(circle,rgba(201,168,76,.06) 0%,transparent 60%);pointer-events:none;}
+.hero-eyebrow{font-family:'Orbitron',sans-serif;font-size:10px;font-weight:600;letter-spacing:.4em;text-transform:uppercase;color:var(--gold);margin-bottom:16px;position:relative;z-index:1;}
+.hero-name{font-family:'Orbitron',sans-serif;font-size:clamp(20px,3vw,32px);font-weight:900;color:var(--white);margin-bottom:8px;position:relative;z-index:1;}
+.hero-title{font-family:'Georgia',serif;font-size:clamp(28px,4vw,44px);font-weight:400;color:var(--gold);font-style:italic;margin-bottom:16px;position:relative;z-index:1;line-height:1.2;}
+.hero-sub{font-size:15px;color:rgba(255,255,255,.7);max-width:500px;margin:0 auto 32px;line-height:1.7;position:relative;z-index:1;}
+
+/* OVERALL PROGRESS */
+.prog-row{display:flex;justify-content:center;align-items:center;gap:16px;margin-bottom:16px;position:relative;z-index:1;}
+.prog-label{font-family:'Orbitron',sans-serif;font-size:10px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:rgba(255,255,255,.65);}
+.prog-pct{font-family:'Orbitron',sans-serif;font-size:14px;font-weight:700;color:var(--gold);}
+.prog-track{width:300px;height:6px;background:rgba(255,255,255,.08);border-radius:100px;overflow:hidden;position:relative;z-index:1;}
+.prog-fill{height:100%;background:linear-gradient(90deg,var(--gold),var(--gold2));border-radius:100px;transition:width .8s ease;}
+
+/* DOCS COMPLETED CHIPS */
+.docs-chips{display:flex;justify-content:center;gap:8px;flex-wrap:wrap;margin-top:16px;position:relative;z-index:1;}
+.doc-chip{font-family:'Orbitron',sans-serif;font-size:9px;font-weight:600;letter-spacing:.15em;padding:4px 12px;border-radius:100px;border:1px solid;}
+.doc-chip.ready{background:rgba(201,168,76,.1);border-color:rgba(201,168,76,.4);color:var(--gold);}
+.doc-chip.locked{background:rgba(255,255,255,.03);border-color:rgba(255,255,255,.1);color:rgba(255,255,255,.25);}
+
+/* DOCUMENTS GRID */
+.docs-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:40px;}
+
+.doc-card{background:rgba(13,27,62,.5);border:1.5px solid rgba(255,255,255,.07);border-radius:16px;overflow:hidden;transition:all .25s;position:relative;}
+.doc-card:hover{border-color:rgba(201,168,76,.25);transform:translateY(-2px);box-shadow:0 12px 40px rgba(13,27,62,.4);}
+.doc-card.ready{border-color:rgba(201,168,76,.2);}
+.doc-card.locked-card{opacity:.5;}
+
+.doc-card-top{padding:20px 24px 16px;border-bottom:1px solid rgba(255,255,255,.05);}
+.doc-num{font-family:'Orbitron',sans-serif;font-size:9px;font-weight:700;color:var(--gold);letter-spacing:.25em;margin-bottom:6px;}
+.doc-title{font-family:'Orbitron',sans-serif;font-size:15px;font-weight:800;color:var(--white);margin-bottom:4px;line-height:1.25;}
+.doc-source{font-size:11px;color:rgba(255,255,255,.3);}
+.doc-lock{position:absolute;top:16px;right:16px;font-size:16px;}
+
+.doc-preview{padding:16px 24px;min-height:80px;}
+.doc-preview-text{font-size:12px;color:rgba(255,255,255,.45);line-height:1.65;font-style:italic;}
+.doc-preview-text.has-content{color:rgba(255,255,255,.6);font-style:normal;}
+
+.doc-footer{padding:12px 24px;border-top:1px solid rgba(255,255,255,.05);display:flex;align-items:center;justify-content:space-between;}
+.doc-status{font-size:11px;font-weight:600;}
+.status-ready{color:var(--gold);}
+.status-locked{color:rgba(255,255,255,.25);}
+.btn-download{display:inline-flex;align-items:center;gap:6px;padding:8px 18px;border-radius:8px;background:linear-gradient(135deg,var(--gold),var(--gold2));color:var(--navy);font-family:'Outfit',sans-serif;font-size:12px;font-weight:800;border:none;cursor:pointer;transition:all .2s;}
+.btn-download:hover{transform:translateY(-1px);box-shadow:0 4px 16px rgba(201,168,76,.35);}
+.btn-download:disabled{opacity:.35;cursor:not-allowed;transform:none;box-shadow:none;}
+.btn-preview{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:8px;background:transparent;color:rgba(255,255,255,.4);font-family:'Outfit',sans-serif;font-size:12px;font-weight:600;border:1px solid rgba(255,255,255,.1);cursor:pointer;transition:all .2s;}
+.btn-preview:hover{border-color:var(--gold);color:var(--gold);}
+
+/* DOWNLOAD ALL */
+.download-all-bar{background:rgba(201,168,76,.06);border:1.5px solid var(--gold-border);border-radius:14px;padding:20px 28px;display:flex;align-items:center;justify-content:space-between;margin-bottom:40px;flex-wrap:wrap;gap:12px;}
+.dal-left{font-size:14px;color:rgba(255,255,255,.6);line-height:1.5;}
+.dal-left strong{color:var(--gold);}
+.btn-dl-all{display:inline-flex;align-items:center;gap:8px;padding:12px 28px;border-radius:10px;background:linear-gradient(135deg,var(--gold),var(--gold2));color:var(--navy);font-family:'Outfit',sans-serif;font-size:14px;font-weight:800;border:none;cursor:pointer;transition:all .2s;}
+.btn-dl-all:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(201,168,76,.4);}
+.btn-dl-all:disabled{opacity:.35;cursor:not-allowed;transform:none;}
+
+/* CERTIFICATE CTA */
+.cert-cta{text-align:center;background:var(--navy2);border:1.5px solid var(--gold-border);border-radius:20px;padding:48px;position:relative;overflow:hidden;}
+.cert-cta::before{content:'';position:absolute;inset:0;background-image:linear-gradient(rgba(201,168,76,.04) 1px,transparent 1px),linear-gradient(90deg,rgba(201,168,76,.04) 1px,transparent 1px);background-size:32px 32px;pointer-events:none;}
+.cert-eyebrow{font-family:'Orbitron',sans-serif;font-size:9px;font-weight:600;letter-spacing:.4em;text-transform:uppercase;color:var(--gold);margin-bottom:12px;position:relative;z-index:1;}
+.cert-title{font-family:'Orbitron',sans-serif;font-size:clamp(18px,2.5vw,26px);font-weight:900;color:var(--white);margin-bottom:8px;position:relative;z-index:1;}
+.cert-sub{font-size:14px;color:rgba(255,255,255,.4);margin-bottom:28px;line-height:1.6;position:relative;z-index:1;}
+.btn-cert{display:inline-flex;align-items:center;gap:8px;padding:16px 40px;border-radius:12px;background:linear-gradient(135deg,var(--gold),var(--gold2));color:var(--navy);font-family:'Outfit',sans-serif;font-size:15px;font-weight:800;border:none;cursor:pointer;transition:all .3s;box-shadow:0 8px 32px rgba(201,168,76,.3);position:relative;z-index:1;}
+.btn-cert:hover{transform:translateY(-3px);box-shadow:0 16px 48px rgba(201,168,76,.5);}
+.btn-cert:disabled{opacity:.3;cursor:not-allowed;transform:none;box-shadow:none;}
+
+/* PREVIEW MODAL */
+.preview-overlay{position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:500;display:none;align-items:flex-start;justify-content:center;backdrop-filter:blur(6px);padding:40px 20px;overflow-y:auto;}
+.preview-overlay.open{display:flex;}
+.preview-modal{background:#0D1B3E;border:1.5px solid var(--gold-border);border-radius:20px;width:100%;max-width:700px;position:relative;box-shadow:0 24px 80px rgba(0,0,0,.6);}
+.preview-header{padding:24px 28px;border-bottom:1px solid rgba(255,255,255,.06);display:flex;align-items:flex-start;justify-content:space-between;gap:12px;}
+.preview-title{font-family:'Orbitron',sans-serif;font-size:16px;font-weight:700;color:var(--gold);}
+.preview-close{background:none;border:none;color:rgba(255,255,255,.4);font-size:20px;cursor:pointer;flex-shrink:0;line-height:1;}
+.preview-close:hover{color:var(--white);}
+.preview-body{padding:28px;max-height:70vh;overflow-y:auto;}
+.preview-section{margin-bottom:24px;}
+.preview-section-title{font-family:'Orbitron',sans-serif;font-size:9px;font-weight:600;letter-spacing:.25em;text-transform:uppercase;color:var(--gold);margin-bottom:8px;}
+.preview-section-content{font-size:13px;color:rgba(255,255,255,.65);line-height:1.7;background:rgba(255,255,255,.04);border-radius:8px;padding:12px 14px;border-left:2px solid rgba(201,168,76,.3);}
+.preview-footer{padding:16px 28px;border-top:1px solid rgba(255,255,255,.06);display:flex;justify-content:flex-end;gap:8px;}
+
+/* TOAST */
+.toast{position:fixed;bottom:24px;right:24px;padding:12px 20px;border-radius:10px;font-size:13px;font-weight:600;z-index:999;transform:translateY(100px);opacity:0;transition:all .3s;background:rgba(34,197,94,.15);border:1px solid rgba(34,197,94,.3);color:#86EFAC;}
+.toast.show{transform:translateY(0);opacity:1;}
+
+@keyframes spin{to{transform:rotate(360deg)}}
+.spinner-inline{display:inline-block;width:12px;height:12px;border-radius:50%;border:2px solid rgba(13,27,62,.3);border-top-color:var(--navy);animation:spin .7s linear infinite;}
+
+@media(max-width:700px){.docs-grid{grid-template-columns:1fr;}.page{padding:32px 20px;}.download-all-bar{flex-direction:column;text-align:center;}}
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="orientation.html" class="nav-brand">
+    <div class="nav-mark">HB</div>
+    <div><div class="nav-name">BUILD TERMINAL</div><div class="nav-sub">Jupiter's Lab</div></div>
+  </a>
+  <div class="nav-right">
+    <span class="nav-user" id="nav-user"></span>
+    <button class="btn-signout" onclick="signOut()">Sign Out</button>
+  </div>
+</nav>
+
+<div class="page">
+
+  <!-- HERO -->
+  <div class="portfolio-hero">
+    <div class="hero-eyebrow">✦ Your Business Portfolio</div>
+    <div class="hero-name" id="student-name">Loading...</div>
+    <div class="hero-title">You built something real.</div>
+    <p class="hero-sub">Every answer you gave, every decision you made, every module you completed — it's all here. Eight documents. One foundation. Everything you need to start.</p>
+    <div class="prog-row">
+      <span class="prog-label">Documents Ready</span>
+      <div class="prog-track"><div class="prog-fill" id="prog-fill" style="width:0%"></div></div>
+      <span class="prog-pct" id="prog-pct">0 / 8</span>
+    </div>
+    <div class="docs-chips" id="docs-chips"></div>
+  </div>
+
+  <!-- DOWNLOAD ALL BAR -->
+  <div class="download-all-bar">
+    <div class="dal-left"><strong>Download Complete Portfolio</strong><br>Download all eight documents as individual PDFs in one click.</div>
+    <button class="btn-dl-all" id="btn-dl-all" onclick="downloadAll()" disabled>⬇ Download All 8 Documents</button>
+  </div>
+
+  <!-- DOCUMENTS GRID -->
+  <div class="docs-grid" id="docs-grid">
+    <!-- Rendered by JS -->
+  </div>
+
+  <!-- CERTIFICATE CTA -->
+  <div class="cert-cta">
+    <div class="cert-eyebrow">// Final Step</div>
+    <div class="cert-title">Your certificate is waiting.</div>
+    <p class="cert-sub">Complete all eight documents to unlock your Hella Build Certificate of Completion and your invitation to work directly with Jey.</p>
+    <button class="btn-cert" id="btn-cert" onclick="window.location.href='certificate.html'" disabled>View My Certificate →</button>
+  </div>
+
+</div>
+
+<!-- PREVIEW MODAL -->
+<div class="preview-overlay" id="preview-overlay">
+  <div class="preview-modal">
+    <div class="preview-header">
+      <div class="preview-title" id="preview-title">Document Preview</div>
+      <button class="preview-close" onclick="closePreview()">✕</button>
+    </div>
+    <div class="preview-body" id="preview-body"></div>
+    <div class="preview-footer">
+      <button class="btn-preview" onclick="closePreview()">Close</button>
+      <button class="btn-download" id="preview-download-btn">⬇ Download PDF</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const { jsPDF } = window.jspdf;
+
+// ── DOCUMENT DEFINITIONS ─────────────────────────────────────────
+const DOCS = [
+  {
+    num: '01',
+    title: 'Skill Stack Document',
+    source: 'Modules 01 + 02',
+    worksheets: ['skill-extraction-matrix','skill-stack-builder'],
+    fields: [
+      {label:'Core Skills Identified', keys:['extraction-skills','m1-skills']},
+      {label:'Primary Skill Stack Name', keys:['s1-name','primary-stack']},
+      {label:'Stack Advantage', keys:['s1-advantage']},
+      {label:'What Your Stack Solves', keys:['s1-sentence']},
+      {label:'Stack 2 (if applicable)', keys:['s2-name','s2-advantage']},
+      {label:'Primary Stack — Lock-In', keys:['primary-stack']},
+    ]
+  },
+  {
+    num: '02',
+    title: 'Ideal Client Profile',
+    source: 'Module 03',
+    worksheets: ['direction-compass'],
+    fields: [
+      {label:'Who They Are', keys:['icp-who']},
+      {label:'What They Want', keys:['icp-goals']},
+      {label:'Pain Points', keys:['icp-pain']},
+      {label:'What They\'ve Already Tried', keys:['icp-tried']},
+      {label:'Where They Live Online', keys:['icp-online']},
+      {label:'What Keeps Them Up at Night', keys:['icp-fear']},
+      {label:'What They Say vs. What They Mean', keys:['icp-says']},
+      {label:'What Makes Them Ready', keys:['icp-trigger']},
+      {label:'ICP One-Liner', keys:['icp-oneliner']},
+    ]
+  },
+  {
+    num: '03',
+    title: 'Offer Document',
+    source: 'Module 04',
+    worksheets: ['offer-blueprint'],
+    fields: [
+      {label:'The Problem', keys:['def-01']},
+      {label:'The Audience', keys:['def-02']},
+      {label:'The Outcome', keys:['def-03']},
+      {label:'Timeline', keys:['def-04']},
+      {label:'What\'s Included', keys:['def-05']},
+      {label:'What\'s NOT Included', keys:['def-06']},
+      {label:'Completion Definition', keys:['def-07']},
+      {label:'Complete Offer Description', keys:['final-offer']},
+    ]
+  },
+  {
+    num: '04',
+    title: 'Pricing Strategy',
+    source: 'Module 04',
+    worksheets: ['offer-blueprint'],
+    fields: [
+      {label:'Core Offer Price', keys:['ps-core-price']},
+      {label:'The Value You\'re Pricing', keys:['ps-value']},
+      {label:'Market Rate Context', keys:['ps-market']},
+      {label:'Time & Capacity Cost', keys:['ps-time']},
+      {label:'Discount Policy', keys:['ps-discount']},
+      {label:'Price Objection Script', keys:['ps-objection']},
+      {label:'When to Raise Your Rates', keys:['ps-raise']},
+      {label:'Price Review Schedule', keys:['ps-review']},
+    ]
+  },
+  {
+    num: '05',
+    title: 'Workflow + SOP',
+    source: 'Module 05',
+    worksheets: ['delivery-system-map'],
+    fields: [
+      {label:'Phase 01 — Inquiry & Qualification', keys:['p1-what','p1-client','p1-produce']},
+      {label:'Phase 02 — Onboarding & Kickoff', keys:['p2-what','p2-client','p2-produce']},
+      {label:'Phase 03 — Active Delivery', keys:['p3-what','p3-client','p3-produce']},
+      {label:'Phase 04 — Completion & Handoff', keys:['p4-what','p4-client','p4-produce']},
+      {label:'Phase 05 — Post-Project Follow-Up', keys:['p5-what','p5-client','p5-produce']},
+      {label:'Client Intake Questions', keys:['iq-1','iq-2','iq-3','iq-4','iq-5']},
+      {label:'Full Delivery SOP', keys:['final-sop']},
+    ]
+  },
+  {
+    num: '06',
+    title: 'Client Agreement + Scope Protection',
+    source: 'Module 06',
+    worksheets: ['scope-protection-toolkit'],
+    fields: [
+      {label:'Project Scope', keys:['sa-scope']},
+      {label:'What\'s NOT Included', keys:['sa-excluded']},
+      {label:'Client Responsibilities', keys:['sa-client-resp']},
+      {label:'Revision Policy', keys:['sa-revisions']},
+      {label:'Payment Terms', keys:['sa-payment']},
+      {label:'Cancellation Policy', keys:['sa-cancel']},
+      {label:'Scope Creep Script', keys:['scr1-script']},
+      {label:'Revision Limit Script', keys:['scr2-script']},
+      {label:'Off-Hours Script', keys:['scr3-script']},
+      {label:'Complete Client Agreement', keys:['final-agreement']},
+    ]
+  },
+  {
+    num: '07',
+    title: 'Client Acquisition Plan',
+    source: 'Bonus Module',
+    worksheets: ['revenue-roadmap'],
+    fields: [
+      {label:'Warm Outreach List', keys:['acq-warmlist']},
+      {label:'Outreach Message', keys:['acq-message']},
+      {label:'Follow-Up Plan', keys:['acq-followup']},
+      {label:'Discovery Call Approach', keys:['acq-discovery']},
+      {label:'Referral Ask — Timing & Script', keys:['acq-referral']},
+      {label:'First 3 Content Posts', keys:['acq-content']},
+    ]
+  },
+  {
+    num: '08',
+    title: '90-Day Revenue + Marketing Plan',
+    source: 'Bonus Module',
+    worksheets: ['revenue-roadmap'],
+    fields: [
+      {label:'Baseline Income Goal', keys:['inc-baseline-mo','inc-baseline-yr','inc-baseline-clients']},
+      {label:'Realistic Income Goal', keys:['inc-real-mo','inc-real-yr','inc-real-clients']},
+      {label:'Client Math', keys:['math-price','math-clients','math-revenue']},
+      {label:'Days 01–30', keys:['d1-focus','d1-actions','d1-win']},
+      {label:'Days 31–60', keys:['d2-focus','d2-actions','d2-win']},
+      {label:'Days 61–90', keys:['d3-focus','d3-actions','d3-win']},
+      {label:'Primary Marketing Platform', keys:['mkt-platform']},
+      {label:'Content Themes', keys:['mkt-themes']},
+      {label:'Metrics to Track', keys:['met-revenue','met-calls','met-conversion','met-content']},
+      {label:'Three Actions This Week', keys:['act-1','act-2','act-3']},
+      {label:'Launch Commitment', keys:['final-commitment']},
+    ]
+  },
+];
+
+// ── STATE ────────────────────────────────────────────────────────
+let studentName = 'Builder';
+let studentEmail = '';
+let worksheetCache = {};
+let completedModules = [];
+let docReadiness = new Array(8).fill(false);
+let currentPreviewDoc = null;
+
+// ── MODULE → DOC READINESS MAP ───────────────────────────────────
+const moduleRequired = [
+  ['module-01','module-02'],  // Doc 01
+  ['module-03'],               // Doc 02
+  ['module-04'],               // Doc 03
+  ['module-04'],               // Doc 04
+  ['module-05'],               // Doc 05
+  ['module-06'],               // Doc 06
+  ['module-bonus'],            // Doc 07
+  ['module-bonus'],            // Doc 08
+];
+
+// ── INIT ─────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', async () => {
+  const session = await requireAuth();
+  if (!session) return;
+  const user = session.user;
+  studentEmail = user.email;
+  studentName = user.user_metadata?.full_name || user.email.split('@')[0].replace(/[._-]/g,' ').replace(/\b\w/g,c=>c.toUpperCase());
+  document.getElementById('nav-user').textContent = studentName;
+  document.getElementById('student-name').textContent = studentName;
+
+  // Load progress and all worksheets in parallel
+  const [completed, ...worksheets] = await Promise.all([
+    getProgress(),
+    ...['skill-extraction-matrix','skill-stack-builder','direction-compass','offer-blueprint','delivery-system-map','scope-protection-toolkit','revenue-roadmap'].map(w => loadWorksheet(w))
+  ]);
+
+  completedModules = completed || [];
+  ['skill-extraction-matrix','skill-stack-builder','direction-compass','offer-blueprint','delivery-system-map','scope-protection-toolkit','revenue-roadmap'].forEach((name,i) => {
+    if (worksheets[i]) worksheetCache[name] = worksheets[i];
+  });
+
+  // Determine readiness per doc
+  docReadiness = DOCS.map((_,i) => {
+    return moduleRequired[i].every(mod => completedModules.includes(mod));
+  });
+
+  renderDocs();
+  updateHero();
+});
+
+// ── RENDER DOCS ──────────────────────────────────────────────────
+function renderDocs() {
+  const grid = document.getElementById('docs-grid');
+  grid.innerHTML = DOCS.map((doc, i) => {
+    const ready = docReadiness[i];
+    const preview = getDocPreview(doc);
+    const hasContent = preview && preview.length > 10;
+    return `<div class="doc-card ${ready ? 'ready' : 'locked-card'}" id="doc-card-${i}">
+      <div class="doc-card-top">
+        <div class="doc-num">DOCUMENT ${doc.num}</div>
+        <div class="doc-title">${doc.title}</div>
+        <div class="doc-source">From ${doc.source}</div>
+        <div class="doc-lock">${ready ? '✓' : '🔒'}</div>
+      </div>
+      <div class="doc-preview">
+        <div class="doc-preview-text ${hasContent ? 'has-content' : ''}">${hasContent ? preview : (ready ? 'Worksheet completed — ready to download.' : `Complete ${moduleRequired[i].join(' + ')} to unlock this document.`)}</div>
+      </div>
+      <div class="doc-footer">
+        <span class="doc-status ${ready ? 'status-ready' : 'status-locked'}">${ready ? '● Ready' : '○ Locked'}</span>
+        <div style="display:flex;gap:8px;">
+          ${ready ? `<button class="btn-preview" onclick="previewDoc(${i})">Preview</button>` : ''}
+          <button class="btn-download" onclick="downloadDoc(${i})" ${ready ? '' : 'disabled'}>⬇ Download</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function getDocPreview(doc) {
+  for (const ws of doc.worksheets) {
+    const data = worksheetCache[ws];
+    if (!data) continue;
+    for (const section of doc.fields) {
+      for (const key of section.keys) {
+        const val = data[key];
+        if (val && val.length > 15) {
+          return val.slice(0, 120) + (val.length > 120 ? '...' : '');
+        }
+      }
+    }
+  }
+  return null;
+}
+
+// ── UPDATE HERO ──────────────────────────────────────────────────
+function updateHero() {
+  const count = docReadiness.filter(Boolean).length;
+  const pct = Math.round((count / 8) * 100);
+  document.getElementById('prog-fill').style.width = pct + '%';
+  document.getElementById('prog-pct').textContent = `${count} / 8`;
+
+  const chips = document.getElementById('docs-chips');
+  chips.innerHTML = DOCS.map((doc,i) => `<span class="doc-chip ${docReadiness[i] ? 'ready' : 'locked'}">DOC ${doc.num}</span>`).join('');
+
+  const allReady = count === 8;
+  document.getElementById('btn-dl-all').disabled = !allReady;
+  document.getElementById('btn-cert').disabled = !allReady;
+}
+
+// ── PDF GENERATION ───────────────────────────────────────────────
+function buildPDF(docIndex) {
+  const doc = DOCS[docIndex];
+  const pdf = new jsPDF({ orientation:'portrait', unit:'mm', format:'a4' });
+  const W = 210;
+  const margin = 20;
+  const contentW = W - margin * 2;
+  let y = 20;
+
+  const addText = (text, x, fontSize, style, color, maxW) => {
+    pdf.setFontSize(fontSize);
+    pdf.setFont('helvetica', style || 'normal');
+    pdf.setTextColor(...(color || [26,43,74]));
+    const lines = pdf.splitTextToSize(String(text || ''), maxW || contentW);
+    lines.forEach(line => {
+      if (y > 270) { pdf.addPage(); y = 20; }
+      pdf.text(line, x, y);
+      y += fontSize * 0.45;
+    });
+    return y;
+  };
+
+  const checkPage = (needed = 20) => {
+    if (y + needed > 270) { pdf.addPage(); y = 20; }
+  };
+
+  // ── HEADER ──
+  pdf.setFillColor(13, 27, 62);
+  pdf.rect(0, 0, W, 38, 'F');
+  pdf.setFontSize(9);
+  pdf.setFont('helvetica','bold');
+  pdf.setTextColor(201, 168, 76);
+  pdf.text("JUPITER'S LAB CREATIVE STUDIO", margin, 13);
+  pdf.text('HELLA BUILD', margin, 20);
+  pdf.setFont('helvetica','normal');
+  pdf.setTextColor(180, 180, 180);
+  pdf.setFontSize(8);
+  pdf.text(`Generated: ${new Date().toLocaleDateString()}  ·  ${studentEmail}`, margin, 27);
+  pdf.text('jupiterslab.com  ·  Confidential', W - margin, 27, {align:'right'});
+
+  // ── GOLD ACCENT LINE ──
+  pdf.setDrawColor(201, 168, 76);
+  pdf.setLineWidth(0.8);
+  pdf.line(margin, 40, W - margin, 40);
+
+  y = 52;
+
+  // ── DOCUMENT TITLE ──
+  pdf.setFontSize(9);
+  pdf.setFont('helvetica','bold');
+  pdf.setTextColor(201, 168, 76);
+  pdf.text(`DOCUMENT ${doc.num}`, margin, y);
+  y += 7;
+
+  pdf.setFontSize(22);
+  pdf.setFont('helvetica','bold');
+  pdf.setTextColor(13, 27, 62);
+  pdf.text(doc.title, margin, y);
+  y += 6;
+
+  pdf.setFontSize(10);
+  pdf.setFont('helvetica','normal');
+  pdf.setTextColor(120, 139, 174);
+  pdf.text(`From ${doc.source}  ·  ${studentName}`, margin, y);
+  y += 4;
+
+  pdf.setDrawColor(220, 220, 230);
+  pdf.setLineWidth(0.3);
+  pdf.line(margin, y, W - margin, y);
+  y += 10;
+
+  // ── CONTENT SECTIONS ──
+  doc.fields.forEach(section => {
+    const values = [];
+    section.keys.forEach(key => {
+      doc.worksheets.forEach(ws => {
+        const data = worksheetCache[ws];
+        if (data && data[key] && data[key].length > 0) values.push(data[key]);
+      });
+    });
+    const combined = values.filter(Boolean).join('\n\n');
+    if (!combined || combined.trim().length === 0) return;
+
+    checkPage(24);
+
+    // Section label
+    pdf.setFillColor(245, 243, 238);
+    pdf.roundedRect(margin, y - 4, contentW, 10, 1, 1, 'F');
+    pdf.setFontSize(8);
+    pdf.setFont('helvetica','bold');
+    pdf.setTextColor(201, 168, 76);
+    pdf.text(section.label.toUpperCase(), margin + 4, y + 2.5);
+    y += 12;
+
+    // Content
+    pdf.setFontSize(10);
+    pdf.setFont('helvetica','normal');
+    pdf.setTextColor(26, 43, 74);
+    const lines = pdf.splitTextToSize(combined, contentW - 4);
+    lines.forEach(line => {
+      checkPage(6);
+      pdf.text(line, margin + 2, y);
+      y += 5.5;
+    });
+    y += 6;
+  });
+
+  // ── FOOTER ──
+  const totalPages = pdf.internal.getNumberOfPages();
+  for (let p = 1; p <= totalPages; p++) {
+    pdf.setPage(p);
+    pdf.setDrawColor(201, 168, 76);
+    pdf.setLineWidth(0.3);
+    pdf.line(margin, 285, W - margin, 285);
+    pdf.setFontSize(7.5);
+    pdf.setFont('helvetica','normal');
+    pdf.setTextColor(150, 150, 160);
+    pdf.text(`Hella Build  ·  ${doc.title}  ·  ${studentName}`, margin, 290);
+    pdf.text(`Page ${p} of ${totalPages}`, W - margin, 290, {align:'right'});
+  }
+
+  return pdf;
+}
+
+// ── DOWNLOAD SINGLE ──────────────────────────────────────────────
+async function downloadDoc(i) {
+  if (!docReadiness[i]) return;
+  const btn = document.querySelector(`#doc-card-${i} .btn-download`);
+  const orig = btn.innerHTML;
+  btn.innerHTML = '<span class="spinner-inline"></span> Generating...';
+  btn.disabled = true;
+  await new Promise(r => setTimeout(r, 100));
+  try {
+    const pdf = buildPDF(i);
+    pdf.save(`JLab_Doc${DOCS[i].num}_${DOCS[i].title.replace(/\s+/g,'_')}.pdf`);
+    showToast(`Document ${DOCS[i].num} downloaded ✓`);
+  } catch(e) {
+    showToast('Error generating PDF');
+  }
+  btn.innerHTML = orig;
+  btn.disabled = false;
+}
+
+// ── DOWNLOAD ALL ─────────────────────────────────────────────────
+async function downloadAll() {
+  const btn = document.getElementById('btn-dl-all');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner-inline"></span> Generating all...';
+  for (let i = 0; i < 8; i++) {
+    if (docReadiness[i]) {
+      await new Promise(r => setTimeout(r, 200));
+      const pdf = buildPDF(i);
+      pdf.save(`JLab_Doc${DOCS[i].num}_${DOCS[i].title.replace(/\s+/g,'_')}.pdf`);
+    }
+  }
+  btn.innerHTML = '⬇ Download All 8 Documents';
+  btn.disabled = false;
+  showToast('All 8 documents downloaded ✓');
+}
+
+// ── PREVIEW ──────────────────────────────────────────────────────
+function previewDoc(i) {
+  const doc = DOCS[i];
+  currentPreviewDoc = i;
+  document.getElementById('preview-title').textContent = `Document ${doc.num} — ${doc.title}`;
+  document.getElementById('preview-download-btn').onclick = () => downloadDoc(i);
+
+  let html = '';
+  doc.fields.forEach(section => {
+    const values = [];
+    section.keys.forEach(key => {
+      doc.worksheets.forEach(ws => {
+        const data = worksheetCache[ws];
+        if (data && data[key] && data[key].length > 0) values.push(data[key]);
+      });
+    });
+    const combined = values.filter(Boolean).join(' · ');
+    if (!combined || combined.trim().length < 3) return;
+    html += `<div class="preview-section">
+      <div class="preview-section-title">${section.label}</div>
+      <div class="preview-section-content">${combined.replace(/\n/g,'<br>')}</div>
+    </div>`;
+  });
+
+  if (!html) html = '<div style="color:rgba(255,255,255,.4);font-size:13px;padding:20px 0;">No content saved yet for this document.</div>';
+  document.getElementById('preview-body').innerHTML = html;
+  document.getElementById('preview-overlay').classList.add('open');
+}
+
+function closePreview() {
+  document.getElementById('preview-overlay').classList.remove('open');
+}
+
+// ── TOAST ─────────────────────────────────────────────────────────
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+</script>
+</body>
+</html>
