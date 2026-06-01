@@ -1,0 +1,749 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Module 04: Offer Design — Hella Build</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="app.js" type="text/javascript"></script>
+<style>
+:root{
+  --navy:#0D1B3E;--navy2:#0A1020;
+  --gold:#C9A84C;--gold2:#E8C96A;
+  --cyan:#00D4FF;--white:#FFFFFF;
+  --off:#F5F3EE;--text:#1A2B4A;--muted:#7A8BAE;
+  --border:rgba(13,27,62,0.1);--gold-border:rgba(201,168,76,0.3);
+}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--off);color:var(--text);font-family:'Outfit',sans-serif;font-size:16px;line-height:1.6;-webkit-font-smoothing:antialiased;}
+body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(13,27,62,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(13,27,62,.03) 1px,transparent 1px);background-size:48px 48px;pointer-events:none;z-index:0;}
+
+nav{position:sticky;top:0;z-index:200;background:rgba(245,243,238,.9);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border-bottom:1px solid var(--border);padding:0 32px;height:64px;display:flex;align-items:center;justify-content:space-between;}
+.nav-brand{display:flex;align-items:center;gap:10px;text-decoration:none;}
+.nav-mark{width:34px;height:34px;border-radius:8px;background:var(--navy);display:flex;align-items:center;justify-content:center;font-family:'Orbitron',sans-serif;font-size:11px;font-weight:800;color:var(--gold);}
+.nav-name{font-family:'Orbitron',sans-serif;font-size:12px;font-weight:700;color:var(--navy);letter-spacing:.1em;}
+.nav-sub{font-size:10px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;}
+.nav-right{display:flex;align-items:center;gap:12px;}
+.nav-user{font-size:13px;color:var(--muted);}
+.btn-signout{font-family:'Outfit',sans-serif;font-size:13px;font-weight:600;padding:8px 18px;border-radius:8px;border:1.5px solid var(--border);background:transparent;color:var(--text);cursor:pointer;transition:all .2s;}
+.btn-signout:hover{border-color:var(--navy);}
+
+.layout{display:grid;grid-template-columns:260px 1fr;min-height:calc(100vh - 64px);position:relative;z-index:1;}
+
+.sidebar{background:var(--navy2);border-right:1px solid rgba(255,255,255,.05);padding:28px 0;position:sticky;top:64px;height:calc(100vh - 64px);overflow-y:auto;display:flex;flex-direction:column;}
+.sidebar::before{content:'';position:absolute;inset:0;background-image:linear-gradient(rgba(0,212,255,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(0,212,255,.03) 1px,transparent 1px);background-size:32px 32px;pointer-events:none;}
+.sb-section{font-family:'Orbitron',sans-serif;font-size:9px;font-weight:600;letter-spacing:.3em;text-transform:uppercase;color:rgba(255,255,255,.2);padding:0 24px;margin-bottom:8px;margin-top:24px;}
+.sb-item{display:flex;align-items:center;gap:12px;padding:11px 24px;text-decoration:none;transition:background .15s;position:relative;}
+.sb-item:hover{background:rgba(255,255,255,.04);}
+.sb-item.active{background:rgba(201,168,76,.08);}
+.sb-item.active::before{content:'';position:absolute;right:0;top:0;bottom:0;width:2px;background:var(--gold);}
+.sb-num{font-family:'Orbitron',sans-serif;font-size:10px;font-weight:700;color:var(--gold);letter-spacing:.1em;min-width:28px;}
+.sb-text{font-size:13px;font-weight:500;color:rgba(255,255,255,.65);flex:1;line-height:1.3;}
+.sb-item.active .sb-text{color:var(--white);}
+.sb-check{width:18px;height:18px;border-radius:4px;border:1.5px solid rgba(255,255,255,.12);display:flex;align-items:center;justify-content:center;font-size:9px;color:var(--gold);flex-shrink:0;}
+.sb-check.done{background:rgba(201,168,76,.18);border-color:var(--gold);}
+.sb-check.locked{opacity:.35;}
+.sb-footer{margin-top:auto;padding:20px 24px;border-top:1px solid rgba(255,255,255,.05);position:relative;z-index:1;}
+.sb-av{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--gold),#7A5010);display:flex;align-items:center;justify-content:center;font-family:'Orbitron',sans-serif;font-size:11px;font-weight:800;color:var(--navy);flex-shrink:0;}
+.sb-out{font-size:12px;color:rgba(255,255,255,.25);background:none;border:none;cursor:pointer;padding:0;transition:color .2s;margin-top:10px;display:block;}
+.sb-out:hover{color:rgba(255,255,255,.5);}
+
+.progress-strip{margin:0;padding:16px 24px;background:rgba(201,168,76,.06);border-bottom:1px solid var(--gold-border);position:relative;z-index:1;}
+.prog-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
+.prog-label{font-family:'Orbitron',sans-serif;font-size:10px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:var(--muted);}
+.prog-pct{font-family:'Orbitron',sans-serif;font-size:12px;font-weight:700;color:var(--gold);}
+.prog-track{height:5px;background:var(--border);border-radius:100px;overflow:hidden;}
+.prog-fill{height:100%;background:linear-gradient(90deg,var(--gold),var(--cyan));border-radius:100px;transition:width .6s ease;}
+
+.main{padding:48px 56px;max-width:900px;}
+
+.mod-hero{background:var(--navy);border-radius:20px;padding:44px 48px;position:relative;overflow:hidden;margin-bottom:48px;box-shadow:0 16px 48px rgba(13,27,62,.25),0 0 0 1px rgba(201,168,76,.15);}
+.mod-hero::before{content:'04';position:absolute;right:32px;bottom:-16px;font-family:'Orbitron',sans-serif;font-size:140px;font-weight:900;color:rgba(255,255,255,.04);line-height:1;pointer-events:none;}
+.mod-hero::after{content:'';position:absolute;top:-80px;right:-80px;width:300px;height:300px;border-radius:50%;background:radial-gradient(circle,rgba(201,168,76,.1) 0%,transparent 70%);pointer-events:none;}
+.scanline{position:absolute;left:0;right:0;top:0;height:2px;background:linear-gradient(90deg,transparent,rgba(0,212,255,.12),transparent);animation:scan 5s linear infinite;pointer-events:none;}
+@keyframes scan{0%{transform:translateY(0)}100%{transform:translateY(400px)}}
+.mod-eyebrow{font-family:'Orbitron',sans-serif;font-size:10px;font-weight:600;letter-spacing:.3em;text-transform:uppercase;color:var(--cyan);margin-bottom:16px;animation:glowcyan 2.5s infinite;}
+@keyframes glowcyan{0%,100%{opacity:.7}50%{opacity:1;text-shadow:0 0 20px rgba(0,212,255,.7)}}
+.mod-h{font-family:'Orbitron',sans-serif;font-size:clamp(24px,3.5vw,40px);font-weight:900;line-height:1.1;color:var(--white);margin-bottom:16px;}
+.mod-h em{font-style:normal;color:var(--gold);}
+.mod-p{font-size:15px;color:rgba(255,255,255,.55);line-height:1.75;max-width:520px;margin-bottom:24px;}
+.mod-meta{display:flex;gap:20px;flex-wrap:wrap;}
+.meta-chip{display:flex;align-items:center;gap:6px;font-size:12px;color:rgba(255,255,255,.4);}
+.meta-chip span{color:var(--gold);font-weight:600;}
+
+.s-label{font-family:'Orbitron',sans-serif;font-size:10px;font-weight:600;letter-spacing:.3em;text-transform:uppercase;color:var(--gold);margin-bottom:16px;}
+
+.lesson{background:white;border-radius:16px;padding:36px;border:1px solid var(--border);box-shadow:0 4px 16px rgba(13,27,62,.06);margin-bottom:24px;}
+.lesson-num{font-family:'Orbitron',sans-serif;font-size:10px;font-weight:600;letter-spacing:.25em;text-transform:uppercase;color:var(--gold);margin-bottom:8px;}
+.lesson-title{font-family:'Orbitron',sans-serif;font-size:18px;font-weight:700;color:var(--navy);margin-bottom:20px;letter-spacing:.02em;}
+.lesson-p{font-size:15px;color:var(--muted);line-height:1.75;margin-bottom:16px;}
+.lesson-p:last-child{margin-bottom:0;}
+.callout-cyan{padding:18px 22px;background:rgba(0,212,255,.06);border-left:3px solid var(--cyan);border-radius:0 10px 10px 0;margin:20px 0;font-size:14px;color:var(--text);line-height:1.65;}
+.callout-cyan strong{color:var(--navy);}
+.callout-gold{padding:18px 22px;background:rgba(201,168,76,.08);border-left:3px solid var(--gold);border-radius:0 10px 10px 0;margin:20px 0;font-size:14px;color:#6B4E00;line-height:1.65;font-weight:500;}
+
+.audio-player{display:flex;align-items:center;gap:16px;padding:16px 20px;background:var(--navy);border-radius:12px;margin:20px 0;border:1px solid rgba(201,168,76,.15);}
+.play-btn{width:40px;height:40px;border-radius:50%;background:var(--gold);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;transition:transform .2s,background .2s;}
+.play-btn:hover{transform:scale(1.1);background:var(--gold2);}
+.audio-info{flex:1;}
+.audio-title{font-size:13px;font-weight:600;color:var(--white);margin-bottom:2px;}
+.audio-sub{font-size:11px;color:rgba(255,255,255,.35);}
+.audio-bar{height:3px;background:rgba(255,255,255,.12);border-radius:100px;margin-top:8px;}
+.audio-time{font-family:'Orbitron',sans-serif;font-size:11px;color:rgba(255,255,255,.35);white-space:nowrap;}
+
+/* OFFER BLUEPRINT WORKSHEET */
+.ws-section{margin:48px 0;}
+.ws-header{background:var(--navy);border-radius:16px 16px 0 0;padding:28px 32px;border:1px solid var(--gold-border);border-bottom:none;display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:16px;}
+.ws-eyebrow{font-family:'Orbitron',sans-serif;font-size:9px;font-weight:600;letter-spacing:.3em;text-transform:uppercase;color:var(--cyan);margin-bottom:8px;animation:glowcyan 2.5s infinite;}
+.ws-title{font-family:'Orbitron',sans-serif;font-size:22px;font-weight:900;color:var(--white);}
+.ws-subtitle{font-size:13px;color:rgba(255,255,255,.45);margin-top:4px;}
+.ws-save{display:flex;align-items:center;gap:8px;font-size:12px;color:rgba(255,255,255,.4);}
+.save-dot{width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,.2);transition:background .3s;}
+.save-dot.saving{background:var(--gold);animation:pulsegold 1s infinite;}
+.save-dot.saved{background:#28C840;}
+@keyframes pulsegold{0%,100%{box-shadow:0 0 0 0 rgba(201,168,76,.5)}50%{box-shadow:0 0 0 6px rgba(201,168,76,0)}}
+.ws-instructions{background:rgba(201,168,76,.06);border:1px solid var(--gold-border);border-top:none;border-bottom:none;padding:16px 32px;font-size:13px;color:var(--text);line-height:1.6;}
+.ws-instructions strong{color:var(--navy);}
+.ws-body{background:white;border:1px solid var(--gold-border);border-top:none;border-radius:0 0 16px 16px;padding:32px;}
+
+/* Eight containment definitions */
+.eight-grid{display:flex;flex-direction:column;gap:0;border:1.5px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:32px;}
+.eight-row{display:grid;grid-template-columns:220px 1fr;border-bottom:1px solid var(--border);}
+.eight-row:last-child{border-bottom:none;}
+.eight-label-cell{background:var(--navy);padding:20px 24px;display:flex;flex-direction:column;justify-content:center;border-right:1px solid rgba(255,255,255,.06);}
+.eight-num{font-family:'Orbitron',sans-serif;font-size:9px;font-weight:700;color:var(--gold);letter-spacing:.15em;margin-bottom:4px;}
+.eight-name{font-size:13px;font-weight:700;color:var(--white);line-height:1.3;}
+.eight-hint{font-size:10px;color:rgba(255,255,255,.35);margin-top:4px;line-height:1.4;}
+.eight-input-cell{padding:16px 20px;background:white;}
+.eight-input{width:100%;padding:10px 14px;border:1.5px solid var(--border);border-radius:8px;background:var(--off);font-family:'Outfit',sans-serif;font-size:13px;color:var(--text);outline:none;resize:vertical;min-height:70px;transition:all .2s;line-height:1.55;}
+.eight-input:focus{border-color:var(--gold);background:white;box-shadow:0 0 0 3px rgba(201,168,76,.12);}
+.eight-input::placeholder{color:rgba(13,27,62,.25);font-size:12px;}
+.eight-input.single{min-height:44px;resize:none;}
+
+/* Offer container template */
+.offer-container{background:var(--navy);border-radius:14px;padding:32px;margin-bottom:32px;border:1px solid var(--gold-border);}
+.oc-label{font-family:'Orbitron',sans-serif;font-size:10px;font-weight:600;letter-spacing:.25em;text-transform:uppercase;color:var(--gold);margin-bottom:16px;}
+.oc-sentence{font-size:14px;color:rgba(255,255,255,.6);line-height:1.7;margin-bottom:24px;}
+.oc-fields{display:flex;flex-direction:column;gap:14px;}
+.oc-field-row{display:grid;grid-template-columns:140px 1fr;gap:12px;align-items:start;}
+.oc-prefix{font-size:13px;font-weight:600;color:var(--gold);padding-top:12px;line-height:1.3;}
+.oc-input{padding:11px 14px;border:1.5px solid rgba(255,255,255,.12);border-radius:8px;background:rgba(255,255,255,.06);font-family:'Outfit',sans-serif;font-size:13px;color:var(--white);outline:none;transition:all .2s;width:100%;}
+.oc-input:focus{border-color:var(--gold);background:rgba(255,255,255,.1);box-shadow:0 0 0 3px rgba(201,168,76,.12);}
+.oc-input::placeholder{color:rgba(255,255,255,.25);font-size:12px;}
+.oc-preview{background:rgba(201,168,76,.08);border:1px solid var(--gold-border);border-radius:10px;padding:20px 24px;margin-top:20px;}
+.oc-preview-label{font-family:'Orbitron',sans-serif;font-size:9px;font-weight:600;letter-spacing:.25em;text-transform:uppercase;color:var(--gold);margin-bottom:10px;}
+.oc-preview-text{font-size:14px;color:var(--white);line-height:1.75;font-style:italic;}
+.oc-preview-text span{color:var(--gold);font-style:normal;font-weight:600;}
+
+/* Pricing section */
+.pricing-section{margin-bottom:32px;}
+.pricing-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;}
+.pricing-card{border:1.5px solid var(--border);border-radius:12px;overflow:hidden;}
+.pricing-card-header{background:var(--navy);padding:14px 18px;}
+.pc-label{font-family:'Orbitron',sans-serif;font-size:9px;font-weight:700;color:var(--gold);letter-spacing:.15em;}
+.pc-title{font-size:12px;color:rgba(255,255,255,.6);margin-top:2px;}
+.pricing-card-body{padding:14px 18px;display:flex;flex-direction:column;gap:10px;}
+.price-input{padding:10px 14px;border:1.5px solid var(--border);border-radius:8px;background:var(--off);font-family:'Outfit',sans-serif;font-size:13px;color:var(--text);outline:none;transition:all .2s;width:100%;}
+.price-input:focus{border-color:var(--gold);background:white;box-shadow:0 0 0 3px rgba(201,168,76,.12);}
+.price-input::placeholder{color:rgba(13,27,62,.25);font-size:11px;}
+
+/* LOCK-IN */
+.lockin-section{background:var(--navy);border-radius:20px;padding:40px;margin:24px 0;border:1.5px solid var(--gold-border);box-shadow:0 12px 40px rgba(13,27,62,.2),0 0 24px rgba(201,168,76,.1);position:relative;overflow:hidden;}
+.lockin-section::after{content:'';position:absolute;bottom:-80px;right:-80px;width:300px;height:300px;border-radius:50%;background:radial-gradient(circle,rgba(201,168,76,.1) 0%,transparent 70%);pointer-events:none;}
+.lockin-tag{font-family:'Orbitron',sans-serif;font-size:10px;font-weight:600;letter-spacing:.3em;text-transform:uppercase;color:var(--gold);margin-bottom:12px;}
+.lockin-title{font-family:'Orbitron',sans-serif;font-size:22px;font-weight:900;color:var(--white);margin-bottom:12px;}
+.lockin-rule{font-size:14px;color:rgba(255,255,255,.6);line-height:1.65;margin-bottom:24px;}
+.lockin-rule strong{color:var(--gold);}
+.lockin-input{width:100%;padding:15px 18px;border:1.5px solid rgba(201,168,76,.4);border-radius:10px;background:rgba(255,255,255,.05);font-family:'Outfit',sans-serif;font-size:15px;font-weight:600;color:var(--white);outline:none;transition:all .2s;margin-bottom:12px;resize:vertical;min-height:100px;}
+.lockin-input:focus{border-color:var(--gold);background:rgba(255,255,255,.08);box-shadow:0 0 0 3px rgba(201,168,76,.15);}
+.lockin-input::placeholder{color:rgba(255,255,255,.3);font-weight:400;}
+.lockin-warn{font-size:13px;color:rgba(201,168,76,.7);display:none;margin-bottom:12px;}
+.lockin-ok{font-size:13px;color:#28C840;display:none;margin-bottom:12px;}
+
+.decl-box{background:linear-gradient(135deg,rgba(201,168,76,.1) 0%,rgba(201,168,76,.05) 100%);border:1.5px solid var(--gold-border);border-radius:20px;padding:40px;text-align:center;margin:24px 0;box-shadow:0 8px 32px rgba(201,168,76,.1);}
+.decl-label{font-family:'Orbitron',sans-serif;font-size:9px;font-weight:600;letter-spacing:.3em;text-transform:uppercase;color:#8A6B1A;margin-bottom:16px;}
+.decl-text{font-family:'Orbitron',sans-serif;font-size:clamp(16px,2.2vw,22px);font-weight:800;color:var(--navy);line-height:1.25;margin-bottom:12px;}
+.decl-sub{font-size:14px;color:var(--muted);margin-bottom:28px;font-style:italic;}
+.alert-msg{padding:12px 16px;border-radius:8px;font-size:13px;font-weight:500;margin-bottom:16px;display:none;}
+.alert-msg.show{display:block;}
+.alert-err{background:#FEF2F2;color:#B91C1C;border:1px solid #FECACA;}
+.alert-ok{background:#F0FDF4;color:#15803D;border:1px solid #BBF7D0;}
+.btn-decl{display:inline-flex;align-items:center;gap:8px;padding:16px 40px;border-radius:12px;background:var(--navy);color:var(--gold);font-family:'Outfit',sans-serif;font-size:15px;font-weight:700;letter-spacing:.05em;border:none;cursor:pointer;box-shadow:0 8px 28px rgba(13,27,62,.2);transition:all .25s;}
+.btn-decl:hover{transform:translateY(-3px);box-shadow:0 16px 40px rgba(13,27,62,.3),0 0 24px rgba(201,168,76,.2);}
+
+.mod-nav{display:flex;justify-content:space-between;align-items:center;gap:12px;padding-top:40px;border-top:1px solid var(--border);margin-top:40px;}
+.btn-back{display:inline-flex;align-items:center;gap:8px;padding:12px 24px;border-radius:10px;background:transparent;color:var(--text);border:1.5px solid var(--border);font-family:'Outfit',sans-serif;font-size:14px;font-weight:600;text-decoration:none;cursor:pointer;transition:all .2s;}
+.btn-back:hover{border-color:var(--navy);background:rgba(13,27,62,.04);}
+.btn-next{display:inline-flex;align-items:center;gap:8px;padding:12px 24px;border-radius:10px;background:var(--navy);color:var(--gold);border:none;font-family:'Outfit',sans-serif;font-size:14px;font-weight:700;text-decoration:none;cursor:pointer;transition:all .2s;opacity:.4;pointer-events:none;}
+.btn-next.unlocked{opacity:1;pointer-events:auto;}
+.btn-next.unlocked:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(13,27,62,.25);}
+
+@keyframes spin{to{transform:rotate(360deg)}}
+@media(max-width:900px){
+  .layout{grid-template-columns:1fr;}.sidebar{display:none;}.main{padding:32px 24px;}
+  .eight-row{grid-template-columns:1fr;}.eight-label-cell{border-right:none;border-bottom:1px solid rgba(255,255,255,.06);}
+  .oc-field-row{grid-template-columns:1fr;}.oc-prefix{padding-top:0;}
+  .pricing-row{grid-template-columns:1fr;}
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="orientation.html" class="nav-brand">
+    <div class="nav-mark">HB</div>
+    <div>
+      <div class="nav-name">BUILD TERMINAL</div>
+      <div class="nav-sub">Jupiter's Lab</div>
+    </div>
+  </a>
+  <div class="nav-right">
+    <span class="nav-user" id="nav-user"></span>
+    <button class="btn-signout" onclick="signOut()">Sign Out</button>
+  </div>
+</nav>
+
+<div class="layout">
+  <aside class="sidebar">
+    <div style="position:relative;z-index:1;flex:1;">
+      <div class="sb-section">Course</div>
+      <a href="orientation.html" class="sb-item"><div class="sb-num">00</div><div class="sb-text">Orientation</div><div class="sb-check done" id="ck-00">✓</div></a>
+      <a href="module1.html" class="sb-item"><div class="sb-num">01</div><div class="sb-text">Skill Clarity</div><div class="sb-check" id="ck-01"></div></a>
+      <a href="module2.html" class="sb-item"><div class="sb-num">02</div><div class="sb-text">Skill Stacking</div><div class="sb-check" id="ck-02"></div></a>
+      <a href="module3.html" class="sb-item"><div class="sb-num">03</div><div class="sb-text">Direction</div><div class="sb-check" id="ck-03"></div></a>
+      <a href="module4.html" class="sb-item active"><div class="sb-num">04</div><div class="sb-text">Offer Design</div><div class="sb-check" id="ck-04"></div></a>
+      <div class="sb-item" style="opacity:.4;cursor:default;"><div class="sb-num">05</div><div class="sb-text">Workflow</div><div class="sb-check locked">🔒</div></div>
+      <div class="sb-item" style="opacity:.4;cursor:default;"><div class="sb-num">06</div><div class="sb-text">Systems + Rest</div><div class="sb-check locked">🔒</div></div>
+      <div class="sb-item" style="opacity:.4;cursor:default;"><div class="sb-num">★</div><div class="sb-text">Bonus Module</div><div class="sb-check locked">🔒</div></div>
+    </div>
+    <div class="sb-footer">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+        <div class="sb-av" id="sb-av">?</div>
+        <div><div style="font-size:13px;font-weight:600;color:var(--white);" id="sb-name">—</div><div style="font-size:11px;color:rgba(255,255,255,.3);" id="sb-email">—</div></div>
+      </div>
+      <button class="sb-out" onclick="signOut()">← Sign out</button>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="progress-strip">
+      <div class="prog-row"><span class="prog-label">Course Progress</span><span class="prog-pct" id="prog-pct">55%</span></div>
+      <div class="prog-track"><div class="prog-fill" id="prog-fill" style="width:55%;"></div></div>
+    </div>
+
+    <!-- HERO -->
+    <div class="mod-hero" style="margin-top:40px;">
+      <div class="scanline"></div>
+      <div class="mod-eyebrow">// Module 04 — Phase R: Revenue</div>
+      <h1 class="mod-h">Turning Skills Into<br><em>a Real Offer</em></h1>
+      <p class="mod-p">You know what you do. You know who you do it for. Now you're going to build the thing they can actually buy — a defined offer with a scope, a timeline, a price, and a completion definition. Not a service. An offer.</p>
+      <div class="mod-meta">
+        <div class="meta-chip">⏱ <span>~25 minutes</span></div>
+        <div class="meta-chip">📐 <span>Offer Blueprint Worksheet</span></div>
+        <div class="meta-chip">🔒 <span>Lock-In: Your signature offer description</span></div>
+      </div>
+    </div>
+
+    <!-- LESSON 4.1 -->
+    <div class="s-label">Lesson 4.1</div>
+    <div class="lesson">
+      <div class="lesson-num">Lesson 4.1 · What an Offer Actually Is</div>
+      <div class="lesson-title">The Difference Between a Service and an Offer</div>
+      <div class="audio-player">
+        <button class="play-btn" onclick="toggleAudio(this)">▶</button>
+        <div class="audio-info">
+          <div class="audio-title">Lesson 4.1 — Services vs. Offers</div>
+          <div class="audio-sub">Voiceover · ~5 min · Add audio file to enable playback</div>
+          <div class="audio-bar"></div>
+        </div>
+        <div class="audio-time">0:00</div>
+      </div>
+      <p class="lesson-p">A service is what you do. An offer is what they buy. The difference is precision. "I do brand strategy" is a service. "I help service-based founders define their positioning, build their offer, and create the messaging that makes them referable — delivered in 30 days for a flat fee" is an offer. One is a category. The other is a product.</p>
+      <p class="lesson-p">Most service providers fail not because they lack skill but because they lack containment. They take on anything that comes in, customize everything, and end up doing different work for every client with no repeatable process. That's not a business. That's employment without benefits.</p>
+      <div class="callout-cyan">
+        <strong>The three elements every strong offer needs:</strong> A specific outcome the client will have at the end. A defined scope — what's included and what's not. A fixed timeline. If your offer is missing any of these, it's not an offer yet. It's a conversation that will end in scope creep.
+      </div>
+    </div>
+
+    <!-- LESSON 4.2 -->
+    <div class="s-label">Lesson 4.2</div>
+    <div class="lesson">
+      <div class="lesson-num">Lesson 4.2 · Pricing With Confidence</div>
+      <div class="lesson-title">Why You Price Based on Value, Not Hours</div>
+      <div class="audio-player">
+        <button class="play-btn" onclick="toggleAudio(this)">▶</button>
+        <div class="audio-info">
+          <div class="audio-title">Lesson 4.2 — Value-Based Pricing</div>
+          <div class="audio-sub">Voiceover · ~5 min · Add audio file to enable playback</div>
+          <div class="audio-bar"></div>
+        </div>
+        <div class="audio-time">0:00</div>
+      </div>
+      <p class="lesson-p">Hourly pricing is a trap. It caps your income at the number of hours you can work, rewards slowness over efficiency, and puts the client in control of your time. The moment you get faster at your work — which you will — your income goes down. That's backwards.</p>
+      <p class="lesson-p">Value-based pricing asks a different question: what is this worth to them? If your positioning work helps a client go from unclear to referable and their next three clients come from a single referral, what is that worth? More than your hourly rate. Price the outcome, not the effort.</p>
+      <div class="callout-cyan">
+        <strong>Document your price logic.</strong> Know why your offer costs what it costs — not just the number, but the reasoning. Value delivered. Market rate for this type of outcome. Time required. When a client challenges your price, you're not defending a number, you're explaining a rationale. That's a completely different conversation.
+      </div>
+      <div class="callout-gold">🔒 Your offer description at the end of this module becomes one of your six portfolio documents. Write it as if you're posting it publicly — because eventually you will.</div>
+    </div>
+
+    <!-- OFFER BLUEPRINT WORKSHEET -->
+    <div class="ws-section">
+      <div class="s-label">Interactive Worksheet</div>
+      <div class="ws-header">
+        <div>
+          <div class="ws-eyebrow">// Phase R — Revenue · Worksheet 04</div>
+          <div class="ws-title">The Offer Blueprint</div>
+          <div class="ws-subtitle">Your answers save automatically as you type</div>
+        </div>
+        <div class="ws-save">
+          <div class="save-dot" id="save-dot"></div>
+          <span id="save-txt">Ready</span>
+        </div>
+      </div>
+      <div class="ws-instructions">
+        <strong>Instructions:</strong> Complete all eight containment definitions. Skip none. Every field that stays blank is a future scope creep conversation you haven't had yet. Then use the Offer Container Template to build your public-facing offer description, and set your pricing with documented reasoning.
+      </div>
+      <div class="ws-body">
+
+        <!-- Eight Containment Definitions -->
+        <div style="font-family:'Orbitron',sans-serif;font-size:13px;font-weight:700;color:var(--navy);margin-bottom:16px;letter-spacing:.02em;">// Eight Containment Definitions</div>
+        <p style="font-size:13px;color:var(--muted);margin-bottom:24px;line-height:1.6;">Every offer must pass through all eight. An undefined offer creates scope creep, underpricing, and client confusion. Skip none.</p>
+
+        <div class="eight-grid">
+          <div class="eight-row">
+            <div class="eight-label-cell">
+              <div class="eight-num">01</div>
+              <div class="eight-name">The Problem</div>
+              <div class="eight-hint">One sentence. If it needs more, it's not specific enough.</div>
+            </div>
+            <div class="eight-input-cell">
+              <textarea class="eight-input single" id="def-01" placeholder="The specific problem you are solving — in one sentence." oninput="autosave(); updateContainer()"></textarea>
+            </div>
+          </div>
+          <div class="eight-row">
+            <div class="eight-label-cell">
+              <div class="eight-num">02</div>
+              <div class="eight-name">The Audience</div>
+              <div class="eight-hint">Match exactly what you defined in Module 3.</div>
+            </div>
+            <div class="eight-input-cell">
+              <textarea class="eight-input single" id="def-02" placeholder="The precise person experiencing this problem." oninput="autosave(); updateContainer()"></textarea>
+            </div>
+          </div>
+          <div class="eight-row">
+            <div class="eight-label-cell">
+              <div class="eight-num">03</div>
+              <div class="eight-name">The Outcome</div>
+              <div class="eight-hint">What they'll have, know, or be able to do at the end.</div>
+            </div>
+            <div class="eight-input-cell">
+              <textarea class="eight-input" id="def-03" placeholder="Describe the after-state. Not what you'll do — what they'll have when you're done." oninput="autosave(); updateContainer()"></textarea>
+            </div>
+          </div>
+          <div class="eight-row">
+            <div class="eight-label-cell">
+              <div class="eight-num">04</div>
+              <div class="eight-name">The Timeline</div>
+              <div class="eight-hint">Fixed duration. 30, 60, or 90 days maximum.</div>
+            </div>
+            <div class="eight-input-cell">
+              <textarea class="eight-input single" id="def-04" placeholder="e.g. 30-day engagement · 4 sessions over 6 weeks · 90-day intensive" oninput="autosave(); updateContainer()"></textarea>
+            </div>
+          </div>
+          <div class="eight-row">
+            <div class="eight-label-cell">
+              <div class="eight-num">05</div>
+              <div class="eight-name">Scope — Included</div>
+              <div class="eight-hint">Explicit list. If it's not here, it's not included.</div>
+            </div>
+            <div class="eight-input-cell">
+              <textarea class="eight-input" id="def-05" placeholder="List every deliverable, session, document, and touchpoint that is included. Be specific." oninput="autosave()"></textarea>
+            </div>
+          </div>
+          <div class="eight-row">
+            <div class="eight-label-cell">
+              <div class="eight-num">06</div>
+              <div class="eight-name">Scope — Excluded</div>
+              <div class="eight-hint">Not optional. Stating exclusions protects both parties.</div>
+            </div>
+            <div class="eight-input-cell">
+              <textarea class="eight-input" id="def-06" placeholder="List what is NOT included. What conversations will require a separate engagement or new contract?" oninput="autosave()"></textarea>
+            </div>
+          </div>
+          <div class="eight-row">
+            <div class="eight-label-cell">
+              <div class="eight-num">07</div>
+              <div class="eight-name">Completion Definition</div>
+              <div class="eight-hint">Objective, not subjective. Both parties can verify this independently.</div>
+            </div>
+            <div class="eight-input-cell">
+              <textarea class="eight-input" id="def-07" placeholder="How will both you and the client know this engagement is done? What tangible thing exists at completion?" oninput="autosave()"></textarea>
+            </div>
+          </div>
+          <div class="eight-row">
+            <div class="eight-label-cell">
+              <div class="eight-num">08</div>
+              <div class="eight-name">Price Logic</div>
+              <div class="eight-hint">Document your reasoning — not just the number.</div>
+            </div>
+            <div class="eight-input-cell">
+              <textarea class="eight-input" id="def-08" placeholder="Why is this priced at this number? Value delivered. Market rate. Time required. Write the reasoning you'd give a client who asked." oninput="autosave()"></textarea>
+            </div>
+          </div>
+        </div>
+
+        <!-- Offer Container Template -->
+        <div class="offer-container">
+          <div class="oc-label">// Offer Container Template — Live Build</div>
+          <p class="oc-sentence">Fill in each piece below. Your complete offer statement builds in real time. This is what goes on your website, your proposal, your sales conversation.</p>
+          <div class="oc-fields">
+            <div class="oc-field-row">
+              <span class="oc-prefix">I help</span>
+              <input type="text" class="oc-input" id="oc-who" placeholder="[specific audience from Definition 02]" oninput="autosave(); updateContainer()">
+            </div>
+            <div class="oc-field-row">
+              <span class="oc-prefix">solve</span>
+              <input type="text" class="oc-input" id="oc-problem" placeholder="[specific problem from Definition 01]" oninput="autosave(); updateContainer()">
+            </div>
+            <div class="oc-field-row">
+              <span class="oc-prefix">within</span>
+              <input type="text" class="oc-input" id="oc-timeline" placeholder="[timeline from Definition 04]" oninput="autosave(); updateContainer()">
+            </div>
+            <div class="oc-field-row">
+              <span class="oc-prefix">so they can</span>
+              <input type="text" class="oc-input" id="oc-outcome" placeholder="[outcome from Definition 03]" oninput="autosave(); updateContainer()">
+            </div>
+            <div class="oc-field-row">
+              <span class="oc-prefix">This includes</span>
+              <input type="text" class="oc-input" id="oc-includes" placeholder="[summary of included scope from Definition 05]" oninput="autosave(); updateContainer()">
+            </div>
+            <div class="oc-field-row">
+              <span class="oc-prefix">It does NOT include</span>
+              <input type="text" class="oc-input" id="oc-excludes" placeholder="[key exclusions from Definition 06]" oninput="autosave(); updateContainer()">
+            </div>
+            <div class="oc-field-row">
+              <span class="oc-prefix">Done when</span>
+              <input type="text" class="oc-input" id="oc-done" placeholder="[completion definition from Definition 07]" oninput="autosave(); updateContainer()">
+            </div>
+          </div>
+          <div class="oc-preview">
+            <div class="oc-preview-label">// Your Offer Statement — Live Preview</div>
+            <div class="oc-preview-text" id="oc-preview">Fill in the fields above to see your offer statement build.</div>
+          </div>
+        </div>
+
+        <!-- Pricing -->
+        <div class="pricing-section">
+          <div style="font-family:'Orbitron',sans-serif;font-size:13px;font-weight:700;color:var(--navy);margin-bottom:8px;letter-spacing:.02em;">// Pricing Structure</div>
+          <p style="font-size:13px;color:var(--muted);margin-bottom:20px;line-height:1.6;">Set your pricing across tiers. You don't need all three — start with one. Add tiers as you understand your market better.</p>
+          <div class="pricing-row">
+            <div class="pricing-card">
+              <div class="pricing-card-header">
+                <div class="pc-label">CORE OFFER</div>
+                <div class="pc-title">Your primary, signature offer</div>
+              </div>
+              <div class="pricing-card-body">
+                <input type="text" class="price-input" id="price-core-name" placeholder="Offer name" oninput="autosave()">
+                <input type="text" class="price-input" id="price-core-amount" placeholder="Price (e.g. $1,500 flat · $500/mo)" oninput="autosave()">
+                <input type="text" class="price-input" id="price-core-why" placeholder="Why this price (brief)" oninput="autosave()">
+              </div>
+            </div>
+            <div class="pricing-card">
+              <div class="pricing-card-header">
+                <div class="pc-label">ENTRY OFFER</div>
+                <div class="pc-title">Lower-barrier first step</div>
+              </div>
+              <div class="pricing-card-body">
+                <input type="text" class="price-input" id="price-entry-name" placeholder="Offer name (optional)" oninput="autosave()">
+                <input type="text" class="price-input" id="price-entry-amount" placeholder="Price" oninput="autosave()">
+                <input type="text" class="price-input" id="price-entry-why" placeholder="How this feeds your core offer" oninput="autosave()">
+              </div>
+            </div>
+            <div class="pricing-card">
+              <div class="pricing-card-header">
+                <div class="pc-label">PREMIUM OFFER</div>
+                <div class="pc-title">Highest-touch, highest-value</div>
+              </div>
+              <div class="pricing-card-body">
+                <input type="text" class="price-input" id="price-premium-name" placeholder="Offer name (optional)" oninput="autosave()">
+                <input type="text" class="price-input" id="price-premium-amount" placeholder="Price" oninput="autosave()">
+                <input type="text" class="price-input" id="price-premium-why" placeholder="What makes this worth the premium" oninput="autosave()">
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- LESSON 4.3 — PRICING OBJECTIONS -->
+    <div class="s-label" style="margin-top:48px;">Lesson 4.3</div>
+    <div class="lesson">
+      <div class="lesson-num">Lesson 4.3 · Holding Your Price When Clients Push Back</div>
+      <div class="lesson-title">The Moment Most Founders Fold — And How Not To</div>
+      <div class="audio-player">
+        <button class="play-btn" onclick="toggleAudio(this)">▶</button>
+        <div class="audio-info">
+          <div class="audio-title">Lesson 4.3 — Holding Your Price</div>
+          <div class="audio-sub">Voiceover · ~5 min · Add audio file to enable playback</div>
+          <div class="audio-bar"></div>
+        </div>
+        <div class="audio-time">0:00</div>
+      </div>
+      <p class="lesson-p">Here's what happens in most discovery calls. You say your price. There's a pause. The client says "that's a lot" or "I need to think about it" or "can you do anything on the price?" And most founders immediately fold — discount, add free extras, apologize for their price, or spend the next ten minutes justifying themselves. Every single one of those responses signals that you don't actually believe your price is right.</p>
+      <p class="lesson-p">When a client says "that's expensive," they are not telling you your price is wrong. They are testing whether you believe it's right. The response that works is not a longer explanation. It's two things: acknowledge, then anchor back to the outcome.</p>
+      <div class="callout-cyan">
+        <strong>The script that works:</strong> "I understand — it's a real investment. What I can tell you is that by the end of our engagement you'll have [specific outcome]. The price reflects that result, not just my time. If now isn't the right moment, I'd rather you come back when it is than stretch for something that doesn't feel right."
+        <br><br>
+        That response does three things: it validates without caving, it reanchors to value not effort, and it removes pressure — which paradoxically makes them more likely to say yes.
+      </div>
+      <p class="lesson-p">The other objection worth preparing for is "I can get this cheaper somewhere else." The answer: "You probably can. The question is whether cheaper gets you the same outcome. My pricing reflects what it actually takes to deliver the result I described — not what it takes to show up and try." Say it calmly. Mean it. Move on.</p>
+      <div class="callout-gold">🔒 The Pricing Strategy Document below becomes Document 04 in your portfolio. It's separate from your offer — it documents your pricing rationale so you can defend any number with confidence and revisit it as your market understanding grows.</div>
+    </div>
+
+    <!-- PRICING STRATEGY DOCUMENT -->
+    <div class="ws-section">
+      <div class="s-label">Pricing Strategy — Document 04</div>
+      <div class="ws-header">
+        <div>
+          <div class="ws-eyebrow">// Phase R — Revenue · Pricing Document</div>
+          <div class="ws-title">Pricing Strategy</div>
+          <div class="ws-subtitle">Your standalone pricing document — separate from the offer itself</div>
+        </div>
+        <div class="ws-save">
+          <div class="save-dot" id="save-dot-ps"></div>
+          <span id="save-txt-ps">Ready</span>
+        </div>
+      </div>
+      <div class="ws-instructions">
+        <strong>Instructions:</strong> Document your full pricing rationale here. This is the document you come back to when someone asks why you charge what you charge — or when you're ready to raise your rates. It should be detailed enough that you could hand it to a business advisor and they'd understand your entire pricing strategy.
+      </div>
+      <div class="ws-body" style="background:white;border:1px solid var(--gold-border);border-top:none;border-radius:0 0 16px 16px;padding:32px;">
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:28px;">
+          <div>
+            <div style="font-family:'Orbitron',sans-serif;font-size:9px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:var(--gold);margin-bottom:6px;">Core Offer Price</div>
+            <div style="font-size:12px;color:var(--muted);margin-bottom:8px;font-style:italic;">Your primary offer. The number that appears on your website.</div>
+            <input type="text" style="width:100%;padding:10px 14px;border:1.5px solid var(--border);border-radius:8px;background:var(--off);font-family:'Outfit',sans-serif;font-size:14px;color:var(--text);outline:none;transition:all .2s;" id="ps-core-price" placeholder="e.g. $1,500 flat fee · $500/month" oninput="autosavePricing()">
+          </div>
+          <div>
+            <div style="font-family:'Orbitron',sans-serif;font-size:9px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:var(--gold);margin-bottom:6px;">Price Review Schedule</div>
+            <div style="font-size:12px;color:var(--muted);margin-bottom:8px;font-style:italic;">When will you revisit this number?</div>
+            <input type="text" style="width:100%;padding:10px 14px;border:1.5px solid var(--border);border-radius:8px;background:var(--off);font-family:'Outfit',sans-serif;font-size:14px;color:var(--text);outline:none;transition:all .2s;" id="ps-review" placeholder="e.g. After every 3 clients · Every 6 months" oninput="autosavePricing()">
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:28px;">
+          <div>
+            <div style="font-family:'Orbitron',sans-serif;font-size:9px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:var(--gold);margin-bottom:6px;">The Value You're Pricing</div>
+            <div style="font-size:12px;color:var(--muted);margin-bottom:8px;font-style:italic;">Not your time — the outcome the client gets. What is that worth to them?</div>
+            <textarea style="width:100%;padding:10px 14px;border:1.5px solid var(--border);border-radius:8px;background:var(--off);font-family:'Outfit',sans-serif;font-size:13px;color:var(--text);outline:none;resize:vertical;min-height:90px;transition:all .2s;line-height:1.55;" id="ps-value" placeholder="e.g. A founder who goes from unclear to referable typically closes 2–3 additional clients in the following 90 days. At their average project value of $2,000, that's $4,000–$6,000 in direct revenue attributable to the clarity work." oninput="autosavePricing()"></textarea>
+          </div>
+          <div>
+            <div style="font-family:'Orbitron',sans-serif;font-size:9px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:var(--gold);margin-bottom:6px;">Market Rate Context</div>
+            <div style="font-size:12px;color:var(--muted);margin-bottom:8px;font-style:italic;">What do comparable services cost? How do you compare?</div>
+            <textarea style="width:100%;padding:10px 14px;border:1.5px solid var(--border);border-radius:8px;background:var(--off);font-family:'Outfit',sans-serif;font-size:13px;color:var(--text);outline:none;resize:vertical;min-height:90px;transition:all .2s;line-height:1.55;" id="ps-market" placeholder="e.g. Brand strategists typically charge $2,500–$10,000 for positioning work. Business coaches charge $3,000–$8,000 for 3-month engagements. My $1,500 flat fee is below market for the depth of output I deliver." oninput="autosavePricing()"></textarea>
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:28px;">
+          <div>
+            <div style="font-family:'Orbitron',sans-serif;font-size:9px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:var(--gold);margin-bottom:6px;">Time and Capacity Cost</div>
+            <div style="font-size:12px;color:var(--muted);margin-bottom:8px;font-style:italic;">How many hours does this engagement require? What does that mean for your capacity?</div>
+            <textarea style="width:100%;padding:10px 14px;border:1.5px solid var(--border);border-radius:8px;background:var(--off);font-family:'Outfit',sans-serif;font-size:13px;color:var(--text);outline:none;resize:vertical;min-height:90px;transition:all .2s;line-height:1.55;" id="ps-time" placeholder="e.g. 4 sessions at 60 min + 3–4 hours of prep and deliverable work per client = 7–8 hours total. At $1,500 that's ~$190/hour effective rate. Maximum 3 clients at once = $4,500/month ceiling at current price." oninput="autosavePricing()"></textarea>
+          </div>
+          <div>
+            <div style="font-family:'Orbitron',sans-serif;font-size:9px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:var(--gold);margin-bottom:6px;">Discount Policy</div>
+            <div style="font-size:12px;color:var(--muted);margin-bottom:8px;font-style:italic;">Do you discount? Under what circumstances? What's your policy when someone asks?</div>
+            <textarea style="width:100%;padding:10px 14px;border:1.5px solid var(--border);border-radius:8px;background:var(--off);font-family:'Outfit',sans-serif;font-size:13px;color:var(--text);outline:none;resize:vertical;min-height:90px;transition:all .2s;line-height:1.55;" id="ps-discount" placeholder="e.g. I do not discount my core offer. If price is a barrier I offer a payment plan (50% now, 50% at delivery) or I direct them to my entry offer. Discounting signals that my stated price isn't real — I won't do that." oninput="autosavePricing()"></textarea>
+          </div>
+        </div>
+
+        <div style="margin-bottom:28px;">
+          <div style="font-family:'Orbitron',sans-serif;font-size:9px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:var(--gold);margin-bottom:6px;">Your Price Objection Script</div>
+          <div style="font-size:12px;color:var(--muted);margin-bottom:8px;font-style:italic;">Write your actual word-for-word response when someone says "that's expensive" or asks for a discount. Write it in your voice. Practice saying it out loud.</div>
+          <textarea style="width:100%;padding:12px 14px;border:1.5px solid var(--border);border-radius:8px;background:var(--off);font-family:'Outfit',sans-serif;font-size:13px;color:var(--text);outline:none;resize:vertical;min-height:100px;transition:all .2s;line-height:1.6;" id="ps-objection" placeholder="e.g. 'I understand — it's a real investment. What I can tell you is that by the end of our engagement you'll have a documented positioning statement, a complete offer, and a 90-day plan you can actually execute. The price reflects that outcome, not just my time. If now isn't the right moment, I'd rather you come back when it is.'" oninput="autosavePricing()"></textarea>
+        </div>
+
+        <div style="margin-bottom:0;">
+          <div style="font-family:'Orbitron',sans-serif;font-size:9px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:var(--gold);margin-bottom:6px;">When to Raise Your Rates</div>
+          <div style="font-size:12px;color:var(--muted);margin-bottom:8px;font-style:italic;">What signals tell you it's time to increase your price? Document the triggers now so you honor them later.</div>
+          <textarea style="width:100%;padding:12px 14px;border:1.5px solid var(--border);border-radius:8px;background:var(--off);font-family:'Outfit',sans-serif;font-size:13px;color:var(--text);outline:none;resize:vertical;min-height:90px;transition:all .2s;line-height:1.6;" id="ps-raise" placeholder="e.g. I will raise my rate by $300 when: (1) I have 3 completed client engagements with documented outcomes, (2) I have a testimonial I can reference publicly, or (3) my discovery call conversion rate exceeds 60%. Whichever comes first." oninput="autosavePricing()"></textarea>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- LOCK-IN -->
+    <div class="s-label">Lock-In Decision</div>
+    <div class="lockin-section">
+      <div class="lockin-tag">🔒 Lock-In Rule — Phase R: Revenue</div>
+      <div class="lockin-title">Write Your Signature Offer Description.</div>
+      <p class="lockin-rule">Copy your completed offer statement from the container template above and paste it here. <strong>Then write the offer as if you were posting it publicly</strong> — full description, what's included, the price, and what the client walks away with. This is one of your six portfolio documents. Write it like it matters.</p>
+      <textarea class="lockin-input" id="final-offer" placeholder="Write your complete offer description here. Include: the audience, the problem, what's included, the timeline, the outcome, and the price. Write it as if this is going on your website tomorrow." oninput="autosave(); checkLockIn();"></textarea>
+      <div class="lockin-warn" id="lockin-warn">⚠ Your offer description must be complete enough to post publicly. Keep writing.</div>
+      <div class="lockin-ok" id="lockin-ok">✓ Offer documented. You may advance to Module 5.</div>
+    </div>
+
+    <!-- DECLARATION -->
+    <div class="decl-box">
+      <div class="decl-label">✦ Declaration Moment — Module 04</div>
+      <div class="decl-text">"My offer protects my energy<br>as much as it serves others."</div>
+      <div class="decl-sub">You just built the thing people can buy. That's not small.</div>
+      <div class="alert-msg" id="alert-complete"></div>
+      <button class="btn-decl" id="complete-btn" onclick="completeModule()">
+        Save &amp; Complete Module 4 →
+      </button>
+    </div>
+
+    <div class="mod-nav">
+      <a href="module3.html" class="btn-back">← Back to Module 3</a>
+      <a href="module5.html" class="btn-next" id="next-btn">Module 5 →</a>
+    </div>
+  </main>
+</div>
+
+<script>
+let saveTimer = null;
+
+document.addEventListener('DOMContentLoaded', async () => {
+  const session = await requireAuth();
+  if (!session) return;
+  const user = session.user;
+  const name = user.user_metadata?.full_name || user.email.split('@')[0].replace(/[._-]/g,' ').replace(/\b\w/g,c=>c.toUpperCase());
+  const initials = name.split(' ').map(n=>n[0]).join('').slice(0,2).toUpperCase();
+  document.getElementById('nav-user').textContent = name;
+  document.getElementById('sb-name').textContent = name;
+  document.getElementById('sb-email').textContent = user.email;
+  document.getElementById('sb-av').textContent = initials;
+
+  const completed = await getProgress();
+  const pct = Math.max(55, Math.round(((completed.length + 5) / 9) * 100));
+  document.getElementById('prog-fill').style.width = pct + '%';
+  document.getElementById('prog-pct').textContent = pct + '%';
+  ['00','01','02','03','04'].forEach(n => {
+    const c = document.getElementById(`ck-${n}`);
+    if (c && (completed.includes(`module-0${n}`) || n === '00')) { c.textContent = '✓'; c.classList.add('done'); }
+  });
+  if (completed.includes('module-04')) {
+    document.getElementById('next-btn').classList.add('unlocked');
+    const c = document.getElementById('ck-04');
+    if (c) { c.textContent = '✓'; c.classList.add('done'); }
+  }
+
+  const saved = await loadWorksheet('offer-blueprint');
+  if (saved) populate(saved);
+});
+
+function updateContainer() {
+  const who      = document.getElementById('oc-who')?.value.trim()      || '[specific audience]';
+  const problem  = document.getElementById('oc-problem')?.value.trim()  || '[specific problem]';
+  const timeline = document.getElementById('oc-timeline')?.value.trim() || '[timeline]';
+  const outcome  = document.getElementById('oc-outcome')?.value.trim()  || '[outcome]';
+  const includes = document.getElementById('oc-includes')?.value.trim() || '[what\'s included]';
+  const excludes = document.getElementById('oc-excludes')?.value.trim() || '[what\'s excluded]';
+  const done     = document.getElementById('oc-done')?.value.trim()     || '[completion definition]';
+  const preview  = document.getElementById('oc-preview');
+  const hasData  = document.getElementById('oc-who').value && document.getElementById('oc-problem').value;
+  if (hasData) {
+    preview.innerHTML = `I help <span>${who}</span> solve <span>${problem}</span> within <span>${timeline}</span> so they can <span>${outcome}</span>. This includes <span>${includes}</span>. It does NOT include <span>${excludes}</span>. Done when <span>${done}</span>.`;
+  } else {
+    preview.textContent = 'Fill in the fields above to see your offer statement build.';
+  }
+}
+
+function autosavePricing() {
+  clearTimeout(saveTimer);
+  setSave('saving');
+  const dot2 = document.getElementById('save-dot-ps');
+  const txt2 = document.getElementById('save-txt-ps');
+  if (dot2) { dot2.className = 'save-dot saving'; txt2.textContent = 'Saving...'; }
+  saveTimer = setTimeout(async () => {
+    await doSave();
+    if (dot2) { dot2.className = 'save-dot saved'; txt2.textContent = 'Saved ✓'; }
+  }, 1400);
+}
+
+function autosave() {
+  clearTimeout(saveTimer);
+  setSave('saving');
+  saveTimer = setTimeout(doSave, 1400);
+}
+
+async function doSave() {
+  const { error } = await saveWorksheet('offer-blueprint', collect());
+  setSave(error ? 'error' : 'saved');
+}
+
+function setSave(s) {
+  const dot = document.getElementById('save-dot');
+  const txt = document.getElementById('save-txt');
+  dot.className = 'save-dot';
+  if (s === 'saving') { dot.classList.add('saving'); txt.textContent = 'Saving...'; }
+  else if (s === 'saved') { dot.classList.add('saved'); txt.textContent = 'Saved ✓'; }
+  else { txt.textContent = 'Error — check connection'; }
+}
+
+function collect() {
+  const ids = ['def-01','def-02','def-03','def-04','def-05','def-06','def-07','def-08',
+               'oc-who','oc-problem','oc-timeline','oc-outcome','oc-includes','oc-excludes','oc-done',
+               'price-core-name','price-core-amount','price-core-why',
+               'price-entry-name','price-entry-amount','price-entry-why',
+               'price-premium-name','price-premium-amount','price-premium-why',
+               'ps-core-price','ps-review','ps-value','ps-market','ps-time','ps-discount','ps-objection','ps-raise',
+               'final-offer'];
+  const data = {};
+  ids.forEach(id => { data[id] = document.getElementById(id)?.value || ''; });
+  return data;
+}
+
+function populate(saved) {
+  Object.keys(saved).forEach(key => {
+    const el = document.getElementById(key);
+    if (el) el.value = saved[key];
+  });
+  updateContainer();
+  if (saved['final-offer']) checkLockIn();
+  setSave('saved');
+}
+
+function checkLockIn() {
+  const val = document.getElementById('final-offer').value.trim();
+  document.getElementById('lockin-warn').style.display = 'none';
+  document.getElementById('lockin-ok').style.display = val.length > 50 ? 'block' : 'none';
+}
+
+async function completeModule() {
+  const offer = document.getElementById('final-offer').value.trim();
+  if (offer.length < 50) {
+    document.getElementById('lockin-warn').style.display = 'block';
+    document.querySelector('.lockin-section').scrollIntoView({ behavior: 'smooth' });
+    const a = document.getElementById('alert-complete');
+    a.textContent = 'Complete your offer description before advancing.';
+    a.className = 'alert-msg alert-err show';
+    return;
+  }
+  const btn = document.getElementById('complete-btn');
+  btn.innerHTML = '<span style="display:inline-block;width:16px;height:16px;border-radius:50%;border:2px solid rgba(201,168,76,.3);border-top-color:var(--gold);animation:spin .7s linear infinite;"></span> Saving...';
+  btn.disabled = true;
+  await doSave();
+  await markModuleComplete('module-04');
+  const c = document.getElementById('ck-04');
+  if (c) { c.textContent = '✓'; c.classList.add('done'); }
+  document.getElementById('next-btn').classList.add('unlocked');
+  const a = document.getElementById('alert-complete');
+  a.textContent = '✓ Module 4 complete! Your Offer Blueprint is saved. Module 5 is now unlocked.';
+  a.className = 'alert-msg alert-ok show';
+  btn.innerHTML = '✓ Module 4 Complete';
+}
+
+function toggleAudio(btn) {
+  const on = btn.dataset.playing === 'true';
+  btn.textContent = on ? '▶' : '⏸';
+  btn.dataset.playing = (!on).toString();
+}
+</script>
+</body>
+</html>
