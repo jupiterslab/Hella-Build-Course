@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Skill Translator — Jupiter's Lab</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--navy:#0D1B3E;--navy2:#0A1020;--gold:#C9A84C;--gold2:#E8C96A;--cyan:#00D4FF;--white:#FFFFFF;--off:#F5F3EE;--text:#1A2B4A;--muted:#7A8BAE;--border:rgba(13,27,62,0.1);--gold-border:rgba(201,168,76,0.3);}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--navy2);color:var(--white);font-family:'Outfit',sans-serif;min-height:100vh;-webkit-font-smoothing:antialiased;}
+body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(201,168,76,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(201,168,76,.03) 1px,transparent 1px);background-size:48px 48px;pointer-events:none;z-index:0;}
+nav{position:sticky;top:0;z-index:200;background:rgba(10,16,32,.95);backdrop-filter:blur(24px);border-bottom:1px solid rgba(201,168,76,.1);padding:0 32px;height:64px;display:flex;align-items:center;justify-content:space-between;}
+.nav-brand{display:flex;align-items:center;gap:10px;text-decoration:none;}
+.nav-mark{width:34px;height:34px;border-radius:8px;background:linear-gradient(135deg,var(--gold),var(--gold2));display:flex;align-items:center;justify-content:center;font-family:'Orbitron',sans-serif;font-size:11px;font-weight:800;color:var(--navy);}
+.nav-name{font-family:'Orbitron',sans-serif;font-size:12px;font-weight:700;color:var(--gold);letter-spacing:.1em;}
+.nav-sub{font-size:10px;color:rgba(255,255,255,.3);letter-spacing:.1em;text-transform:uppercase;}
+.back-btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:8px;border:1px solid rgba(255,255,255,.1);color:rgba(255,255,255,.5);font-size:13px;font-weight:600;text-decoration:none;transition:all .2s;background:transparent;cursor:pointer;}
+.back-btn:hover{border-color:var(--gold);color:var(--gold);}
+.page{max-width:820px;margin:0 auto;padding:56px 32px;position:relative;z-index:1;}
+.hero{text-align:center;margin-bottom:48px;}
+.hero-eyebrow{font-family:'Orbitron',sans-serif;font-size:9px;font-weight:600;letter-spacing:.4em;text-transform:uppercase;color:var(--gold);margin-bottom:14px;}
+.hero-title{font-family:'Orbitron',sans-serif;font-size:clamp(26px,4vw,42px);font-weight:900;color:var(--white);line-height:1.1;margin-bottom:12px;}
+.hero-title em{font-style:normal;color:var(--gold);}
+.hero-sub{font-size:15px;color:rgba(255,255,255,.5);max-width:480px;margin:0 auto;line-height:1.7;}
+.search-wrapper{position:relative;margin-bottom:12px;}
+.search-input{width:100%;padding:18px 56px 18px 24px;border:2px solid rgba(201,168,76,.3);border-radius:14px;background:rgba(13,27,62,.6);font-family:'Outfit',sans-serif;font-size:17px;color:var(--white);outline:none;transition:all .25s;backdrop-filter:blur(12px);}
+.search-input:focus{border-color:var(--gold);background:rgba(13,27,62,.8);box-shadow:0 0 0 4px rgba(201,168,76,.1);}
+.search-input::placeholder{color:rgba(255,255,255,.25);}
+.search-icon{position:absolute;right:20px;top:50%;transform:translateY(-50%);font-size:20px;pointer-events:none;}
+.search-hint{text-align:center;font-size:12px;color:rgba(255,255,255,.25);margin-bottom:40px;}
+.search-hint span{color:rgba(201,168,76,.6);cursor:pointer;transition:color .2s;}
+.search-hint span:hover{color:var(--gold);}
+.results-label{font-family:'Orbitron',sans-serif;font-size:9px;font-weight:600;letter-spacing:.3em;text-transform:uppercase;color:rgba(255,255,255,.3);margin-bottom:16px;display:none;}
+.results-label.show{display:block;}
+.results-count{color:var(--gold);}
+.results-grid{display:flex;flex-direction:column;gap:12px;margin-bottom:48px;}
+.result-card{background:rgba(13,27,62,.5);border:1.5px solid rgba(255,255,255,.07);border-radius:14px;overflow:hidden;transition:all .2s;animation:fadeIn .2s ease;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.result-card:hover{border-color:rgba(201,168,76,.25);transform:translateY(-1px);}
+.result-card.highlight{border-color:rgba(201,168,76,.4);background:rgba(13,27,62,.7);}
+.rc-top{padding:16px 20px;display:flex;align-items:flex-start;gap:14px;border-bottom:1px solid rgba(255,255,255,.05);}
+.rc-icon{font-size:22px;flex-shrink:0;margin-top:2px;}
+.rc-left{flex:1;}
+.rc-activity{font-size:15px;font-weight:700;color:var(--white);margin-bottom:3px;}
+.rc-category{font-family:'Orbitron',sans-serif;font-size:8px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:var(--gold);}
+.rc-match{font-size:11px;color:rgba(255,255,255,.3);margin-left:auto;padding:3px 10px;border-radius:100px;background:rgba(201,168,76,.1);border:1px solid rgba(201,168,76,.2);white-space:nowrap;flex-shrink:0;}
+.rc-skills{padding:14px 20px;display:flex;flex-wrap:wrap;gap:8px;}
+.skill-tag{display:inline-flex;align-items:center;gap:5px;padding:6px 14px;border-radius:100px;background:rgba(0,212,255,.08);border:1px solid rgba(0,212,255,.2);font-size:12px;font-weight:600;color:var(--cyan);cursor:pointer;transition:all .2s;}
+.skill-tag:hover{background:rgba(0,212,255,.15);border-color:rgba(0,212,255,.4);}
+.skill-tag.copied{background:rgba(34,197,94,.1);border-color:rgba(34,197,94,.3);color:#86EFAC;}
+.rc-context{padding:0 20px 14px;font-size:12px;color:rgba(255,255,255,.35);line-height:1.55;font-style:italic;}
+.empty-state{text-align:center;padding:64px 32px;display:none;}
+.empty-state.show{display:block;}
+.empty-icon{font-size:48px;margin-bottom:16px;}
+.empty-title{font-size:16px;font-weight:600;color:rgba(255,255,255,.4);margin-bottom:8px;}
+.empty-sub{font-size:13px;color:rgba(255,255,255,.25);line-height:1.6;}
+.browse-section{margin-bottom:48px;}
+.browse-title{font-family:'Orbitron',sans-serif;font-size:10px;font-weight:600;letter-spacing:.3em;text-transform:uppercase;color:rgba(255,255,255,.3);margin-bottom:16px;}
+.category-pills{display:flex;flex-wrap:wrap;gap:8px;}
+.cat-pill{padding:8px 18px;border-radius:100px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.03);font-size:13px;font-weight:500;color:rgba(255,255,255,.45);cursor:pointer;transition:all .2s;}
+.cat-pill:hover{border-color:var(--gold);color:var(--gold);background:rgba(201,168,76,.06);}
+.cat-pill.active{border-color:var(--gold);color:var(--navy);background:var(--gold);font-weight:700;}
+.cta-bar{background:linear-gradient(135deg,rgba(13,27,62,.8),rgba(10,16,32,.9));border:1.5px solid var(--gold-border);border-radius:16px;padding:28px 32px;display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap;}
+.cta-text{font-size:14px;color:rgba(255,255,255,.55);line-height:1.6;}
+.cta-text strong{color:var(--gold);}
+.cta-btn{display:inline-flex;align-items:center;gap:8px;padding:12px 28px;border-radius:10px;background:linear-gradient(135deg,var(--gold),var(--gold2));color:var(--navy);font-family:'Outfit',sans-serif;font-size:14px;font-weight:800;border:none;cursor:pointer;transition:all .2s;text-decoration:none;white-space:nowrap;}
+.cta-btn:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(201,168,76,.4);}
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);padding:10px 20px;border-radius:10px;font-size:13px;font-weight:600;z-index:999;opacity:0;transition:all .3s;background:rgba(34,197,94,.15);border:1px solid rgba(34,197,94,.3);color:#86EFAC;white-space:nowrap;}
+.toast.show{transform:translateX(-50%) translateY(0);opacity:1;}
+@media(max-width:600px){.page{padding:32px 20px;}.cta-bar{flex-direction:column;text-align:center;}}
+</style>
+</head>
+<body>
+<nav>
+  <a href="orientation.html" class="nav-brand">
+    <div class="nav-mark">JL</div>
+    <div><div class="nav-name">JUPITER'S LAB</div><div class="nav-sub">Skill Translator</div></div>
+  </a>
+  <a href="module1.html" class="back-btn">← Back to Module 1</a>
+</nav>
+<div class="page">
+  <div class="hero">
+    <div class="hero-eyebrow">Skill Translator · Clarity Tool</div>
+    <h1 class="hero-title">What You <em>Did</em><br>Becomes What You <em>Know</em></h1>
+    <p class="hero-sub">Enter your job title or background. The translator surfaces the transferable skills underneath it — named, defined, and ready to build from.</p>
+  </div>
+  <div class="search-wrapper">
+    <input type="text" class="search-input" id="search-input" placeholder="Job title, background, or life role... e.g. nurse, veteran, student, stay at home mom" oninput="handleSearch(this.value)" autocomplete="off" spellcheck="false">
+    <div class="search-icon">🔍</div>
+  </div>
+  <div class="search-hint">
+    Try: <span onclick="quickSearch('nurse')">nurse</span> ·
+    <span onclick="quickSearch('student')">student</span> ·
+    <span onclick="quickSearch('stay at home mom')">stay at home mom</span> ·
+    <span onclick="quickSearch('veteran')">veteran</span> ·
+    <span onclick="quickSearch('manager')">manager</span> ·
+    <span onclick="quickSearch('no experience')">no experience</span>
+    <br><span style="color:rgba(201,168,76,.4);margin-top:6px;display:inline-block;">🎖️ Military? Enter your MOS code directly — e.g. <span onclick="quickSearch('91J')" style="color:rgba(201,168,76,.7);cursor:pointer;">91J</span>, <span onclick="quickSearch('42A')" style="color:rgba(201,168,76,.7);cursor:pointer;">42A</span>, <span onclick="quickSearch('68W')" style="color:rgba(201,168,76,.7);cursor:pointer;">68W</span></span>
+  </div>
+  <div class="results-label" id="results-label">Showing <span class="results-count" id="results-count">0</span> results</div>
+  <div class="results-grid" id="results-grid"></div>
+  <div class="empty-state" id="empty-state">
+    <div class="empty-icon">🤔</div>
+    <div class="empty-title">No exact match — try a different word</div>
+    <div class="empty-sub">Use what you actually say when describing your work, not a job title. Or browse by category below.</div>
+  </div>
+  <div class="browse-section" id="browse-section">
+    <div class="browse-title">Browse by Category</div>
+    <div class="category-pills" id="category-pills"></div>
+  </div>
+  <div class="cta-bar">
+    <div class="cta-text">Now that you know what your skills are called — <strong>build your business around them.</strong> Hella Build takes you from skill clarity to a complete, documented business foundation.</div>
+    <a href="module1.html" class="cta-btn">Continue in Hella Build →</a>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+<script>
+const SKILLS=[
+  {id:1,category:'Healthcare',icon:'🏥',activity:'Registered Nurse / Licensed Nurse',keywords:['nurse','rn','lpn','lvn','registered nurse','nursing','licensed','clinical','hospital','ward','ICU','ER','patient care','bedside'],skills:['Patient assessment','Clinical documentation','Care coordination','Crisis triage','Medication management','Empathetic communication','Team collaboration under pressure'],context:'Nurses operate high-stakes systems daily — that\'s project management, communication, and crisis leadership at once.'},
+  {id:2,category:'Healthcare',icon:'🦷',activity:'Dental Assistant / Dental Hygienist',keywords:['dental','dentist','hygienist','dental assistant','teeth','oral health','clinic','orthodontic'],skills:['Clinical procedure coordination','Patient anxiety management','Infection control compliance','Detail-oriented documentation','Appointment systems','Client education'],context:'Dental professionals run precision operations and manage anxious clients — both are high-value transferable skills.'},
+  {id:3,category:'Healthcare',icon:'💊',activity:'Pharmacy Technician / Pharmacist',keywords:['pharmacy','pharmacist','tech','prescriptions','medications','drugs','dispensing','retail pharmacy','CVS','Walgreens'],skills:['Prescription management','Regulatory compliance','Customer consultation','Inventory systems','Accuracy under volume','Health literacy education'],context:'Pharmacy work builds compliance expertise, attention to detail, and the ability to explain complex information simply.'},
+  {id:4,category:'Healthcare',icon:'🧠',activity:'Therapist / Counselor / Social Worker',keywords:['therapist','counselor','social worker','mental health','LCSW','LPC','psychologist','behavioral health','case manager','therapy'],skills:['Active listening','Behavioral assessment','Crisis intervention','Care planning','Empathetic coaching','Documentation and case management'],context:'Therapists are professional problem-solvers who understand human behavior at a deep level — that transfers everywhere.'},
+  {id:5,category:'Healthcare',icon:'🩺',activity:'Medical Assistant / Clinical Coordinator',keywords:['medical assistant','MA','clinical coordinator','front desk','medical office','healthcare admin','scheduling','EHR','EMR','vitals'],skills:['Clinical operations','Patient scheduling','EHR documentation','Insurance verification','Multi-tasking in fast environments','Administrative systems'],context:'Medical assistants are operations professionals who keep clinical environments running — that\'s a systems skill.'},
+  {id:6,category:'Healthcare',icon:'🏋️',activity:'Personal Trainer / Fitness Coach',keywords:['personal trainer','fitness coach','gym','trainer','CPT','NASM','ACE','strength','conditioning','athletic','workout','fitness'],skills:['Program design','Behavioral change coaching','Client accountability','Goal setting','Progress tracking','Motivational communication'],context:'Trainers design systems that produce physical results — that\'s curriculum design and behavioral coaching combined.'},
+  {id:7,category:'Healthcare',icon:'🥗',activity:'Nutritionist / Health Coach / Dietitian',keywords:['nutritionist','dietitian','health coach','RD','nutrition','wellness','meal planning','weight loss','food','diet','ingredients','labels','nutritional','eating','calories'],skills:['Nutritional guidance','Habit formation coaching','Client behavior change','Health literacy education','Program development','Accountability systems'],context:'Nutrition professionals change how people relate to their own bodies — that\'s deeply skilled behavioral coaching.'},
+  {id:8,category:'Healthcare',icon:'🏷️',activity:'Health Educator / Wellness Educator',keywords:['health educator','wellness','community health','public health','prevention','education','outreach','nutrition label','ingredients','reading labels','food literacy'],skills:['Health literacy education','Consumer advocacy','Nutritional label interpretation','Behavior change design','Community outreach','Program facilitation'],context:'Teaching someone to understand what they\'re actually eating or how their body works changes behavior for life — that\'s high-value education.'},
+  {id:9,category:'Education',icon:'📚',activity:'Teacher / Educator / Instructor',keywords:['teacher','educator','instructor','professor','faculty','classroom','K-12','elementary','middle school','high school','adjunct','substitute'],skills:['Curriculum design','Instructional delivery','Classroom management','Student assessment','Differentiated learning','Parent communication'],context:'Teachers are full-time curriculum designers and behavioral managers — skills that transfer directly to training and consulting.'},
+  {id:10,category:'Education',icon:'👶',activity:'Childcare Worker / Daycare Provider / Nanny',keywords:['childcare','daycare','nanny','babysitter','early childhood','preschool','toddler','infant','caregiver','au pair','after school'],skills:['Child development expertise','Behavior management','Curriculum adaptation','Safety and crisis management','Parent communication','Schedule and routine design'],context:'Childcare professionals manage complex human development daily — that\'s coaching, scheduling, and emotional intelligence at once.'},
+  {id:11,category:'Education',icon:'🎓',activity:'School Counselor / Academic Advisor',keywords:['school counselor','academic advisor','college counselor','guidance','advisor','student services','higher ed','admissions','career counselor'],skills:['Student advocacy','Career pathway planning','Crisis support','Goal-setting frameworks','Stakeholder communication','Resource coordination'],context:'Advisors map paths for others — that\'s exactly what coaches and consultants do.'},
+  {id:12,category:'Education',icon:'🧑‍🏫',activity:'Corporate Trainer / Learning & Development',keywords:['corporate trainer','L&D','learning and development','training specialist','facilitation','onboarding','employee development','eLearning','instructional designer'],skills:['Adult learning design','Facilitation','Onboarding systems','Skills gap analysis','Content development','Performance assessment'],context:'L&D professionals build systems that transfer knowledge at scale — that\'s a premium consulting skill.'},
+  {id:13,category:'Business & Finance',icon:'📊',activity:'Accountant / Bookkeeper / CPA',keywords:['accountant','bookkeeper','CPA','accounting','finance','tax','audit','QuickBooks','financial','controller','CFO','AP','AR'],skills:['Financial analysis','Budget management','Regulatory compliance','Client advisory','Risk assessment','Financial storytelling'],context:'Accountants translate numbers into business decisions — that advisory skill is valuable far beyond spreadsheets.'},
+  {id:14,category:'Business & Finance',icon:'💼',activity:'Business Analyst / Data Analyst',keywords:['business analyst','data analyst','BA','analyst','data','reporting','requirements','process improvement','SQL','tableau','power BI','insights'],skills:['Requirements gathering','Data interpretation','Process documentation','Stakeholder communication','Problem diagnosis','Decision support'],context:'Analysts find what\'s broken and describe it clearly — that\'s a consulting superpower.'},
+  {id:15,category:'Business & Finance',icon:'🏦',activity:'Bank Teller / Loan Officer / Financial Advisor',keywords:['bank teller','loan officer','financial advisor','banker','mortgage','credit','investments','wealth management','branch','financial planning','Chase','Wells Fargo'],skills:['Client financial assessment','Regulatory compliance','Trust-based relationship building','Financial education','Goal-aligned planning','Risk communication'],context:'Finance professionals help people make life-changing decisions under pressure — that\'s high-trust advisory work.'},
+  {id:16,category:'Business & Finance',icon:'📈',activity:'Sales Representative / Account Executive',keywords:['sales','account executive','AE','SDR','BDR','sales rep','territory','quota','B2B','B2C','cold calling','pipeline','revenue','inside sales','outside sales'],skills:['Consultative selling','Objection handling','Pipeline management','Relationship development','Negotiation','Prospecting systems'],context:'Sales professionals build the systems every service business needs to grow — that skill is directly portable.'},
+  {id:17,category:'Business & Finance',icon:'🤝',activity:'Account Manager / Customer Success Manager',keywords:['account manager','client success','CSM','customer success','relationship manager','retention','upsell','accounts','SaaS','enterprise'],skills:['Relationship management','Client retention strategy','Expansion planning','Escalation handling','Success planning','Communication cadence'],context:'Account managers keep clients happy and growing — that\'s the blueprint for running a consulting practice.'},
+  {id:18,category:'Operations & Management',icon:'📋',activity:'Project Manager / Program Manager',keywords:['project manager','program manager','PM','PMP','scrum','agile','waterfall','delivery','coordination','timeline','PMO','Jira','Asana'],skills:['Project planning','Stakeholder management','Risk mitigation','Resource allocation','Timeline management','Cross-functional coordination'],context:'Project managers make complex things happen on time — that execution skill is the core of any consulting deliverable.'},
+  {id:19,category:'Operations & Management',icon:'⚙️',activity:'Operations Manager / Director of Operations',keywords:['operations','ops manager','director of operations','COO','process','efficiency','supply chain','workflow','procedures','systems','ops'],skills:['Operational systems design','Process optimization','Team leadership','Performance management','Vendor management','Scalability planning'],context:'Ops leaders build the infrastructure that makes everything else work — highest-value skill in any growing business.'},
+  {id:20,category:'Operations & Management',icon:'🏪',activity:'Retail Manager / Store Manager',keywords:['retail','store manager','retail manager','floor manager','assistant manager','merchandising','inventory','customer service','staff','district manager'],skills:['Team leadership','Inventory management','Customer conflict resolution','Sales performance coaching','Scheduling systems','Visual merchandising'],context:'Retail managers run full business operations daily — P&L, people management, and customer experience simultaneously.'},
+  {id:21,category:'Operations & Management',icon:'🚚',activity:'Logistics Coordinator / Supply Chain Manager',keywords:['logistics','supply chain','coordinator','shipping','receiving','warehouse','fulfillment','procurement','vendor','inventory','distribution'],skills:['Logistics systems management','Vendor coordination','Cost optimization','Process documentation','Deadline management','Problem-solving under pressure'],context:'Logistics professionals manage complex moving systems under time pressure — that\'s operations consulting expertise.'},
+  {id:22,category:'HR & People',icon:'👥',activity:'Human Resources Manager / HR Generalist',keywords:['HR','human resources','HRBP','generalist','recruiting','talent','employee relations','benefits','compensation','onboarding','HR manager','people ops'],skills:['Talent acquisition','Policy development','Employee relations','Performance management','Compliance','Organizational development'],context:'HR professionals understand people systems at a level most leaders don\'t — that expertise is directly consulting-relevant.'},
+  {id:23,category:'HR & People',icon:'🔍',activity:'Recruiter / Talent Acquisition Specialist',keywords:['recruiter','talent acquisition','headhunter','staffing','sourcing','recruiting','hiring','candidate','placement','search','executive search'],skills:['Candidate assessment','Employer branding','Negotiation','Relationship building','Market research','Pipeline development'],context:'Recruiters identify high-value people and sell them on opportunities — that\'s research and persuasion combined.'},
+  {id:24,category:'Technology',icon:'💻',activity:'Software Developer / Engineer',keywords:['software','developer','engineer','coding','programming','Python','JavaScript','Java','backend','frontend','fullstack','SWE','dev'],skills:['Problem decomposition','Systems architecture','Technical documentation','Debugging','Collaborative development','Continuous learning'],context:'Developers solve abstract problems with structured logic — that analytical approach transfers to any complex business challenge.'},
+  {id:25,category:'Technology',icon:'🔐',activity:'IT / Cybersecurity / IAM Professional',keywords:['IT','cybersecurity','security','IAM','identity','access management','network','infrastructure','sysadmin','CISSP','compliance','SOC','information security'],skills:['Security architecture','Risk assessment','Identity governance','Compliance management','Systems documentation','Stakeholder communication'],context:'Security professionals think in systems and risk — that structured mindset is highly valuable in operations consulting.'},
+  {id:26,category:'Technology',icon:'📱',activity:'UX Designer / Product Designer',keywords:['UX','UI','product design','user experience','figma','wireframe','prototype','design thinking','research','usability','interaction design'],skills:['User research','Empathy mapping','Information architecture','Iterative design','Stakeholder presentation','Problem framing'],context:'UX designers are professional empathists — they understand users so deeply they can build what people need before they ask.'},
+  {id:27,category:'Technology',icon:'📊',activity:'Data Scientist / Analytics Engineer',keywords:['data scientist','data engineer','analytics','machine learning','AI','Python','R','SQL','modeling','statistics','insights','BI'],skills:['Statistical analysis','Data storytelling','Pattern recognition','Predictive modeling','Business intelligence','Executive communication'],context:'Data scientists translate complexity into clarity — one of the most in-demand business skills available.'},
+  {id:28,category:'Creative & Media',icon:'🎨',activity:'Graphic Designer / Brand Designer',keywords:['graphic designer','brand designer','visual','logo','branding','Canva','Photoshop','Illustrator','Adobe','identity','creative director'],skills:['Visual communication','Brand identity development','Client brief interpretation','Typography','Color strategy','Creative direction'],context:'Designers communicate ideas without words — that\'s a strategic skill as much as an aesthetic one.'},
+  {id:29,category:'Creative & Media',icon:'📸',activity:'Photographer / Videographer / Content Creator',keywords:['photographer','videographer','content creator','YouTube','TikTok','Instagram','film','camera','editing','production','media','influencer'],skills:['Visual storytelling','Brand expression','Audience engagement','Production planning','Content strategy','Post-production'],context:'Content creators build audiences from scratch — that audience-building skill is directly applicable to any business.'},
+  {id:30,category:'Creative & Media',icon:'✍️',activity:'Copywriter / Content Writer / Journalist',keywords:['copywriter','content writer','journalist','blogger','writer','editorial','copy','SEO','ghostwriter','communications','public relations','PR'],skills:['Persuasive writing','Audience psychology','Brand voice','Research and synthesis','Editorial judgment','Content strategy'],context:'Writers who understand persuasion are among the highest-earning service providers in any market.'},
+  {id:31,category:'Creative & Media',icon:'🎵',activity:'Musician / Music Producer / Audio Engineer',keywords:['musician','music producer','audio engineer','recording','beats','songwriter','mixing','mastering','artist','performer','rapper','singer'],skills:['Creative production','Sound design','Artist development','Brand building','Audience cultivation','Project management'],context:'Music professionals manage creative projects, clients, and deadlines — skills that translate directly to service business operations.'},
+  {id:32,category:'Legal & Public Service',icon:'⚖️',activity:'Paralegal / Legal Assistant / Attorney',keywords:['paralegal','legal assistant','attorney','lawyer','law','legal','contracts','litigation','compliance','court','firm','counsel'],skills:['Contract drafting','Legal research','Document management','Deadline management','Client communication','Risk identification'],context:'Legal professionals work in high-stakes environments with complex documentation — that precision and communication is premium.'},
+  {id:33,category:'Legal & Public Service',icon:'🚔',activity:'Law Enforcement / Corrections Officer / Security',keywords:['police','law enforcement','officer','corrections','sheriff','detective','investigator','patrol','security','guard','TSA','federal agent'],skills:['Crisis management','De-escalation','Report documentation','Situational assessment','Leadership under pressure','Community communication'],context:'Law enforcement professionals make high-stakes decisions rapidly and communicate them clearly — that\'s elite leadership training.'},
+  {id:34,category:'Legal & Public Service',icon:'🎖️',activity:'Military / Veteran',keywords:['military','veteran','army','navy','air force','marines','coast guard','national guard','reserve','service member','combat','deployment','armed forces'],skills:['Mission planning','Team leadership under pressure','Logistics coordination','Risk assessment','Adaptability','Disciplined execution','Cross-functional communication'],context:'Military experience is one of the most underrated business training programs — the skills are real and transferable.'},
+  {id:35,category:'Legal & Public Service',icon:'🌍',activity:'Nonprofit / Social Services / Community Organizer',keywords:['nonprofit','social services','community organizer','advocate','case manager','outreach','NGO','mission','program manager','volunteer','charity','501c3'],skills:['Program development','Grant writing','Stakeholder engagement','Community building','Impact measurement','Resource coordination'],context:'Nonprofit professionals run complex programs on limited budgets — that resourcefulness is a real business skill.'},
+  {id:36,category:'Trades & Skilled Labor',icon:'🔨',activity:'Contractor / Construction / Skilled Trades',keywords:['contractor','construction','carpenter','electrician','plumber','HVAC','builder','trades','handyman','remodeling','renovation','general contractor'],skills:['Project estimation','Client expectation management','Vendor coordination','Quality control','Schedule management','Problem-solving on the fly'],context:'Contractors run small businesses every day — estimating, managing clients, and delivering quality on schedule.'},
+  {id:37,category:'Trades & Skilled Labor',icon:'🚗',activity:'Auto Mechanic / Automotive Technician',keywords:['mechanic','auto','technician','automotive','cars','repair','diesel','vehicle','shop','dealership'],skills:['Diagnostic problem-solving','Technical documentation','Client education','Parts management','Quality assurance','Systematic troubleshooting'],context:'Mechanics diagnose invisible problems and explain them to non-experts — that\'s a consulting skill.'},
+  {id:38,category:'Service Industry',icon:'🍽️',activity:'Restaurant Manager / Chef / Food Service',keywords:['restaurant','food service','manager','chef','kitchen','catering','hospitality','server','bartender','FOH','BOH','general manager'],skills:['Team leadership','Customer experience design','Inventory and cost management','High-volume operations','Conflict resolution','Training and development'],context:'Restaurant operations are some of the most demanding management environments — those skills transfer everywhere.'},
+  {id:39,category:'Service Industry',icon:'💄',activity:'Cosmetologist / Esthetician / Beauty Professional',keywords:['cosmetologist','esthetician','stylist','hair','makeup','beauty','salon','spa','nails','lashes','skincare','barber','beauty school'],skills:['Client consultation','Aesthetic assessment','Relationship retention','Appointment management','Product knowledge','Visual transformation'],context:'Beauty professionals build loyal client relationships and run mini-businesses — that\'s service business expertise.'},
+  {id:40,category:'Service Industry',icon:'🏨',activity:'Hotel / Hospitality / Event Manager',keywords:['hotel','hospitality','events','front desk','concierge','event planner','coordinator','venue','catering','conference','wedding planner'],skills:['Client experience design','Logistics coordination','Vendor management','Crisis resolution','High-standard operations','Multi-stakeholder communication'],context:'Hospitality professionals deliver flawless experiences under pressure — that operational skill is consulting-relevant.'},
+  {id:41,category:'Home & Family',icon:'🏠',activity:'Stay at Home Mom / Dad / Household Manager',keywords:['stay at home mom','SAHM','homemaker','caregiver','parent','household manager','domestic','family manager','home','full-time parent','caretaker'],skills:['Household operations management','Budget oversight','Scheduling and logistics','Behavioral coaching','Curriculum design','Crisis management','Multi-project coordination'],context:'Running a household is running a small organization — the skills are real, they\'re just rarely given a professional name.'},
+  {id:42,category:'Home & Family',icon:'👴',activity:'Elder Care / Home Health Aide / CNA',keywords:['elder care','home health','caregiver','CNA','aide','senior care','assisted living','companion','hospice','geriatric','nursing home'],skills:['Patient-centered communication','Care plan management','Family communication','Compassionate leadership','Documentation','Daily operations management'],context:'Caregivers manage complex human needs with patience and precision — that coordination and empathy is a high-value skill set.'},
+  {id:43,category:'Real Estate',icon:'🏡',activity:'Real Estate Agent / Broker / Property Manager',keywords:['real estate','agent','broker','realtor','property manager','homes','listings','buyer','seller','mortgage','closing','MLS','leasing'],skills:['Market analysis','Negotiation','Client representation','Contract management','Marketing strategy','Relationship-based sales'],context:'Real estate professionals close high-stakes deals through relationships — both skills are direct business transferables.'},
+  {id:44,category:'Government & Admin',icon:'🏛️',activity:'Government Employee / Federal / State Worker',keywords:['government','federal','state','municipal','civil service','public sector','agency','administrator','policy','regulatory','GS','contractor'],skills:['Policy interpretation','Compliance management','Stakeholder communication','Documentation','Process adherence','Public-facing communication'],context:'Government professionals understand compliance and systems at a depth most private sector workers never reach.'},
+  {id:45,category:'Government & Admin',icon:'📁',activity:'Administrative Assistant / Executive Assistant / Office Manager',keywords:['admin','administrative','executive assistant','EA','office manager','coordinator','secretary','receptionist','clerical','support','C-suite'],skills:['Executive support','Calendar and project coordination','Communication management','Systems organization','Vendor coordination','Operational efficiency'],context:'Admins have visibility into the entire operation and the communication skills to manage it — that\'s rare and valuable.'},
+  {id:46,category:'Arts & Entertainment',icon:'🎭',activity:'Actor / Performer / Artist / Creative',keywords:['actor','performer','artist','theater','entertainment','musician','dancer','model','creative','arts','comedian','host','MC'],skills:['Audience connection','Brand presence','Emotional storytelling','Resilience and rejection management','Personal branding','Content creation'],context:'Performers build personal brands and connect with audiences for a living — both skills are directly applicable to business.'},
+  {id:47,category:'Business & Finance',icon:'🏢',activity:'Manager / Director / VP / Executive',keywords:['manager','director','VP','vice president','executive','C-suite','leadership','general manager','department head','senior manager'],skills:['Strategic planning','Team leadership','Budget management','Organizational communication','Performance management','Change leadership'],context:'Management experience at any level means you\'ve learned to get results through other people — that\'s leverage.'},
+  {id:48,category:'Business & Finance',icon:'🚀',activity:'Entrepreneur / Founder / Small Business Owner',keywords:['entrepreneur','founder','small business','owner','self-employed','solopreneur','startup','CEO','business owner','side hustle'],skills:['Business development','Operational decision-making','Customer acquisition','Financial management','Resilience','Multi-functional leadership'],context:'If you\'ve run a business before — even a small one — you already know more than most people starting out.'},
+];
+
+
+const MOS_DB = {
+  // INFANTRY & COMBAT
+  '11B':  {title:'Infantry Soldier',               civilian:'Combat Operations Specialist'},
+  '11C':  {title:'Indirect Fire Infantryman',       civilian:'Weapons Systems Operator'},
+  '11A':  {title:'Infantry Officer',                civilian:'Operations Commander'},
+  '12B':  {title:'Combat Engineer',                 civilian:'Construction & Demolition Engineer'},
+  '12C':  {title:'Bridge Crewmember',               civilian:'Structural Engineer Technician'},
+  '12K':  {title:'Plumber',                         civilian:'Plumbing Systems Technician'},
+  '12N':  {title:'Horizontal Construction Engineer',civilian:'Heavy Equipment Operator'},
+  '12W':  {title:'Carpentry & Masonry Specialist',  civilian:'Construction Tradesperson'},
+  '12Y':  {title:'Geospatial Engineer',             civilian:'GIS & Mapping Analyst'},
+  // INTELLIGENCE
+  '35F':  {title:'Intelligence Analyst',            civilian:'Intelligence & Data Analyst'},
+  '35L':  {title:'Counterintelligence Agent',       civilian:'Investigative Security Analyst'},
+  '35M':  {title:'Human Intelligence Collector',    civilian:'Human Intelligence Specialist'},
+  '35N':  {title:'Signals Intelligence Analyst',    civilian:'Signals & Communications Analyst'},
+  '35P':  {title:'Cryptologic Linguist',            civilian:'Language & Cryptology Specialist'},
+  '35T':  {title:'MI Systems Maintainer',           civilian:'Intelligence Systems Technician'},
+  // SIGNAL & COMMUNICATIONS
+  '25B':  {title:'IT Specialist',                   civilian:'IT Systems Administrator'},
+  '25C':  {title:'Radio Operator',                  civilian:'Communications Technician'},
+  '25L':  {title:'Cable Systems Installer',         civilian:'Network Infrastructure Technician'},
+  '25N':  {title:'Nodal Network Systems Operator',  civilian:'Network Operations Specialist'},
+  '25Q':  {title:'Multichannel Transmission Operator',civilian:'Telecommunications Technician'},
+  '25S':  {title:'Satellite Communications Operator',civilian:'Satellite Systems Technician'},
+  '25U':  {title:'Signal Support Systems Specialist',civilian:'IT Field Support Technician'},
+  // MEDICAL
+  '68A':  {title:'Biomedical Equipment Specialist', civilian:'Medical Equipment Technician'},
+  '68B':  {title:'Orthopedic Specialist',           civilian:'Orthopedic Technician'},
+  '68C':  {title:'Practical Nursing Specialist',    civilian:'Licensed Practical Nurse'},
+  '68D':  {title:'Operating Room Specialist',       civilian:'Surgical Technologist'},
+  '68E':  {title:'Dental Specialist',               civilian:'Dental Assistant'},
+  '68G':  {title:'Patient Administration Specialist',civilian:'Medical Records Administrator'},
+  '68J':  {title:'Medical Logistics Specialist',    civilian:'Medical Supply Chain Coordinator'},
+  '68K':  {title:'Medical Laboratory Specialist',   civilian:'Clinical Laboratory Technician'},
+  '68P':  {title:'Radiology Specialist',            civilian:'Radiologic Technologist'},
+  '68Q':  {title:'Pharmacy Specialist',             civilian:'Pharmacy Technician'},
+  '68R':  {title:'Veterinary Food Inspection Specialist',civilian:'Food Safety Inspector'},
+  '68S':  {title:'Preventive Medicine Specialist',  civilian:'Public Health Specialist'},
+  '68T':  {title:'Animal Care Specialist',          civilian:'Veterinary Technician'},
+  '68W':  {title:'Combat Medic',                    civilian:'Emergency Medical Technician'},
+  '68X':  {title:'Behavioral Health Specialist',    civilian:'Mental Health Technician'},
+  // AVIATION
+  '15B':  {title:'Aircraft Power Plant Repairer',   civilian:'Aviation Mechanic'},
+  '15D':  {title:'Aircraft Powertrain Repairer',    civilian:'Aerospace Powertrain Technician'},
+  '15E':  {title:'Unmanned Aircraft Systems Repairer',civilian:'UAV / Drone Technician'},
+  '15F':  {title:'Aircraft Electrician',            civilian:'Aviation Electrical Technician'},
+  '15G':  {title:'Aircraft Structural Repairer',    civilian:'Aircraft Sheet Metal Mechanic'},
+  '15N':  {title:'Aviator',                         civilian:'Commercial Pilot / Flight Operations'},
+  '15P':  {title:'Aviation Operations Specialist',  civilian:'Aviation Operations Coordinator'},
+  '15Q':  {title:'Air Traffic Control Operator',    civilian:'Air Traffic Controller'},
+  '15R':  {title:'AH-64 Attack Helicopter Repairer',civilian:'Aviation Systems Mechanic'},
+  '15T':  {title:'UH-60 Helicopter Repairer',       civilian:'Helicopter Maintenance Technician'},
+  '15U':  {title:'CH-47 Helicopter Repairer',       civilian:'Heavy Lift Aviation Mechanic'},
+  // LOGISTICS & SUPPLY
+  '88H':  {title:'Cargo Specialist',                civilian:'Logistics & Freight Coordinator'},
+  '88K':  {title:'Watercraft Operator',             civilian:'Marine Operations Specialist'},
+  '88L':  {title:'Watercraft Engineer',             civilian:'Marine Engineer'},
+  '88M':  {title:'Motor Transport Operator',        civilian:'Commercial Driver / Fleet Manager'},
+  '88N':  {title:'Transportation Management Coordinator',civilian:'Transportation Logistics Manager'},
+  '89A':  {title:'Ammunition Stock Control Specialist',civilian:'Inventory & Compliance Specialist'},
+  '89B':  {title:'Ammunition Specialist',           civilian:'Explosives & Hazmat Specialist'},
+  '89D':  {title:'Explosive Ordnance Disposal',     civilian:'Bomb Technician / EOD Specialist'},
+  '92A':  {title:'Automated Logistical Specialist', civilian:'Supply Chain & Inventory Manager'},
+  '92F':  {title:'Petroleum Supply Specialist',     civilian:'Fuel Operations & Distribution Manager'},
+  '92G':  {title:'Food Service Specialist',         civilian:'Food Service Manager / Chef'},
+  '92L':  {title:'Petroleum Laboratory Specialist', civilian:'Chemical Laboratory Technician'},
+  '92M':  {title:'Mortuary Affairs Specialist',     civilian:'Mortuary Services Coordinator'},
+  '92R':  {title:'Parachute Rigger',                civilian:'Precision Equipment Inspector'},
+  '92S':  {title:'Shower / Laundry / Clothing Repair',civilian:'Textile & Facilities Operations'},
+  '92W':  {title:'Water Treatment Specialist',      civilian:'Water Systems Technician'},
+  '92Y':  {title:'Unit Supply Specialist',          civilian:'Supply & Inventory Coordinator'},
+  // QUARTERMASTER & MAINTENANCE
+  '91A':  {title:'M1 Abrams Tank System Maintainer',civilian:'Heavy Equipment Mechanic'},
+  '91B':  {title:'Wheeled Vehicle Mechanic',        civilian:'Fleet Maintenance Technician'},
+  '91C':  {title:'Utilities Equipment Repairer',    civilian:'Utilities Systems Technician'},
+  '91D':  {title:'Power Generation Equipment Repairer',civilian:'Electrical Power Systems Technician'},
+  '91E':  {title:'Allied Trades Specialist',        civilian:'Industrial Trades Specialist'},
+  '91F':  {title:'Small Arms Repairer',             civilian:'Precision Mechanical Technician'},
+  '91G':  {title:'Fire Control Repairer',           civilian:'Electronic Fire Control Technician'},
+  '91H':  {title:'Track Vehicle Repairer',          civilian:'Heavy Tracked Vehicle Mechanic'},
+  '91J':  {title:'Quartermaster & Chemical Equipment Repairer',civilian:'Chemical & Environmental Systems Technician'},
+  '91L':  {title:'Construction Equipment Repairer', civilian:'Heavy Construction Equipment Mechanic'},
+  '91M':  {title:'Bradley Fighting Vehicle Repairer',civilian:'Armored Vehicle Systems Mechanic'},
+  '91P':  {title:'Artillery Mechanic',              civilian:'Precision Weapons Systems Technician'},
+  '91S':  {title:'Stryker Systems Maintainer',      civilian:'Multi-Platform Vehicle Systems Technician'},
+  '91X':  {title:'Maintenance Supervisor',          civilian:'Maintenance Operations Manager'},
+  '91Z':  {title:'Senior Maintenance Supervisor',   civilian:'Director of Maintenance Operations'},
+  // HR & ADMIN
+  '42A':  {title:'Human Resources Specialist',      civilian:'HR Administrator / Personnel Manager'},
+  '42B':  {title:'Human Resources Officer',         civilian:'HR Director / People Operations Lead'},
+  '42F':  {title:'HR Information Systems Technician',civilian:'HRIS Analyst'},
+  '42R':  {title:'Army Bandperson',                 civilian:'Professional Musician'},
+  '42S':  {title:'Special Band Member',             civilian:'Performing Arts Professional'},
+  // FINANCE
+  '36A':  {title:'Financial Manager',               civilian:'Financial Controller / CFO'},
+  '36B':  {title:'Financial Management Technician', civilian:'Accounting & Payroll Specialist'},
+  // LAW & JUSTICE
+  '27A':  {title:'Judge Advocate',                  civilian:'Attorney / Legal Counsel'},
+  '27D':  {title:'Paralegal Specialist',            civilian:'Paralegal / Legal Assistant'},
+  '31B':  {title:'Military Police',                 civilian:'Law Enforcement Officer'},
+  '31D':  {title:'Criminal Investigation Special Agent',civilian:'Criminal Investigator / Detective'},
+  '31E':  {title:'Internment / Resettlement Specialist',civilian:'Corrections / Case Management Officer'},
+  '31K':  {title:'Military Working Dog Handler',    civilian:'K9 Handler / Animal Control Specialist'},
+  // PUBLIC AFFAIRS & INFORMATION
+  '46Q':  {title:'Public Affairs Specialist',       civilian:'Public Relations & Communications Specialist'},
+  '46R':  {title:'Public Affairs Broadcast Specialist',civilian:'Broadcast Journalist / Media Producer'},
+  '46Z':  {title:'Chief Public Affairs NCO',        civilian:'Director of Communications'},
+  // CIVIL AFFAIRS & PSYOPS
+  '38A':  {title:'Civil Affairs Officer',           civilian:'Community Development Director'},
+  '38B':  {title:'Civil Affairs Specialist',        civilian:'Community Liaison & Program Manager'},
+  '37F':  {title:'Psychological Operations Specialist',civilian:'Strategic Communications & Influence Specialist'},
+  // SPECIAL OPERATIONS
+  '18A':  {title:'Special Forces Officer',          civilian:'Strategic Operations Director'},
+  '18B':  {title:'Special Forces Weapons Sergeant', civilian:'Advanced Weapons & Tactics Specialist'},
+  '18C':  {title:'Special Forces Engineer Sergeant',civilian:'Engineering & Demolition Specialist'},
+  '18D':  {title:'Special Forces Medical Sergeant', civilian:'Advanced Emergency Medical Specialist'},
+  '18E':  {title:'Special Forces Communications Sergeant',civilian:'Advanced Communications Specialist'},
+  '18F':  {title:'Special Forces Assistant Operations Sergeant',civilian:'Intelligence & Operations Planner'},
+  '18Z':  {title:'Special Forces Senior Sergeant',  civilian:'Special Operations Program Manager'},
+};
+
+// Map MOS to skills
+function getMOSSkills(mos) {
+  const entry = MOS_DB[mos.toUpperCase()];
+  if (!entry) return null;
+  // Map civilian title to skills from the SKILLS database
+  const titleLower = entry.civilian.toLowerCase();
+  const matches = SKILLS.filter(s =>
+    s.keywords.some(k => titleLower.includes(k) || k.split(' ').some(w => w.length > 3 && titleLower.includes(w)))
+  );
+  return { entry, matches };
+}
+
+const CATEGORIES=[...new Set(SKILLS.map(s=>s.category))];
+let searchTimeout=null;
+
+document.addEventListener('DOMContentLoaded',()=>{renderCategories();showBrowse();});
+
+function handleSearch(query){
+  clearTimeout(searchTimeout);
+  const q = query.trim().toUpperCase();
+  // Check if it looks like a MOS code (2 digits + 1 letter or 3 digits + 1 letter)
+  if (/^\d{2,3}[A-Z]$/.test(q)) {
+    searchTimeout = setTimeout(() => runMOS(q), 180);
+  } else {
+    searchTimeout = setTimeout(() => runSearch(query), 180);
+  }
+}
+function quickSearch(term){document.getElementById('search-input').value=term;runSearch(term);}
+
+function runMOS(mos) {
+  hideBrowse();
+  const result = getMOSSkills(mos);
+  const grid = document.getElementById('results-grid');
+  const label = document.getElementById('results-label');
+  const empty = document.getElementById('empty-state');
+  grid.innerHTML = '';
+
+  if (!result || !MOS_DB[mos]) {
+    label.classList.remove('show');
+    empty.querySelector('.empty-title').textContent = 'MOS not found — try searching your job title instead';
+    empty.classList.add('show');
+    return;
+  }
+
+  empty.classList.remove('show');
+  label.classList.add('show');
+
+  const entry = MOS_DB[mos];
+  // Show MOS translation card first
+  const mosCard = document.createElement('div');
+  mosCard.className = 'result-card highlight';
+  mosCard.innerHTML = `
+    <div class="rc-top">
+      <div class="rc-icon">🎖️</div>
+      <div class="rc-left">
+        <div class="rc-activity">${mos} — ${entry.title}</div>
+        <div class="rc-category">Military & Veterans · Civilian: ${entry.civilian}</div>
+      </div>
+      <div class="rc-match">MOS Match</div>
+    </div>
+    <div class="rc-skills">
+      ${getDefaultMOSSkills(mos).map(s => `<div class="skill-tag" onclick="copySkill(this,'${s}')">${s}</div>`).join('')}
+    </div>
+    <div class="rc-context">"Your MOS translates directly to civilian expertise. These are the skills behind the title — named and ready to use."</div>
+  `;
+  grid.appendChild(mosCard);
+  document.getElementById('results-count').textContent = 1;
+
+  // Show any matching skill cards too
+  if (result.matches.length) {
+    result.matches.slice(0,3).forEach(skill => grid.appendChild(buildCard(skill, false)));
+    document.getElementById('results-count').textContent = 1 + result.matches.length;
+  }
+}
+
+function getDefaultMOSSkills(mos) {
+  const skillMap = {
+    // Combat
+    '11B':['Team leadership under pressure','Tactical decision-making','Risk assessment','Physical endurance and discipline','Weapons systems operation','Mission execution'],
+    '11C':['Indirect fire coordination','Target calculation','Team communication','Safety protocol compliance','Precision execution'],
+    '12B':['Demolition planning','Construction project execution','Safety compliance','Team coordination','Engineering problem-solving'],
+    // Intelligence
+    '35F':['Intelligence analysis','Pattern recognition','Report writing','Briefing senior leaders','Data synthesis','Threat assessment'],
+    '35L':['Counterintelligence operations','Investigative interviewing','Source evaluation','Risk assessment','Confidential documentation'],
+    '35M':['Human intelligence collection','Rapport-building under pressure','Cultural competency','Source development','Information synthesis'],
+    '35P':['Multilingual communication','Cryptologic analysis','Signals interpretation','Classified document handling','Linguistic pattern recognition'],
+    // Signal
+    '25B':['IT systems administration','Network troubleshooting','Cybersecurity protocols','Systems documentation','Hardware and software support'],
+    '25U':['Field IT support','Communications systems setup','Rapid troubleshooting','Systems documentation','Client training'],
+    // Medical
+    '68W':['Emergency medical triage','Trauma care under pressure','Patient assessment','Medical documentation','Team coordination in crisis'],
+    '68A':['Medical equipment maintenance','Biomedical systems diagnostics','Regulatory compliance','Technical documentation','Equipment quality assurance'],
+    '68C':['Patient care coordination','Clinical documentation','Medication management','Patient education','Team nursing support'],
+    // Maintenance
+    '91B':['Fleet vehicle diagnostics','Preventive maintenance systems','Technical documentation','Parts management','Quality control inspections'],
+    '91D':['Electrical systems repair','Power generation maintenance','Safety compliance','Technical documentation','Systematic troubleshooting'],
+    '91J':['Chemical equipment repair','Systems diagnostics','Environmental compliance','Technical documentation','Parts and inventory management','Safety protocol enforcement'],
+    '91Z':['Maintenance operations management','Team supervision','Resource planning','Performance standards enforcement','Budget oversight','Training program management'],
+    // Quartermaster & Supply
+    '92A':['Supply chain management','Inventory control systems','Logistics coordination','Database management','Procurement processing','Audit compliance'],
+    '92Y':['Unit supply operations','Property accountability','Inventory documentation','Procurement requests','Equipment issue and turn-in','Records management'],
+    '92G':['Food service operations','Menu planning','Kitchen management','Sanitation compliance','Staff supervision','Cost and inventory control'],
+    // HR & Admin
+    '42A':['Personnel records management','HR policy compliance','Benefits coordination','Onboarding administration','Confidential document handling','Regulatory reporting'],
+    '42B':['HR program management','Policy development','Talent management','Organizational planning','Compliance oversight','Leadership communication'],
+    // Finance
+    '36B':['Financial records management','Payroll processing','Budget tracking','Audit compliance','Financial reporting','Accounting systems operation'],
+    // Law & Justice
+    '31B':['Law enforcement operations','De-escalation','Incident documentation','Emergency response','Community policing','Evidence handling'],
+    '27D':['Legal document preparation','Case file management','Regulatory compliance','Court coordination','Client confidentiality','Legal research'],
+    // Logistics
+    '88M':['Commercial vehicle operation','Route planning','Freight coordination','Fleet safety compliance','Delivery documentation'],
+    '88N':['Transportation logistics management','Movement planning','Convoy coordination','Multi-modal transportation','Tracking and reporting'],
+    '89A':['Ammunition inventory management','Hazmat compliance','Safety protocol enforcement','Stock control systems','Regulatory documentation'],
+    // Aviation
+    '15T':['Helicopter maintenance','Avionics troubleshooting','Maintenance documentation','Safety compliance','Parts management'],
+    '15Q':['Air traffic control operations','Airspace coordination','Pilot communication','Emergency protocols','Safety compliance'],
+    // Public Affairs
+    '46Q':['Public communications management','Media relations','Press release writing','Crisis communications','Community outreach','Brand messaging'],
+    // Special Operations
+    '18D':['Advanced trauma care','Medical team leadership','Austere environment medicine','Training and mentorship','Multi-system patient management'],
+    '18Z':['Special operations program management','Team leadership','Strategic planning','Cross-functional coordination','Mission execution oversight'],
+  };
+  return skillMap[mos] || ['Leadership under pressure','Mission planning and execution','Team coordination','Risk assessment','Disciplined execution','Cross-functional communication','Technical documentation'];
+}
+
+
+function runSearch(query){
+  const q=query.trim().toLowerCase();
+  if(!q){clearResults();showBrowse();return;}
+  hideBrowse();
+  const words=q.split(/\s+/);
+  const scored=SKILLS.map(skill=>{
+    let score=0;
+    words.forEach(word=>{
+      skill.keywords.forEach(kw=>{if(kw.includes(word))score+=word.length>=kw.length*.7?3:1;if(kw.startsWith(word))score+=2;});
+      if(skill.activity.toLowerCase().includes(word))score+=4;
+      if(skill.category.toLowerCase().includes(word))score+=1;
+      skill.skills.forEach(s=>{if(s.toLowerCase().includes(word))score+=2;});
+    });
+    return{skill,score};
+  }).filter(r=>r.score>0).sort((a,b)=>b.score-a.score);
+  renderResults(scored);
+}
+
+function renderResults(scored){
+  const grid=document.getElementById('results-grid');
+  const label=document.getElementById('results-label');
+  const empty=document.getElementById('empty-state');
+  grid.innerHTML='';
+  if(!scored.length){label.classList.remove('show');empty.classList.add('show');return;}
+  empty.classList.remove('show');label.classList.add('show');
+  document.getElementById('results-count').textContent=scored.length;
+  scored.slice(0,8).forEach(({skill},i)=>grid.appendChild(buildCard(skill,i===0)));
+}
+
+function buildCard(skill,isTop){
+  const card=document.createElement('div');
+  card.className=`result-card ${isTop?'highlight':''}`;
+  card.innerHTML=`
+    <div class="rc-top">
+      <div class="rc-icon">${skill.icon}</div>
+      <div class="rc-left">
+        <div class="rc-activity">${skill.activity}</div>
+        <div class="rc-category">${skill.category}</div>
+      </div>
+      ${isTop?'<div class="rc-match">Best match</div>':''}
+    </div>
+    <div class="rc-skills">${skill.skills.map(s=>`<div class="skill-tag" onclick="copySkill(this,'${s}')">${s}</div>`).join('')}</div>
+    <div class="rc-context">"${skill.context}"</div>`;
+  return card;
+}
+
+function renderCategories(){
+  const container=document.getElementById('category-pills');
+  CATEGORIES.forEach(cat=>{
+    const pill=document.createElement('div');
+    pill.className='cat-pill';pill.textContent=cat;
+    pill.onclick=()=>browseCategory(cat,pill);
+    container.appendChild(pill);
+  });
+}
+
+function browseCategory(cat,pill){
+  document.querySelectorAll('.cat-pill').forEach(p=>p.classList.remove('active'));
+  pill.classList.add('active');
+  document.getElementById('search-input').value='';
+  const filtered=SKILLS.filter(s=>s.category===cat);
+  document.getElementById('results-label').classList.add('show');
+  document.getElementById('results-count').textContent=filtered.length;
+  document.getElementById('empty-state').classList.remove('show');
+  const grid=document.getElementById('results-grid');
+  grid.innerHTML='';
+  filtered.forEach(skill=>grid.appendChild(buildCard(skill,false)));
+}
+
+function copySkill(el,skill){
+  navigator.clipboard.writeText(skill).then(()=>{
+    el.classList.add('copied');el.textContent='✓ '+skill;
+    showToast('"'+skill+'" copied — paste it into your Harvest Matrix');
+    setTimeout(()=>{el.classList.remove('copied');el.textContent=skill;},2000);
+  });
+}
+
+function clearResults(){document.getElementById('results-grid').innerHTML='';document.getElementById('results-label').classList.remove('show');document.getElementById('empty-state').classList.remove('show');}
+function showBrowse(){document.getElementById('browse-section').style.display='block';}
+function hideBrowse(){document.getElementById('browse-section').style.display='none';}
+function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2800);}
+</script>
+</body>
+</html>
