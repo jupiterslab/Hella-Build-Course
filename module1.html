@@ -196,6 +196,9 @@ nav{position:sticky;top:0;z-index:200;background:rgba(245,243,238,.9);backdrop-f
 .mod-nav{display:flex;justify-content:space-between;align-items:center;gap:12px;padding-top:40px;border-top:1px solid var(--border);margin-top:40px;}
 .btn-back{display:inline-flex;align-items:center;gap:8px;padding:12px 24px;border-radius:10px;background:transparent;color:var(--text);border:1.5px solid var(--border);font-family:'Outfit',sans-serif;font-size:14px;font-weight:600;text-decoration:none;cursor:pointer;transition:all .2s;}
 .btn-back:hover{border-color:var(--navy);background:rgba(13,27,62,.04);}
+.btn-next{display:inline-flex;align-items:center;gap:8px;padding:12px 24px;border-radius:10px;background:var(--navy);color:var(--gold);border:none;font-family:'Outfit',sans-serif;font-size:14px;font-weight:700;text-decoration:none;cursor:pointer;transition:all .2s;opacity:.4;pointer-events:none;}
+.btn-next.unlocked{opacity:1;pointer-events:auto;}
+.btn-next.unlocked:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(13,27,62,.25);}
 
 @keyframes spin{to{transform:rotate(360deg)}}
 @media(max-width:900px){.layout{grid-template-columns:1fr;}.sidebar{display:none;}.main{padding:32px 24px;}}
@@ -236,8 +239,6 @@ nav{position:sticky;top:0;z-index:200;background:rgba(245,243,238,.9);backdrop-f
       <div class="sb-item" style="opacity:.4;cursor:default;"><div class="sb-num">04</div><div class="sb-text">Offer Design</div><div class="sb-check locked">🔒</div></div>
       <div class="sb-item" style="opacity:.4;cursor:default;"><div class="sb-num">05</div><div class="sb-text">Workflow</div><div class="sb-check locked">🔒</div></div>
       <div class="sb-item" style="opacity:.4;cursor:default;"><div class="sb-num">06</div><div class="sb-text">Systems + Rest</div><div class="sb-check locked">🔒</div></div>
-      <div class="sb-item" style="opacity:.4;cursor:default;"><div class="sb-num">07</div><div class="sb-text">Scope Protection</div><div class="sb-check locked">🔒</div></div>
-      <div class="sb-item" style="opacity:.4;cursor:default;"><div class="sb-num">08</div><div class="sb-text">Long-Term Thinking</div><div class="sb-check locked">🔒</div></div>
       <div class="sb-item" style="opacity:.4;cursor:default;"><div class="sb-num">★</div><div class="sb-text">Bonus Module</div><div class="sb-check locked">🔒</div></div>
     </div>
     <div class="sb-footer">
@@ -414,7 +415,7 @@ nav{position:sticky;top:0;z-index:200;background:rgba(245,243,238,.9);backdrop-f
 
     <div class="mod-nav">
       <a href="orientation.html" class="btn-back">← Back to Orientation</a>
-      <span style="font-size:13px;color:var(--muted);">Module 2 unlocks after completion</span>
+      <a href="module2.html" class="btn-next" id="next-btn">Module 2 →</a>
     </div>
 
   </main>
@@ -441,7 +442,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   document.getElementById('prog-fill').style.width = pct+'%';
   document.getElementById('prog-pct').textContent = pct+'%';
   if (completed.includes('module-00')) { const c=document.getElementById('ck-00'); c.textContent='✓'; c.classList.add('done'); }
-  if (completed.includes('module-01')) { const c=document.getElementById('ck-01'); c.textContent='✓'; c.classList.add('done'); }
+  if (completed.includes('module-01')) { const c=document.getElementById('ck-01'); c.textContent='✓'; c.classList.add('done'); document.getElementById('next-btn').classList.add('unlocked'); }
 
   const saved = await loadWorksheet('harvest-matrix');
   if (saved) populate(saved);
@@ -532,8 +533,9 @@ async function completeModule() {
   await markModuleComplete('module-01');
   document.getElementById('ck-01').textContent='✓';
   document.getElementById('ck-01').classList.add('done');
+  document.getElementById('next-btn').classList.add('unlocked');
   const a=document.getElementById('alert-complete');
-  a.textContent='✓ Module 1 complete! Your worksheet is saved. Module 2 coming soon.';
+  a.textContent='✓ Module 1 complete! Your worksheet is saved. Module 2 is now unlocked.';
   a.className='alert-msg alert-ok show';
   btn.innerHTML='✓ Module 1 Complete';
 }
