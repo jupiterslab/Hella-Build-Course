@@ -137,6 +137,9 @@ nav{position:sticky;top:0;z-index:200;background:rgba(245,243,238,.9);backdrop-f
 .ws-instructions strong{color:var(--navy);}
 
 /* MATRIX TABLE */
+.suggest-chips{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:4px;min-height:0;}
+.suggest-chip{padding:3px 10px;border-radius:100px;background:rgba(201,168,76,.1);border:1px solid rgba(201,168,76,.3);font-size:11px;font-weight:600;color:var(--navy);cursor:pointer;transition:all .15s;white-space:nowrap;}
+.suggest-chip:hover{background:var(--gold);color:var(--navy);}
 .matrix-wrap{overflow-x:auto;border:1px solid var(--gold-border);border-top:none;border-radius:0 0 16px 16px;box-shadow:0 12px 40px rgba(13,27,62,.12);}
 .matrix{width:100%;min-width:720px;border-collapse:collapse;background:white;}
 .matrix thead tr{background:var(--navy);}
@@ -333,7 +336,7 @@ nav{position:sticky;top:0;z-index:200;background:rgba(245,243,238,.9);backdrop-f
           <div class="ws-title">The Harvest Matrix</div>
           <div class="ws-subtitle">Your answers save automatically as you type</div>
           <div style="margin-top:14px;padding-top:14px;border-top:1px solid rgba(255,255,255,.08);font-size:13px;color:rgba(255,255,255,.55);line-height:1.65;">
-            <strong style="color:rgba(255,255,255,.85);">Instructions:</strong> Fill out every row. Column 1 — list every significant role or context (paid, unpaid, volunteer). Column 2 — what you actually did, repeatedly. Column 3 — name the underlying skill (not the task). Column 4 — translate that skill into a business outcome someone would pay for.
+            <strong style="color:rgba(255,255,255,.85);">Instructions:</strong> Fill out every row. Column 1 — list every significant role or context (paid, unpaid, volunteer). Column 2 — what you actually did, repeatedly. Column 3 — name the underlying skill (not the task). Column 4 — suggestions will appear automatically based on what you type in Column 3. Pick one or write your own.
           </div>
         </div>
         <div class="ws-save">
@@ -348,7 +351,7 @@ nav{position:sticky;top:0;z-index:200;background:rgba(245,243,238,.9);backdrop-f
           <div style="font-family:'Orbitron',sans-serif;font-size:10px;font-weight:700;color:var(--gold);letter-spacing:.15em;margin-bottom:4px;">🔍 NOT SURE WHAT YOUR SKILLS ARE CALLED?</div>
           <div style="font-size:13px;color:var(--muted);line-height:1.5;">Type your job title or MOS code into the Skill Translator — it names the skills underneath your experience so you can fill in Column 3 with confidence.</div>
         </div>
-        <a href="skill-translator.html" target="_blank" style="display:inline-flex;align-items:center;gap:6px;padding:10px 20px;border-radius:8px;background:linear-gradient(135deg,var(--gold),var(--gold2));color:var(--navy);font-family:'Outfit',sans-serif;font-size:13px;font-weight:800;text-decoration:none;white-space:nowrap;flex-shrink:0;">Use Skill Translator →</a>
+        <a href="https://jupiterslab.github.io/Hella-Build-Course/skill-translator.html" target="_blank" style="display:inline-flex;align-items:center;gap:6px;padding:10px 20px;border-radius:8px;background:linear-gradient(135deg,var(--gold),var(--gold2));color:var(--navy);font-family:'Outfit',sans-serif;font-size:13px;font-weight:800;text-decoration:none;white-space:nowrap;flex-shrink:0;">Use Skill Translator →</a>
       </div>
 
       <div class="matrix-wrap">
@@ -359,7 +362,7 @@ nav{position:sticky;top:0;z-index:200;background:rgba(245,243,238,.9);backdrop-f
               <th style="width:22%;">Role / Context<span class="th-sub">Paid, unpaid, volunteer</span></th>
               <th style="width:26%;">Repeated Function<span class="th-sub">What did you actually do?</span></th>
               <th style="width:22%;">Underlying Skill<span class="th-sub">Name the skill, not the task</span></th>
-              <th style="width:24%;">Business-Relevant Outcome<span class="th-sub">What would someone pay for?</span></th>
+              <th style="width:24%;">Business-Relevant Outcome<span class="th-sub">Suggestions appear as you type ↑</span></th>
             </tr>
           </thead>
           <tbody id="matrix-body"></tbody>
@@ -455,12 +458,95 @@ function buildRow(n) {
     <td class="row-num">${n}</td>
     <td><textarea class="mx-input" id="r${n}a" placeholder="e.g. Project Manager, 2019–2022" oninput="autosave()"></textarea></td>
     <td><textarea class="mx-input" id="r${n}b" placeholder="e.g. Identified blockers before team leads noticed; redesigned weekly standups" oninput="autosave()"></textarea></td>
-    <td><textarea class="mx-input" id="r${n}c" placeholder="e.g. Systemic problem detection, communication gap analysis" oninput="autosave()"></textarea></td>
-    <td><textarea class="mx-input" id="r${n}d" placeholder="e.g. Reducing cross-team delays for growing orgs without dedicated ops staff" oninput="autosave()"></textarea></td>`;
+    <td><textarea class="mx-input" id="r${n}c" placeholder="e.g. Systemic problem detection" oninput="autosave(); suggestOutcomes(${n})"></textarea></td>
+    <td>
+      <div class="suggest-chips" id="chips-${n}"></div>
+      <textarea class="mx-input" id="r${n}d" placeholder="Select a suggestion above or write your own" oninput="autosave()"></textarea>
+    </td>`;
   document.getElementById('matrix-body').appendChild(tr);
 }
 
 function addRow() { rowCount++; buildRow(rowCount); autosave(); }
+
+const SKILL_OUTCOMES = {
+  'listen':       ['Communication coaching for teams','Client intake and discovery consulting','Conflict mediation services'],
+  'communicat':   ['Communication strategy consulting','Content creation and messaging','Executive communication coaching'],
+  'organiz':      ['Business systems and operations consulting','Administrative support services','Workflow design for growing teams'],
+  'manag':        ['Operations management consulting','Team leadership coaching','Project delivery services'],
+  'lead':         ['Leadership development coaching','Executive advisory','Team culture consulting'],
+  'teach':        ['Curriculum development','Corporate training facilitation','Online course creation'],
+  'train':        ['Employee onboarding design','Corporate training programs','Skills development consulting'],
+  'write':        ['Copywriting and content strategy','Brand messaging and voice development','Technical writing services'],
+  'design':       ['Brand identity design','Visual communication consulting','UX and product design'],
+  'analyz':       ['Business diagnostics and reporting','Data analysis consulting','Market research services'],
+  'research':     ['Market research consulting','Competitive analysis services','Content research and strategy'],
+  'plan':         ['Strategic planning consulting','Project management services','Business roadmap development'],
+  'strateg':      ['Business strategy consulting','Go-to-market planning','Growth strategy advisory'],
+  'market':       ['Marketing strategy consulting','Digital marketing services','Brand positioning consulting'],
+  'sales':        ['Sales strategy consulting','Sales training and coaching','Revenue growth advisory'],
+  'coach':        ['1:1 business coaching','Group coaching programs','Accountability and performance coaching'],
+  'counsel':      ['Advisory consulting','Client guidance services','Decision-making support coaching'],
+  'coordin':      ['Project coordination services','Event management','Operations coordination consulting'],
+  'schedul':      ['Operations and scheduling consulting','Workflow automation','Administrative systems design'],
+  'recruit':      ['Talent acquisition consulting','Hiring process design','HR advisory services'],
+  'hr ':          ['HR consulting and policy development','People operations advisory','Employee relations consulting'],
+  'financ':       ['Financial management consulting','Bookkeeping and accounting services','Budget planning advisory'],
+  'budget':       ['Financial planning consulting','Cost management advisory','Budget design for small businesses'],
+  'techno':       ['Tech stack consulting','Software implementation services','Digital transformation advisory'],
+  'softwar':      ['Software consulting','Technical project management','Systems integration services'],
+  'data':         ['Data analysis and reporting','Business intelligence consulting','Performance metrics advisory'],
+  'problem':      ['Business diagnostics consulting','Process improvement services','Operational problem-solving advisory'],
+  'creat':        ['Creative direction services','Brand development consulting','Content and visual strategy'],
+  'present':      ['Presentation coaching','Executive communication training','Public speaking coaching'],
+  'speak':        ['Public speaking coaching','Corporate facilitation','Keynote and workshop delivery'],
+  'facilitat':    ['Workshop and training facilitation','Team meeting design','Group coaching programs'],
+  'nurtur':       ['Client relationship management consulting','Retention strategy advisory','Community building services'],
+  'relation':     ['Client success consulting','Partnership development','Relationship management advisory'],
+  'negoti':       ['Negotiation coaching','Contract consulting','Procurement advisory services'],
+  'compli':       ['Compliance consulting','Regulatory advisory services','Policy development consulting'],
+  'medic':        ['Healthcare consulting','Patient education services','Clinical operations advisory'],
+  'health':       ['Health coaching and wellness programs','Nutrition consulting','Corporate wellness advisory'],
+  'care':         ['Care coordination consulting','Patient advocacy services','Caregiver support consulting'],
+  'event':        ['Event planning and production','Corporate event management','Experiential marketing consulting'],
+  'logistic':     ['Logistics consulting','Supply chain advisory','Fulfillment and operations consulting'],
+  'supply':       ['Supply chain optimization consulting','Vendor management advisory','Procurement consulting'],
+  'build':        ['Construction project management','Skilled trades consulting','Renovation planning services'],
+  'repair':       ['Technical maintenance consulting','Equipment management services','Systems maintenance advisory'],
+  'custom':       ['Customer experience consulting','Client success strategy','Customer retention advisory'],
+  'brand':        ['Brand strategy consulting','Brand identity development','Positioning and messaging advisory'],
+  'content':      ['Content strategy consulting','Social media management','Editorial and publishing services'],
+  'social':       ['Social media strategy consulting','Community management services','Digital brand consulting'],
+  'mentor':       ['Business mentorship programs','Peer advisory groups','Executive mentoring services'],
+  'safe':         ['Safety compliance consulting','Risk management advisory','Workplace safety training'],
+  'security':     ['Cybersecurity consulting','Risk assessment services','Identity and access management advisory'],
+  'program':      ['Program management consulting','Nonprofit program development','Learning program design'],
+  'develop':      ['Professional development consulting','Leadership development programs','Organizational development advisory'],
+};
+
+function suggestOutcomes(n) {
+  const skill = (document.getElementById(`r${n}c`)?.value || '').toLowerCase();
+  const chips = document.getElementById(`chips-${n}`);
+  if (!chips) return;
+  if (skill.length < 3) { chips.innerHTML = ''; return; }
+
+  const matches = new Set();
+  Object.entries(SKILL_OUTCOMES).forEach(([key, outcomes]) => {
+    if (skill.includes(key)) outcomes.forEach(o => matches.add(o));
+  });
+
+  if (!matches.size) { chips.innerHTML = ''; return; }
+
+  chips.innerHTML = [...matches].slice(0,4).map(o =>
+    `<div class="suggest-chip" onclick="selectOutcome(${n},'${o.replace(/'/g, "\\'")}')">${o}</div>`
+  ).join('');
+}
+
+function selectOutcome(n, value) {
+  const field = document.getElementById(`r${n}d`);
+  if (field) { field.value = value; autosave(); }
+}
+
+
 
 function autosave() {
   clearTimeout(saveTimer);
