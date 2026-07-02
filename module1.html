@@ -359,6 +359,15 @@ nav{position:sticky;top:0;z-index:200;background:rgba(245,243,238,.9);backdrop-f
       <button class="add-row" onclick="addRow()">+ Add Another Row</button>
     </div>
 
+    <!-- SKILL TRANSLATOR CTA -->
+    <div style="margin:24px 0;padding:16px 20px;background:rgba(201,168,76,.06);border:1.5px solid rgba(201,168,76,.25);border-radius:12px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;">
+      <div>
+        <div style="font-family:'Orbitron',sans-serif;font-size:10px;font-weight:700;color:var(--gold);letter-spacing:.15em;margin-bottom:4px;">🔍 NOT SURE WHAT YOUR SKILLS ARE CALLED?</div>
+        <div style="font-size:13px;color:var(--muted);line-height:1.5;">Use the Skill Translator — type your job title or MOS code and it names the skills underneath it for you.</div>
+      </div>
+      <a href="skill-translator.html" target="_blank" style="display:inline-flex;align-items:center;gap:6px;padding:10px 20px;border-radius:8px;background:linear-gradient(135deg,var(--gold),var(--gold2));color:var(--navy);font-family:'Outfit',sans-serif;font-size:13px;font-weight:800;text-decoration:none;white-space:nowrap;flex-shrink:0;">Use Skill Translator →</a>
+    </div>
+
     <!-- DIAGNOSTIC QUESTIONS -->
     <div class="s-label">Three Diagnostic Questions</div>
     <div class="diag-section">
@@ -366,8 +375,8 @@ nav{position:sticky;top:0;z-index:200;background:rgba(245,243,238,.9);backdrop-f
       <p class="diag-intro">Look at your completed rows. The patterns are in the repetition — not in any single role. Answer each question in writing.</p>
 
       <div class="diag-q">
-        <div class="dq-label">1. Which 3 skills show up in 70% or more of your environments?</div>
-        <div class="dq-hint">What keeps appearing regardless of industry, role, or context?</div>
+        <div class="dq-label">1. Which 3 skills show up in almost every area of your life — not just one job or one environment?</div>
+        <div class="dq-hint">What keeps appearing regardless of industry, role, or context? If you did it at work, at home, and in between — it counts.</div>
         <textarea class="field-input" id="dq1" placeholder="Be specific. Name the actual skills, not general descriptions." oninput="autosave()"></textarea>
       </div>
       <div class="diag-q">
