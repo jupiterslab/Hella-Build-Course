@@ -1082,13 +1082,12 @@ async function handleResumeUpload(input) {
     let resumeText = '';
     let pdfBase64 = '';
 
-    if (file.name.endsWith('.txt')) {
+    if (file.name.toLowerCase().endsWith('.txt')) {
       resumeText = await file.text();
-    } else if (file.name.endsWith('.pdf')) {
-      // Send PDF directly as base64 — Edge Function handles text extraction + parsing in one call
+    } else if (file.name.toLowerCase().endsWith('.pdf')) {
       statusEl.textContent = '⏳ Reading your resume...';
       pdfBase64 = await fileToBase64(file);
-    } else if (file.name.endsWith('.docx') || file.name.endsWith('.doc')) {
+    } else if (file.name.toLowerCase().endsWith('.docx') || file.name.toLowerCase().endsWith('.doc')) {
       resumeText = await file.text().catch(() => '');
       if (!resumeText || resumeText.trim().length < 20) {
         statusEl.textContent = '⚠ DOCX parsing limited — save your resume as PDF and upload again.';
@@ -1097,8 +1096,13 @@ async function handleResumeUpload(input) {
     }
 
     if (!resumeText && !pdfBase64) {
-      statusEl.textContent = '⚠ Could not read the file. Try PDF or TXT format.';
-      return;
+      // Try as PDF regardless of extension
+      try {
+        pdfBase64 = await fileToBase64(file);
+      } catch(e) {
+        statusEl.textContent = '⚠ Could not read the file. Try saving as PDF or TXT.';
+        return;
+      }
     }
 
     statusEl.textContent = '🧠 Analyzing your experience...';
