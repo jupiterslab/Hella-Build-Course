@@ -454,8 +454,13 @@ nav{position:sticky;top:0;z-index:200;background:rgba(245,243,238,.9);backdrop-f
     </div>
     <button class="st-close" onclick="closeSkillPanel()">✕</button>
   </div>
-  <div class="st-panel-body" style="padding:0;overflow:hidden;flex:1;">
-    <iframe id="st-iframe" src="skill-translator.html?mode=inject" style="width:100%;height:100%;border:none;background:#0A1020;" allowtransparency="true"></iframe>
+  <div class="st-panel-body">
+    <div class="st-active-row" id="st-row-indicator">No row selected — tap a Column 3 field first</div>
+    <input type="text" class="st-search-input" id="st-search" placeholder="Job title or MOS... e.g. nurse, 42A, security, teacher" oninput="stSearch(this.value)" autocomplete="off" spellcheck="false">
+    <div class="st-results" id="st-results">
+      <div class="st-empty">Search above — click any skill to add it to your targeted row</div>
+    </div>
+    <div class="st-toast-panel" id="st-toast"></div>
   </div>
 </div>
 
@@ -510,7 +515,6 @@ let activeRow = null;
 function openSkillPanel() {
   document.getElementById('st-panel').classList.add('open');
   document.getElementById('st-overlay').classList.add('open');
-  // iframe handles its own focus
 }
 
 function closeSkillPanel() {
@@ -646,53 +650,133 @@ function selectOutcome(n, value) {
 
 
 
-function stSearch(query) {
-  const q = query.trim();
+
+
+
+
+
+
+
+
+
+function stSearch(q) {
   const results = document.getElementById('st-results');
-  if (!q) {
-    results.innerHTML = '<div class="st-empty">Search above — skills appear here. Click any to inject into your targeted row.</div>';
+  if (!q.trim()) {
+    results.innerHTML = '<div class="st-empty">Search above — click any skill to add it to your targeted row</div>';
+    return;
+  }
+  const ql = q.trim().toLowerCase();
+  const mosUpper = q.trim().toUpperCase();
+
+  // MOS detection
+  if (/^\d{2,3}[A-Z]$/.test(mosUpper) && ST_MOS[mosUpper]) {
+    renderSTSkills(ST_MOS[mosUpper], 'MOS ' + mosUpper);
     return;
   }
 
-  // Check MOS first
-  const mosUpper = q.toUpperCase();
-  if (/^\d{2,3}[A-Z]$/.test(mosUpper) && typeof MOS_SKILLS !== 'undefined' && MOS_SKILLS[mosUpper]) {
-    const skills = MOS_SKILLS[mosUpper];
-    renderSTSkills(skills, `MOS ${mosUpper}`);
-    return;
-  }
-
-  // Search job title database
-  const ql = q.toLowerCase();
+  // Job title search
   const found = new Set();
-  JOB_SKILLS.forEach(entry => {
-    const matches = entry.keywords.some(k => ql.includes(k.toLowerCase()) || k.toLowerCase().includes(ql));
-    if (matches) entry.skills.forEach(s => found.add(s));
+  ST_JOBS.forEach(entry => {
+    if (entry.k.some(k => ql.includes(k.toLowerCase()) || k.toLowerCase().includes(ql))) {
+      entry.s.forEach(s => found.add(s));
+    }
   });
 
   if (!found.size) {
-    results.innerHTML = '<div class="st-empty">No match — try a different word or job title</div>';
+    results.innerHTML = '<div class="st-empty">No match — try a different word</div>';
     return;
   }
-  renderSTSkills([...found], null);
+  renderSTSkills([...found].slice(0, 12), null);
 }
 
-
-function showToast(msg) {
-  const t = document.getElementById('st-toast');
-  if (t) { t.textContent = msg; setTimeout(() => { t.textContent = ''; }, 2500); }
+function renderSTSkills(skills, label) {
+  const results = document.getElementById('st-results');
+  const h = label ? '<div style="width:100%;font-family:Orbitron,sans-serif;font-size:9px;color:var(--gold);letter-spacing:.2em;margin-bottom:4px;">' + label + '</div>' : '';
+  results.innerHTML = h + skills.map(s =>
+    '<div class="st-skill-chip" onclick="injectSkill(\'' + s.replace(/'/g, "\\'") + '\')">' + s + '</div>'
+  ).join('');
 }
 
-// Compact job→skills map for embedded panel
+const ST_JOBS = [
+  {k:['nurse','nursing','rn','lpn','clinical','hospital','patient','bedside','healthcare worker','icu','er'],s:['Patient assessment','Clinical documentation','Care coordination','Crisis triage','Medication management','Empathetic communication','Team collaboration under pressure']},
+  {k:['teacher','educator','instructor','classroom','curriculum','faculty','professor','substitute','tutor','k-12','elementary','middle school','high school'],s:['Curriculum design','Instructional delivery','Classroom management','Student assessment','Knowledge transfer','Parent communication','Differentiated learning']},
+  {k:['manager','management','director','supervisor','operations','general manager','department head','ops','team lead'],s:['Team leadership','Performance management','Strategic planning','Resource allocation','Process optimization','Stakeholder communication','Delegation']},
+  {k:['sales','account executive','revenue','quota','pipeline','closing','business development','sales rep','territory','AE','SDR','BDR'],s:['Consultative selling','Objection handling','Pipeline management','Negotiation','Relationship building','Prospecting','Revenue strategy']},
+  {k:['admin','administrative','executive assistant','coordinator','office','receptionist','secretary','clerical','EA','office manager'],s:['Executive support','Calendar management','Systems organization','Vendor coordination','Communication management','Operational efficiency','Multi-tasking']},
+  {k:['hr','human resources','recruiting','talent','onboarding','people','benefits','payroll','hris','people ops','employee relations'],s:['Talent acquisition','Policy development','Employee relations','Performance management','Compliance','Organizational development','Onboarding design']},
+  {k:['coach','coaching','life coach','business coach','accountability','mentor','advisor','consultant'],s:['Goal architecture','Motivational coaching','Accountability systems','Vision mapping','Behavioral change design','Progress tracking']},
+  {k:['social media','content creator','instagram','tiktok','linkedin','youtube','facebook','influencer','reels','creator'],s:['Platform strategy','Content planning','Audience development','Community management','Analytics interpretation','Brand positioning']},
+  {k:['design','graphic','visual','brand','logo','canva','illustrator','photoshop','creative','art director','creative director'],s:['Visual communication','Brand identity design','Typography','Color theory','Client brief interpretation','Creative direction']},
+  {k:['writer','writing','copy','journalist','blogger','content writer','editor','ghostwriter','copywriter','communications','PR'],s:['Copywriting','Content strategy','Audience psychology','Brand voice development','Persuasive communication','Editorial judgment']},
+  {k:['project manager','program manager','pm','pmp','agile','scrum','delivery','launch','project coordination'],s:['Project planning','Stakeholder management','Risk mitigation','Timeline management','Resource allocation','Cross-functional coordination']},
+  {k:['finance','accounting','bookkeeper','cpa','budget','tax','financial','controller','auditor','financial analyst','CFO'],s:['Financial analysis','Budget management','Regulatory compliance','Financial reporting','Risk assessment','Client financial advisory']},
+  {k:['military','veteran','army','navy','marines','air force','coast guard','national guard','reserve','service member','armed forces'],s:['Mission planning','Team leadership under pressure','Risk assessment','Logistics coordination','Disciplined execution','Adaptability','Cross-functional communication']},
+  {k:['mom','parent','caregiver','household','stay at home','family','homemaker','domestic','sahm','full-time parent'],s:['Household operations management','Budget oversight','Scheduling and logistics','Behavioral coaching','Crisis management','Multi-project coordination','Curriculum design']},
+  {k:['medical','healthcare','doctor','physician','health','nurse practitioner','pa','medical assistant','emt','paramedic','clinical'],s:['Clinical communication','Patient education','Care coordination','Documentation','Diagnostic thinking','Empathetic advisory']},
+  {k:['security','cybersecurity','iam','infosec','network','sysadmin','infrastructure','cloud','devops','identity','access management','cissp','soc','it security'],s:['Security architecture','Identity governance','Risk assessment','Compliance management','Systems documentation','Threat analysis','Access control design']},
+  {k:['tech','software','developer','engineer','it','coding','programming','systems','backend','frontend','fullstack','swe'],s:['Systems architecture','Technical documentation','Problem decomposition','Process automation','Systems integration','Technical communication']},
+  {k:['real estate','realtor','agent','broker','property','listings','mortgage','leasing','closing'],s:['Market analysis','Negotiation','Client representation','Contract management','Relationship-based sales','Marketing strategy']},
+  {k:['event','wedding','planner','hospitality','coordinator','venue','catering','conference','event manager'],s:['Logistics management','Vendor coordination','Budget oversight','Timeline execution','Crisis management','Client experience design']},
+  {k:['restaurant','chef','food','culinary','kitchen','catering','cook','bartender','server','food service'],s:['Team leadership','Operations management','Cost management','Quality control','Customer experience','Staff training']},
+  {k:['student','college','university','graduate','entry level','no experience','intern','fresh grad','new grad'],s:['Research and synthesis','Deadline management','Persuasive writing','Critical thinking','Collaborative teamwork','Technology fluency']},
+  {k:['police','law enforcement','officer','corrections','detective','sheriff','patrol','tsa','federal agent','investigator','cop','security guard','guard'],s:['Crisis management','De-escalation','Incident documentation','Emergency response','Situational assessment','Community communication','Report writing']},
+  {k:['beauty','cosmetologist','esthetician','hair','makeup','nail','lash','salon','barber','spa','stylist','skin care'],s:['Client consultation','Aesthetic assessment','Retention strategy','Appointment management','Visual transformation','Product knowledge']},
+  {k:['retail','store','cashier','merchandise','inventory','customer service','associate','buyer','floor manager','district'],s:['Customer conflict resolution','Inventory management','Sales performance coaching','Scheduling systems','Visual merchandising','Team coordination']},
+  {k:['legal','law','attorney','lawyer','paralegal','compliance','contract','counsel','litigation','court','firm'],s:['Contract drafting','Legal research','Document management','Risk identification','Deadline management','Client communication']},
+  {k:['logistics','supply chain','shipping','warehouse','fulfillment','procurement','purchasing','distribution','freight'],s:['Logistics systems management','Vendor coordination','Cost optimization','Process documentation','Inventory control','Deadline management']},
+  {k:['social work','nonprofit','case manager','community','outreach','advocacy','mental health','counselor','therapist','social services'],s:['Active listening','Behavioral assessment','Crisis intervention','Care planning','Empathetic coaching','Resource coordination']},
+  {k:['dental','dentist','hygienist','dental assistant','teeth','oral health','orthodontic'],s:['Clinical procedure coordination','Patient anxiety management','Infection control compliance','Detail-oriented documentation','Client education']},
+  {k:['pharmacy','pharmacist','prescription','medications','dispensing','CVS','walgreens'],s:['Prescription management','Regulatory compliance','Customer consultation','Inventory systems','Accuracy under volume','Health literacy education']},
+  {k:['construction','contractor','carpenter','electrician','plumber','hvac','builder','trades','handyman','renovation'],s:['Project estimation','Client expectation management','Vendor coordination','Quality control','Schedule management','Problem-solving on the fly']},
+  {k:['mechanic','auto','automotive','technician','cars','repair','diesel','vehicle','shop'],s:['Diagnostic problem-solving','Technical documentation','Client education','Parts management','Quality assurance','Systematic troubleshooting']},
+  {k:['customer service','customer support','client relations','help desk','call center','CX'],s:['Client relationship management','De-escalation','Empathetic communication','Problem resolution','Retention strategy','Service recovery']},
+  {k:['analyst','data analyst','business analyst','BA','data','reporting','SQL','tableau','power bi','insights','BI'],s:['Data interpretation','Requirements gathering','Process documentation','Stakeholder communication','Problem diagnosis','Decision support']},
+  {k:['musician','music producer','audio','recording','beats','songwriter','mixing','mastering','performer','artist'],s:['Audio production','Sound design','Artist development','Brand building','Audience cultivation','Project management']},
+  {k:['photographer','videographer','camera','film','editing','production','visual','media'],s:['Visual storytelling','Brand expression','Audience engagement','Production planning','Content strategy','Post-production']},
+];
 
-
-
-// Listen for skill injection from iframe
-window.addEventListener('message', function(e) {
-  if (e.data && e.data.type === 'injectSkill') {
-    injectSkill(e.data.skill);
-  }
-});
+const ST_MOS = {
+  '11B':['Team leadership under pressure','Tactical decision-making','Risk assessment','Mission execution','Weapons systems operation'],
+  '11C':['Indirect fire coordination','Team communication','Safety protocol compliance','Precision execution','Tactical planning'],
+  '25B':['IT systems administration','Network troubleshooting','Cybersecurity protocols','Systems documentation','Hardware and software support'],
+  '25U':['Field IT support','Communications systems setup','Rapid troubleshooting','Systems documentation','Client training'],
+  '31B':['Law enforcement operations','De-escalation','Incident documentation','Emergency response','Community policing'],
+  '35F':['Intelligence analysis','Pattern recognition','Report writing','Data synthesis','Threat assessment'],
+  '35L':['Counterintelligence operations','Investigative interviewing','Source evaluation','Risk assessment','Classified documentation'],
+  '35M':['Human intelligence collection','Cultural competency','Source development','Information synthesis','Rapport building'],
+  '35P':['Multilingual communication','Cryptologic analysis','Signals interpretation','Classified document handling'],
+  '36B':['Financial records management','Payroll processing','Budget tracking','Audit compliance','Financial reporting'],
+  '38A':['Community development','Program management','Stakeholder engagement','Civil affairs planning'],
+  '38B':['Community liaison','Program coordination','Cultural competency','Outreach management'],
+  '42A':['Personnel records management','HR policy compliance','Benefits coordination','Onboarding administration','Regulatory reporting'],
+  '42B':['HR program management','Policy development','Talent management','Organizational planning','Compliance oversight'],
+  '46Q':['Public communications','Media relations','Press release writing','Crisis communications','Community outreach'],
+  '68A':['Medical equipment maintenance','Biomedical systems diagnostics','Regulatory compliance','Technical documentation'],
+  '68C':['Patient care coordination','Clinical documentation','Medication management','Team nursing support'],
+  '68D':['Surgical procedure coordination','Sterile technique','Patient safety protocols','Operating room management'],
+  '68E':['Dental care coordination','Patient anxiety management','Infection control','Clinical documentation'],
+  '68J':['Medical supply chain','Procurement processing','Inventory control','Regulatory compliance'],
+  '68K':['Clinical laboratory operations','Specimen processing','Quality control','Lab documentation'],
+  '68W':['Emergency medical triage','Trauma care under pressure','Patient assessment','Medical documentation','Crisis coordination'],
+  '68X':['Behavioral health support','Crisis intervention','Case documentation','Empathetic coaching'],
+  '88M':['Commercial vehicle operation','Route planning','Freight coordination','Fleet safety compliance'],
+  '88N':['Transportation logistics','Movement planning','Convoy coordination','Multi-modal transportation'],
+  '89A':['Ammunition inventory management','Hazmat compliance','Safety protocol enforcement','Stock control'],
+  '89B':['Explosives handling','Hazmat operations','Safety enforcement','Inventory documentation'],
+  '89D':['Explosive ordnance disposal','Bomb technician operations','Risk assessment','Precision execution'],
+  '91A':['Heavy equipment maintenance','Armored systems repair','Preventive maintenance','Technical documentation'],
+  '91B':['Fleet vehicle diagnostics','Preventive maintenance','Technical documentation','Parts management','Quality control'],
+  '91C':['Utilities systems repair','Electrical troubleshooting','Safety compliance','Maintenance documentation'],
+  '91D':['Electrical power systems','Generator maintenance','Safety compliance','Technical documentation'],
+  '91J':['Chemical equipment repair','Systems diagnostics','Environmental compliance','Technical documentation','Parts and inventory management','Safety protocol enforcement'],
+  '91L':['Construction equipment maintenance','Heavy machinery repair','Preventive maintenance','Technical documentation'],
+  '91X':['Maintenance operations management','Team supervision','Resource planning','Performance standards enforcement'],
+  '91Z':['Maintenance operations management','Team leadership','Resource planning','Training program management','Budget oversight'],
+  '92A':['Supply chain management','Inventory control','Logistics coordination','Database management','Procurement processing'],
+  '92F':['Fuel operations management','Distribution logistics','Safety compliance','Inventory management'],
+  '92G':['Food service operations','Menu planning','Kitchen management','Sanitation compliance','Cost and inventory control'],
+  '92Y':['Unit supply operations','Property accountability','Inventory documentation','Procurement requests','Records management'],
+};
 
 function autosave() {
   clearTimeout(saveTimer);
