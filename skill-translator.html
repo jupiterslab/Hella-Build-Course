@@ -305,7 +305,22 @@ function getMOSSkills(mos) {
 const CATEGORIES=[...new Set(SKILLS.map(s=>s.category))];
 let searchTimeout=null;
 
-document.addEventListener('DOMContentLoaded',()=>{renderCategories();showBrowse();});
+const INJECT_MODE = new URLSearchParams(window.location.search).get('mode') === 'inject';
+
+document.addEventListener('DOMContentLoaded',()=>{
+  if (INJECT_MODE) {
+    const nav = document.querySelector('nav');
+    const cta = document.querySelector('.cta-bar');
+    if (nav) nav.style.display = 'none';
+    if (cta) cta.style.display = 'none';
+    document.body.style.background = '#0A1020';
+    document.querySelector('.page').style.paddingTop = '20px';
+    // Update hero to match inject context
+    const heroSub = document.querySelector('.hero-sub');
+    if (heroSub) heroSub.textContent = 'Search your job title or MOS — tap any skill to inject it directly into your targeted row.';
+  }
+  renderCategories();showBrowse();
+});
 
 function handleSearch(query){
   clearTimeout(searchTimeout);
@@ -487,6 +502,15 @@ function browseCategory(cat,pill){
 }
 
 function copySkill(el,skill){
+  if (INJECT_MODE) {
+    // Send skill to parent module1 page
+    window.parent.postMessage({ type: 'injectSkill', skill: skill }, '*');
+    el.classList.add('copied');
+    el.textContent='✓ Added to row';
+    showToast('"'+skill+'" injected into your matrix row');
+    setTimeout(()=>{el.classList.remove('copied');el.textContent=skill;},2000);
+    return;
+  }
   navigator.clipboard.writeText(skill).then(()=>{
     el.classList.add('copied');el.textContent='✓ '+skill;
     showToast('"'+skill+'" copied — paste it into your Harvest Matrix');
