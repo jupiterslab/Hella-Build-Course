@@ -137,6 +137,7 @@ nav{position:sticky;top:0;z-index:200;background:rgba(245,243,238,.9);backdrop-f
 .ws-instructions strong{color:var(--navy);}
 
 /* MATRIX TABLE */
+.skill-count{font-size:10px;color:var(--muted);text-align:right;margin-top:2px;font-family:'Orbitron',sans-serif;letter-spacing:.05em;}
 .suggest-chips{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:4px;min-height:0;}
 .suggest-chip{padding:3px 10px;border-radius:100px;background:rgba(201,168,76,.1);border:1px solid rgba(201,168,76,.3);font-size:11px;font-weight:600;color:var(--navy);cursor:pointer;transition:all .15s;white-space:nowrap;}
 .suggest-chip:hover{background:var(--gold);color:var(--navy);}
@@ -345,13 +346,21 @@ nav{position:sticky;top:0;z-index:200;background:rgba(245,243,238,.9);backdrop-f
         </div>
       </div>
 
-      <!-- SKILL TRANSLATOR CTA -->
-      <div style="padding:16px 20px;background:rgba(201,168,76,.06);border-left:1.5px solid rgba(201,168,76,.25);border-right:1.5px solid rgba(201,168,76,.25);display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;">
-        <div>
-          <div style="font-family:'Orbitron',sans-serif;font-size:10px;font-weight:700;color:var(--gold);letter-spacing:.15em;margin-bottom:4px;">🔍 NOT SURE WHAT YOUR SKILLS ARE CALLED?</div>
-          <div style="font-size:13px;color:var(--muted);line-height:1.5;">Type your job title or MOS code into the Skill Translator — it names the skills underneath your experience so you can fill in Column 3 with confidence.</div>
+      <!-- EMBEDDED SKILL TRANSLATOR PANEL -->
+      <div id="skill-panel" style="padding:20px 24px;background:rgba(13,27,62,.96);border-left:1.5px solid rgba(201,168,76,.25);border-right:1.5px solid rgba(201,168,76,.25);">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px;">
+          <div>
+            <div style="font-family:'Orbitron',sans-serif;font-size:10px;font-weight:700;color:var(--gold);letter-spacing:.15em;margin-bottom:3px;">🔍 SKILL TRANSLATOR</div>
+            <div style="font-size:12px;color:rgba(255,255,255,.4);" id="st-active-label">Tap a Row 3 field above to target it, then search and click a skill</div>
+          </div>
+          <div style="display:flex;gap:8px;align-items:center;">
+            <input type="text" id="st-search" placeholder="Job title or MOS... e.g. nurse, 42A, teacher" oninput="stSearch(this.value)" style="padding:8px 14px;border:1.5px solid rgba(201,168,76,.3);border-radius:8px;background:rgba(255,255,255,.06);font-family:'Outfit',sans-serif;font-size:13px;color:var(--white);outline:none;width:280px;">
+          </div>
         </div>
-        <a href="https://jupiterslab.github.io/Hella-Build-Course/skill-translator.html" target="_blank" style="display:inline-flex;align-items:center;gap:6px;padding:10px 20px;border-radius:8px;background:linear-gradient(135deg,var(--gold),var(--gold2));color:var(--navy);font-family:'Outfit',sans-serif;font-size:13px;font-weight:800;text-decoration:none;white-space:nowrap;flex-shrink:0;">Use Skill Translator →</a>
+        <div id="st-results" style="display:flex;flex-wrap:wrap;gap:6px;min-height:32px;">
+          <span style="font-size:12px;color:rgba(255,255,255,.25);padding:6px 0;">Search above to see skills — click any to add it to your targeted row</span>
+        </div>
+        <div id="st-toast" style="font-size:11px;color:var(--gold);margin-top:8px;height:16px;"></div>
       </div>
 
       <div class="matrix-wrap">
@@ -458,7 +467,10 @@ function buildRow(n) {
     <td class="row-num">${n}</td>
     <td><textarea class="mx-input" id="r${n}a" placeholder="e.g. Project Manager, 2019–2022" oninput="autosave()"></textarea></td>
     <td><textarea class="mx-input" id="r${n}b" placeholder="e.g. Identified blockers before team leads noticed; redesigned weekly standups" oninput="autosave()"></textarea></td>
-    <td><textarea class="mx-input" id="r${n}c" placeholder="e.g. Systemic problem detection" oninput="autosave(); suggestOutcomes(${n})"></textarea></td>
+    <td>
+      <textarea class="mx-input skill-col" id="r${n}c" placeholder="Tap here to target this row, then pick skills from the translator below" onfocus="setActiveRow(${n})" oninput="autosave(); suggestOutcomes(${n})"></textarea>
+      <div class="skill-count" id="sc-${n}"></div>
+    </td>
     <td>
       <div class="suggest-chips" id="chips-${n}"></div>
       <textarea class="mx-input" id="r${n}d" placeholder="Select a suggestion above or write your own" oninput="autosave()"></textarea>
@@ -467,6 +479,55 @@ function buildRow(n) {
 }
 
 function addRow() { rowCount++; buildRow(rowCount); autosave(); }
+
+let activeRow = null;
+
+function setActiveRow(n) {
+  // Remove highlight from all
+  document.querySelectorAll('.skill-col').forEach(el => el.style.borderColor = '');
+  // Highlight selected
+  const el = document.getElementById(`r${n}c`);
+  if (el) el.style.borderColor = 'var(--gold)';
+  activeRow = n;
+  // Update panel label
+  const label = document.getElementById('st-active-label');
+  if (label) label.textContent = `Adding to Row ${n} — tap a skill below`;
+}
+
+function injectSkill(skill) {
+  if (!activeRow) {
+    showToast('Tap a row\'s skill field first to target it');
+    return;
+  }
+  const field = document.getElementById(`r${activeRow}c`);
+  if (!field) return;
+  const current = field.value.trim();
+  const skills = current ? current.split(',').map(s => s.trim()).filter(Boolean) : [];
+  if (skills.length >= 5) {
+    showToast('Max 5 skills per row — add another row for more');
+    return;
+  }
+  if (skills.includes(skill)) {
+    showToast('That skill is already in this row');
+    return;
+  }
+  field.value = skills.length ? skills.join(', ') + ', ' + skill : skill;
+  updateSkillCount(activeRow);
+  autosave();
+  suggestOutcomes(activeRow);
+  showToast(`"${skill}" added to Row ${activeRow}`);
+}
+
+function updateSkillCount(n) {
+  const field = document.getElementById(`r${n}c`);
+  const counter = document.getElementById(`sc-${n}`);
+  if (!field || !counter) return;
+  const count = field.value.trim() ? field.value.split(',').map(s=>s.trim()).filter(Boolean).length : 0;
+  counter.textContent = count > 0 ? `${count}/5 skills` : '';
+  counter.style.color = count >= 5 ? '#EF4444' : 'var(--muted)';
+}
+
+
 
 const SKILL_OUTCOMES = {
   'listen':       ['Communication coaching for teams','Client intake and discovery consulting','Conflict mediation services'],
@@ -548,7 +609,88 @@ function selectOutcome(n, value) {
 
 
 
-function autosave() {
+function stSearch(query) {
+  const q = query.trim();
+  const results = document.getElementById('st-results');
+  if (!q) {
+    results.innerHTML = '<span style="font-size:12px;color:rgba(255,255,255,.25);padding:6px 0;">Search above to see skills — click any to add to your targeted row</span>';
+    return;
+  }
+
+  // Check MOS first
+  const mosUpper = q.toUpperCase();
+  if (/^\d{2,3}[A-Z]$/.test(mosUpper) && typeof MOS_SKILLS !== 'undefined' && MOS_SKILLS[mosUpper]) {
+    const skills = MOS_SKILLS[mosUpper];
+    renderSTSkills(skills, `MOS ${mosUpper}`);
+    return;
+  }
+
+  // Search job title database
+  const ql = q.toLowerCase();
+  const found = new Set();
+  JOB_SKILLS.forEach(entry => {
+    const matches = entry.keywords.some(k => ql.includes(k) || k.includes(ql));
+    if (matches) entry.skills.forEach(s => found.add(s));
+  });
+
+  if (!found.size) {
+    results.innerHTML = '<span style="font-size:12px;color:rgba(255,255,255,.35);padding:6px 0;">No match — try a different word or job title</span>';
+    return;
+  }
+  renderSTSkills([...found], null);
+}
+
+function renderSTSkills(skills, label) {
+  const results = document.getElementById('st-results');
+  const header = label ? `<span style="font-size:10px;font-family:'Orbitron',sans-serif;color:var(--gold);letter-spacing:.15em;margin-right:8px;">${label}</span>` : '';
+  results.innerHTML = header + skills.map(s =>
+    `<div onclick="injectSkill('${s.replace(/'/g,"\\'")}')" style="padding:5px 12px;border-radius:100px;background:rgba(0,212,255,.08);border:1px solid rgba(0,212,255,.2);font-size:12px;font-weight:600;color:var(--cyan);cursor:pointer;transition:all .15s;" onmouseover="this.style.background='rgba(0,212,255,.2)'" onmouseout="this.style.background='rgba(0,212,255,.08)'">${s}</div>`
+  ).join('');
+}
+
+function showToast(msg) {
+  const t = document.getElementById('st-toast');
+  if (t) { t.textContent = msg; setTimeout(() => { t.textContent = ''; }, 2500); }
+}
+
+// Compact job→skills map for embedded panel
+const JOB_SKILLS = [
+  {keywords:['nurse','nursing','rn','lpn','clinical','hospital','patient'],skills:['Patient assessment','Clinical documentation','Care coordination','Crisis triage','Medication management','Empathetic communication']},
+  {keywords:['teacher','educator','instructor','classroom','curriculum','faculty'],skills:['Curriculum design','Instructional delivery','Classroom management','Student assessment','Knowledge transfer','Parent communication']},
+  {keywords:['manager','management','director','supervisor','operations'],skills:['Team leadership','Performance management','Strategic planning','Resource allocation','Process optimization','Stakeholder communication']},
+  {keywords:['sales','account','revenue','quota','pipeline','closing'],skills:['Consultative selling','Objection handling','Pipeline management','Negotiation','Relationship building','Prospecting']},
+  {keywords:['admin','administrative','executive assistant','coordinator','office'],skills:['Executive support','Calendar management','Systems organization','Vendor coordination','Communication management','Operational efficiency']},
+  {keywords:['hr','human resources','recruiting','talent','onboarding','people'],skills:['Talent acquisition','Policy development','Employee relations','Performance management','Compliance','Organizational development']},
+  {keywords:['coach','coaching','life coach','business coach','accountability'],skills:['Goal architecture','Motivational coaching','Accountability systems','Vision mapping','Behavioral change design','Progress tracking']},
+  {keywords:['social media','content','instagram','tiktok','linkedin','creator'],skills:['Platform strategy','Content planning','Audience development','Community management','Analytics interpretation','Brand positioning']},
+  {keywords:['design','graphic','visual','brand','logo','canva','illustrator'],skills:['Visual communication','Brand identity design','Typography','Color theory','Client brief interpretation','Creative direction']},
+  {keywords:['writer','writing','copy','journalist','blogger','content writer'],skills:['Copywriting','Content strategy','Audience psychology','Brand voice development','Persuasive communication','Editorial judgment']},
+  {keywords:['project','program','pm','pmp','agile','scrum','delivery'],skills:['Project planning','Stakeholder management','Risk mitigation','Timeline management','Resource allocation','Cross-functional coordination']},
+  {keywords:['finance','accounting','bookkeeper','CPA','budget','tax','financial'],skills:['Financial analysis','Budget management','Regulatory compliance','Financial reporting','Risk assessment','Client advisory']},
+  {keywords:['military','veteran','army','navy','marines','air force','service'],skills:['Mission planning','Team leadership under pressure','Risk assessment','Logistics coordination','Disciplined execution','Adaptability']},
+  {keywords:['mom','parent','caregiver','household','stay at home','family'],skills:['Household operations management','Budget oversight','Scheduling and logistics','Behavioral coaching','Crisis management','Multi-project coordination']},
+  {keywords:['medical','healthcare','doctor','physician','clinical','health'],skills:['Clinical communication','Patient education','Care coordination','Documentation','Diagnostic thinking','Empathetic advisory']},
+  {keywords:['tech','software','developer','engineer','IT','coding','programming'],skills:['Systems architecture','Technical documentation','Problem decomposition','Process automation','Systems integration','Technical communication']},
+  {keywords:['real estate','realtor','agent','broker','property','listings'],skills:['Market analysis','Negotiation','Client representation','Contract management','Relationship-based sales','Marketing strategy']},
+  {keywords:['event','wedding','planner','hospitality','coordinator','venue'],skills:['Logistics management','Vendor coordination','Budget oversight','Timeline execution','Crisis management','Client experience design']},
+  {keywords:['restaurant','chef','food','culinary','kitchen','catering'],skills:['Team leadership','Operations management','Cost management','Quality control','Customer experience','Staff training']},
+  {keywords:['student','college','university','graduate','entry level','no experience'],skills:['Research and synthesis','Deadline management','Persuasive writing','Critical thinking','Collaborative teamwork','Technology fluency']},
+];
+
+const MOS_SKILLS = {
+  '11B':['Team leadership under pressure','Tactical decision-making','Risk assessment','Mission execution','Weapons systems operation'],
+  '25B':['IT systems administration','Network troubleshooting','Cybersecurity protocols','Systems documentation','Hardware support'],
+  '35F':['Intelligence analysis','Pattern recognition','Report writing','Data synthesis','Threat assessment'],
+  '42A':['Personnel records management','HR policy compliance','Benefits coordination','Onboarding administration','Regulatory reporting'],
+  '68W':['Emergency medical triage','Trauma care under pressure','Patient assessment','Medical documentation','Team coordination in crisis'],
+  '88M':['Commercial vehicle operation','Route planning','Freight coordination','Fleet safety compliance','Delivery documentation'],
+  '91B':['Fleet vehicle diagnostics','Preventive maintenance','Technical documentation','Parts management','Quality control'],
+  '91J':['Chemical equipment repair','Systems diagnostics','Environmental compliance','Technical documentation','Parts and inventory management'],
+  '92A':['Supply chain management','Inventory control','Logistics coordination','Database management','Procurement processing'],
+  '92Y':['Unit supply operations','Property accountability','Inventory documentation','Procurement requests','Records management'],
+};
+
+
   clearTimeout(saveTimer);
   setSave('saving');
   saveTimer = setTimeout(doSave, 1400);
