@@ -1080,28 +1080,31 @@ async function handleResumeUpload(input) {
 
   try {
     let resumeText = '';
+    let pdfBase64 = '';
 
     if (file.name.endsWith('.txt')) {
       resumeText = await file.text();
     } else if (file.name.endsWith('.pdf')) {
-      // Send as base64 to Claude
-      const base64 = await fileToBase64(file);
-      resumeText = await extractTextFromPDF(base64);
+      // Send PDF directly as base64 — Edge Function handles text extraction + parsing in one call
+      statusEl.textContent = '⏳ Reading your resume...';
+      pdfBase64 = await fileToBase64(file);
     } else if (file.name.endsWith('.docx') || file.name.endsWith('.doc')) {
       resumeText = await file.text().catch(() => '');
-      if (!resumeText) {
-        statusEl.textContent = '⚠ DOCX parsing limited — try saving your resume as a PDF or TXT first.';
+      if (!resumeText || resumeText.trim().length < 20) {
+        statusEl.textContent = '⚠ DOCX parsing limited — save your resume as PDF and upload again.';
         return;
       }
     }
 
-    if (!resumeText || resumeText.trim().length < 50) {
-      statusEl.textContent = '⚠ Could not read the file. Try saving your resume as a PDF or TXT and uploading again.';
+    if (!resumeText && !pdfBase64) {
+      statusEl.textContent = '⚠ Could not read the file. Try PDF or TXT format.';
       return;
     }
 
     statusEl.textContent = '🧠 Analyzing your experience...';
-    const rows = await parseResumeToMatrix(resumeText);
+    const rows = pdfBase64
+      ? await parseResumePDF(pdfBase64)
+      : await parseResumeToMatrix(resumeText);
 
     if (!rows || !rows.length) {
       statusEl.textContent = '⚠ Could not extract experience from this file. Fill the matrix manually.';
@@ -1133,15 +1136,20 @@ async function handleResumeUpload(input) {
     statusEl.textContent = `✓ Matrix filled with ${rows.length} rows from your resume. Review and edit any cell — this is your starting point.`;
 
   } catch(e) {
-    statusEl.textContent = '⚠ Something went wrong. Fill the matrix manually or try a different file format.';
+    statusEl.textContent = '⚠ Error: ' + (e.message || 'Something went wrong. Try again.');
   }
 }
 
 function fileToBase64(file) {
   return new Promise((res, rej) => {
     const reader = new FileReader();
-    reader.onload = () => res(reader.result.split(',')[1]);
-    reader.onerror = () => rej(new Error('Read failed'));
+    reader.onload = () => {
+      const result = reader.result;
+      const base64 = result.includes(',') ? result.split(',')[1] : result;
+      if (!base64 || base64.length < 10) rej(new Error('Empty base64'));
+      else res(base64);
+    };
+    reader.onerror = () => rej(new Error('FileReader failed'));
     reader.readAsDataURL(file);
   });
 }
@@ -1152,6 +1160,14 @@ async function extractTextFromPDF(base64Data) {
   });
   if (error) throw new Error(error.message);
   return data.text || '';
+}
+
+async function parseResumePDF(base64Data) {
+  const { data, error } = await sb.functions.invoke('parse-resume', {
+    body: { pdfBase64: base64Data }
+  });
+  if (error) throw new Error(error.message);
+  return data.rows || [];
 }
 
 async function parseResumeToMatrix(resumeText) {
