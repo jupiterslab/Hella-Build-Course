@@ -454,15 +454,8 @@ nav{position:sticky;top:0;z-index:200;background:rgba(245,243,238,.9);backdrop-f
     </div>
     <button class="st-close" onclick="closeSkillPanel()">✕</button>
   </div>
-  <div class="st-panel-body">
-    <div class="st-active-row" id="st-row-indicator">No row selected — tap a skill field in Column 3</div>
-    <div class="st-search-wrap">
-      <input type="text" class="st-search-input" id="st-search" placeholder="Job title or MOS... e.g. nurse, 42A, stay at home mom" oninput="stSearch(this.value)" autocomplete="off">
-    </div>
-    <div class="st-results" id="st-results">
-      <div class="st-empty">Search above — skills appear here. Click any to inject into your targeted row.</div>
-    </div>
-    <div class="st-toast-panel" id="st-toast"></div>
+  <div class="st-panel-body" style="padding:0;overflow:hidden;flex:1;">
+    <iframe id="st-iframe" src="skill-translator.html?mode=inject" style="width:100%;height:100%;border:none;background:#0A1020;" allowtransparency="true"></iframe>
   </div>
 </div>
 
@@ -517,7 +510,7 @@ let activeRow = null;
 function openSkillPanel() {
   document.getElementById('st-panel').classList.add('open');
   document.getElementById('st-overlay').classList.add('open');
-  document.getElementById('st-search').focus();
+  // iframe handles its own focus
 }
 
 function closeSkillPanel() {
@@ -673,7 +666,7 @@ function stSearch(query) {
   const ql = q.toLowerCase();
   const found = new Set();
   JOB_SKILLS.forEach(entry => {
-    const matches = entry.keywords.some(k => ql.includes(k) || k.includes(ql));
+    const matches = entry.keywords.some(k => ql.includes(k.toLowerCase()) || k.toLowerCase().includes(ql));
     if (matches) entry.skills.forEach(s => found.add(s));
   });
 
@@ -684,13 +677,6 @@ function stSearch(query) {
   renderSTSkills([...found], null);
 }
 
-function renderSTSkills(skills, label) {
-  const results = document.getElementById('st-results');
-  const header = label ? `<div style="width:100%;font-family:'Orbitron',sans-serif;font-size:9px;color:var(--gold);letter-spacing:.2em;margin-bottom:4px;">${label}</div>` : '';
-  results.innerHTML = header + skills.map(s =>
-    `<div class="st-skill-chip" onclick="injectSkill('${s.replace(/'/g,"\\'")}')">${s}</div>`
-  ).join('');
-}
 
 function showToast(msg) {
   const t = document.getElementById('st-toast');
@@ -698,41 +684,15 @@ function showToast(msg) {
 }
 
 // Compact job→skills map for embedded panel
-const JOB_SKILLS = [
-  {keywords:['nurse','nursing','rn','lpn','clinical','hospital','patient'],skills:['Patient assessment','Clinical documentation','Care coordination','Crisis triage','Medication management','Empathetic communication']},
-  {keywords:['teacher','educator','instructor','classroom','curriculum','faculty'],skills:['Curriculum design','Instructional delivery','Classroom management','Student assessment','Knowledge transfer','Parent communication']},
-  {keywords:['manager','management','director','supervisor','operations'],skills:['Team leadership','Performance management','Strategic planning','Resource allocation','Process optimization','Stakeholder communication']},
-  {keywords:['sales','account','revenue','quota','pipeline','closing'],skills:['Consultative selling','Objection handling','Pipeline management','Negotiation','Relationship building','Prospecting']},
-  {keywords:['admin','administrative','executive assistant','coordinator','office'],skills:['Executive support','Calendar management','Systems organization','Vendor coordination','Communication management','Operational efficiency']},
-  {keywords:['hr','human resources','recruiting','talent','onboarding','people'],skills:['Talent acquisition','Policy development','Employee relations','Performance management','Compliance','Organizational development']},
-  {keywords:['coach','coaching','life coach','business coach','accountability'],skills:['Goal architecture','Motivational coaching','Accountability systems','Vision mapping','Behavioral change design','Progress tracking']},
-  {keywords:['social media','content','instagram','tiktok','linkedin','creator'],skills:['Platform strategy','Content planning','Audience development','Community management','Analytics interpretation','Brand positioning']},
-  {keywords:['design','graphic','visual','brand','logo','canva','illustrator'],skills:['Visual communication','Brand identity design','Typography','Color theory','Client brief interpretation','Creative direction']},
-  {keywords:['writer','writing','copy','journalist','blogger','content writer'],skills:['Copywriting','Content strategy','Audience psychology','Brand voice development','Persuasive communication','Editorial judgment']},
-  {keywords:['project','program','pm','pmp','agile','scrum','delivery'],skills:['Project planning','Stakeholder management','Risk mitigation','Timeline management','Resource allocation','Cross-functional coordination']},
-  {keywords:['finance','accounting','bookkeeper','CPA','budget','tax','financial'],skills:['Financial analysis','Budget management','Regulatory compliance','Financial reporting','Risk assessment','Client advisory']},
-  {keywords:['military','veteran','army','navy','marines','air force','service'],skills:['Mission planning','Team leadership under pressure','Risk assessment','Logistics coordination','Disciplined execution','Adaptability']},
-  {keywords:['mom','parent','caregiver','household','stay at home','family'],skills:['Household operations management','Budget oversight','Scheduling and logistics','Behavioral coaching','Crisis management','Multi-project coordination']},
-  {keywords:['medical','healthcare','doctor','physician','clinical','health'],skills:['Clinical communication','Patient education','Care coordination','Documentation','Diagnostic thinking','Empathetic advisory']},
-  {keywords:['tech','software','developer','engineer','IT','coding','programming'],skills:['Systems architecture','Technical documentation','Problem decomposition','Process automation','Systems integration','Technical communication']},
-  {keywords:['real estate','realtor','agent','broker','property','listings'],skills:['Market analysis','Negotiation','Client representation','Contract management','Relationship-based sales','Marketing strategy']},
-  {keywords:['event','wedding','planner','hospitality','coordinator','venue'],skills:['Logistics management','Vendor coordination','Budget oversight','Timeline execution','Crisis management','Client experience design']},
-  {keywords:['restaurant','chef','food','culinary','kitchen','catering'],skills:['Team leadership','Operations management','Cost management','Quality control','Customer experience','Staff training']},
-  {keywords:['student','college','university','graduate','entry level','no experience'],skills:['Research and synthesis','Deadline management','Persuasive writing','Critical thinking','Collaborative teamwork','Technology fluency']},
-];
 
-const MOS_SKILLS = {
-  '11B':['Team leadership under pressure','Tactical decision-making','Risk assessment','Mission execution','Weapons systems operation'],
-  '25B':['IT systems administration','Network troubleshooting','Cybersecurity protocols','Systems documentation','Hardware support'],
-  '35F':['Intelligence analysis','Pattern recognition','Report writing','Data synthesis','Threat assessment'],
-  '42A':['Personnel records management','HR policy compliance','Benefits coordination','Onboarding administration','Regulatory reporting'],
-  '68W':['Emergency medical triage','Trauma care under pressure','Patient assessment','Medical documentation','Team coordination in crisis'],
-  '88M':['Commercial vehicle operation','Route planning','Freight coordination','Fleet safety compliance','Delivery documentation'],
-  '91B':['Fleet vehicle diagnostics','Preventive maintenance','Technical documentation','Parts management','Quality control'],
-  '91J':['Chemical equipment repair','Systems diagnostics','Environmental compliance','Technical documentation','Parts and inventory management'],
-  '92A':['Supply chain management','Inventory control','Logistics coordination','Database management','Procurement processing'],
-  '92Y':['Unit supply operations','Property accountability','Inventory documentation','Procurement requests','Records management'],
-};
+
+
+// Listen for skill injection from iframe
+window.addEventListener('message', function(e) {
+  if (e.data && e.data.type === 'injectSkill') {
+    injectSkill(e.data.skill);
+  }
+});
 
 function autosave() {
   clearTimeout(saveTimer);
