@@ -734,7 +734,7 @@ const MOS_SKILLS = {
   '92Y':['Unit supply operations','Property accountability','Inventory documentation','Procurement requests','Records management'],
 };
 
-
+function autosave() {
   clearTimeout(saveTimer);
   setSave('saving');
   saveTimer = setTimeout(doSave, 1400);
