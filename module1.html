@@ -495,19 +495,18 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 function buildRow(n) {
   const tr = document.createElement('tr');
-  tr.id = `row-${n}`;
-  tr.innerHTML = `
-    <td class="row-num">${n}</td>
-    <td><textarea class="mx-input" id="r${n}a" placeholder="e.g. Project Manager, 2019–2022" oninput="autosave()"></textarea></td>
-    <td><textarea class="mx-input" id="r${n}b" placeholder="e.g. Identified blockers before team leads noticed; redesigned weekly standups" oninput="autosave()"></textarea></td>
-    <td>
-      <textarea class="mx-input skill-col" id="r${n}c" placeholder="Tap here to target this row, then pick skills from the translator below" onfocus="setActiveRow(${n})" oninput="autosave(); suggestOutcomes(${n})"></textarea>
-      <div class="skill-count" id="sc-${n}"></div>
-    </td>
-    <td>
-      <div class="suggest-chips" id="chips-${n}"></div>
-      <textarea class="mx-input" id="r${n}d" placeholder="Select a suggestion above or write your own" oninput="autosave()"></textarea>
-    </td>`;
+  tr.id = 'row-' + n;
+  const td1 = '<td class="row-num">' + n + '</td>';
+  const td2 = '<td><textarea class="mx-input" id="r' + n + 'a" placeholder="e.g. Project Manager, 2019–2022" oninput="autosave()"></textarea></td>';
+  const td3 = '<td><textarea class="mx-input" id="r' + n + 'b" placeholder="e.g. Identified blockers before team leads noticed; redesigned weekly standups" oninput="autosave()"></textarea></td>';
+  const td4 = '<td><textarea class="mx-input skill-col" id="r' + n + 'c" placeholder="Tap here to target this row, then open Skill Translator" oninput="autosave(); suggestOutcomes(' + n + ')"></textarea><div class="skill-count" id="sc-' + n + '"></div></td>';
+  const td5 = '<td><div class="suggest-chips" id="chips-' + n + '"></div><textarea class="mx-input" id="r' + n + 'd" placeholder="Select a suggestion above or write your own" oninput="autosave()"></textarea></td>';
+  tr.innerHTML = td1 + td2 + td3 + td4 + td5;
+
+  // Attach focus handler separately to avoid template literal escaping issues
+  const skillField = tr.querySelector('#r' + n + 'c');
+  if (skillField) skillField.addEventListener('focus', function() { setActiveRow(n); });
+
   document.getElementById('matrix-body').appendChild(tr);
 }
 
