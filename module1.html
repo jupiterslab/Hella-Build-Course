@@ -1097,9 +1097,9 @@ async function handleResumeUpload(input) {
     }
 
     if (!resumeText && !pdfBase64) {
-      // Try as PDF regardless of extension
       try {
-        pdfBase64 = await fileToBase64(file);
+        const dataUrl = await fileToBase64(file);
+        pdfBase64 = dataUrl.split(',')[1];
       } catch(e) {
         statusEl.textContent = '⚠ Could not read the file. Try saving as PDF or TXT.';
         return;
