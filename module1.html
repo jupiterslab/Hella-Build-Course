@@ -409,11 +409,34 @@ nav{position:sticky;top:0;z-index:200;background:rgba(245,243,238,.9);backdrop-f
       <button class="add-row" onclick="addRow()">+ Add Another Row</button>
     </div>
 
+    <!-- PATTERN RECOGNITION -->
+    <div class="s-label">Pattern Recognition</div>
+    <div class="diag-section">
+      <div class="diag-title">// What Your Skills Are Actually Saying</div>
+      <p class="diag-intro">Once your matrix is filled, click below. AI reads every skill across every row and identifies the patterns — even when the names are different. Use what you see to answer the three questions below.</p>
+
+      <div style="text-align:center;margin-bottom:24px;">
+        <button onclick="analyzePatterns()" id="pattern-btn" style="display:inline-flex;align-items:center;gap:8px;padding:13px 32px;border-radius:10px;background:var(--navy);color:var(--gold);font-family:'Outfit',sans-serif;font-size:14px;font-weight:700;border:none;cursor:pointer;transition:all .2s;">
+          🔍 Identify My Skill Patterns
+        </button>
+      </div>
+
+      <div id="pattern-results" style="display:none;">
+        <div style="font-family:'Orbitron',sans-serif;font-size:9px;font-weight:600;letter-spacing:.25em;text-transform:uppercase;color:var(--gold);margin-bottom:16px;">// Your Core Patterns</div>
+        <div id="pattern-cards" style="display:flex;flex-direction:column;gap:12px;margin-bottom:20px;"></div>
+        <div style="font-size:13px;color:var(--muted);line-height:1.6;padding:14px;background:rgba(201,168,76,.06);border-left:3px solid var(--gold);border-radius:0 8px 8px 0;">
+          <strong style="color:var(--navy);">Now use this:</strong> Review your patterns above, then answer the three questions below in your own words.
+        </div>
+      </div>
+
+      <div id="pattern-status" style="font-size:13px;color:var(--muted);text-align:center;min-height:20px;margin-top:8px;"></div>
+    </div>
+
     <!-- DIAGNOSTIC QUESTIONS -->
     <div class="s-label">Three Diagnostic Questions</div>
     <div class="diag-section">
       <div class="diag-title">// Look Across Your Matrix Before Answering</div>
-      <p class="diag-intro">Look at your completed rows. The patterns are in the repetition — not in any single role. Answer each question in writing.</p>
+      <p class="diag-intro">Look at your completed rows and the patterns identified above. Answer each question in your own words.</p>
 
       <div class="diag-q">
         <div class="dq-label">1. Which 3 skills show up in almost every area of your life — not just one job or one environment?</div>
@@ -1176,6 +1199,76 @@ async function parseResumeToMatrix(resumeText) {
   });
   if (error) throw new Error(error.message);
   return data.rows || [];
+}
+
+async function analyzePatterns() {
+  const btn = document.getElementById('pattern-btn');
+  const status = document.getElementById('pattern-status');
+  const results = document.getElementById('pattern-results');
+  const cards = document.getElementById('pattern-cards');
+
+  // Collect all skills from column 3
+  const skills = [];
+  for (let i = 1; i <= rowCount; i++) {
+    const val = document.getElementById('r' + i + 'c')?.value?.trim();
+    if (val) skills.push(val);
+  }
+
+  if (skills.length < 2) {
+    status.textContent = '⚠ Fill out at least 2 rows in the matrix before running pattern recognition.';
+    return;
+  }
+
+  btn.textContent = '🔍 Analyzing...';
+  btn.disabled = true;
+  status.textContent = '';
+  results.style.display = 'none';
+
+  try {
+    const { data, error } = await sb.functions.invoke('parse-resume', {
+      body: {
+        resumeText: 'PATTERN ANALYSIS MODE. Analyze these skills from a student\'s career matrix and identify the repeating core competencies:\n\n' +
+          skills.map((s, i) => `Row ${i+1}: ${s}`).join('\n') +
+          '\n\nIdentify 3 to 5 core patterns. Each pattern groups skills that serve the same underlying function even if named differently. Return ONLY a JSON array. No markdown. Start with [ and end with ].\n\n[{"pattern":"Pattern name (2-4 words)","description":"What this competency actually is and why it keeps appearing","evidence":"Which rows show this pattern","strength":"Core Competency or Supporting Skill"}]'
+      }
+    });
+
+    if (error) throw new Error(error.message);
+
+    const raw = data?.rows ? null : data;
+    let patterns;
+
+    if (data?.rows) {
+      // Got resume rows instead — shouldn't happen in pattern mode
+      throw new Error('Unexpected response format');
+    }
+
+    // Parse raw response
+    const text = typeof data === 'string' ? data : JSON.stringify(data);
+    const start = text.indexOf('[');
+    const end = text.lastIndexOf(']');
+    if (start === -1) throw new Error('No patterns returned');
+    patterns = JSON.parse(text.slice(start, end + 1));
+
+    cards.innerHTML = patterns.map(p => `
+      <div style="background:white;border:1.5px solid var(--border);border-radius:12px;padding:20px;border-left:4px solid ${p.strength === 'Core Competency' ? 'var(--gold)' : 'var(--cyan)'};">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+          <div style="font-family:'Orbitron',sans-serif;font-size:13px;font-weight:700;color:var(--navy);">${p.pattern}</div>
+          <div style="font-size:10px;font-weight:700;padding:3px 10px;border-radius:100px;background:${p.strength === 'Core Competency' ? 'rgba(201,168,76,.12)' : 'rgba(0,212,255,.1)'};color:${p.strength === 'Core Competency' ? 'var(--gold)' : 'var(--cyan)'};">${p.strength}</div>
+        </div>
+        <div style="font-size:13px;color:var(--muted);margin-bottom:6px;line-height:1.55;">${p.description}</div>
+        <div style="font-size:11px;color:rgba(13,27,62,.4);font-style:italic;">Evidence: ${p.evidence}</div>
+      </div>
+    `).join('');
+
+    results.style.display = 'block';
+    btn.textContent = '🔍 Re-analyze Patterns';
+
+  } catch(e) {
+    status.textContent = '⚠ Could not analyze patterns. Make sure your matrix has skills filled in Column 3.';
+    btn.textContent = '🔍 Identify My Skill Patterns';
+  }
+  btn.disabled = false;
 }
 
 function autosave() {
