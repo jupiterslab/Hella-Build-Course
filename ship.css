@@ -153,3 +153,30 @@ html.ship-mode {
 .ship-mode .skill-tag { color:#D6C2EC; border-color:#6B527E; background:#30263E; }
 .ship-mode .skill-tag:hover { background:#48345D; }
 .ship-mode .cat-pill.active { color:#15121A; }
+
+/* Resume extraction supplies the source work. Skills remain the learner's answer. */
+.resume-start { margin:0 0 24px; padding:28px; border:1px solid #414650; border-radius:10px; background:#1B1F26; }
+.resume-start h2 { margin:0 0 12px; font-size:25px; letter-spacing:-.025em; }
+.resume-start > p { max-width:600px; color:#B9BFC9; font-size:14px; line-height:1.6; margin-bottom:20px; }
+.resume-upload-actions { display:flex; gap:16px; align-items:center; flex-wrap:wrap; }
+.resume-upload-button { display:inline-flex; padding:12px 22px; background:#B494D8; color:#17121E; border:1px solid #B494D8; border-radius:7px; font-size:14px; font-weight:600; cursor:pointer; }
+#resume-file-input { position:absolute; width:1px; height:1px; opacity:0; overflow:hidden; }
+.resume-upload-actions:has(input:focus-visible) .resume-upload-button { outline:2px solid #D6C2EC; outline-offset:4px; }
+.resume-loading .resume-upload-button { opacity:.5; cursor:wait; pointer-events:none; }
+#resume-file-name { font-size:12px; color:#B9BFC9; overflow-wrap:anywhere; }
+.resume-start .resume-file-help { font-size:11px; color:#A8ADB8; margin:12px 0 0; }
+#resume-status { margin:18px 0 0; color:#D6C2EC; }
+#resume-status[data-error] { color:#F5A5A5; }
+.manual-experience { display:block; padding:0; margin-top:20px; color:#D0B7EA; border:0; background:none; font:500 12px Inter,sans-serif; cursor:pointer; text-decoration:underline; text-underline-offset:3px; }
+.resume-review-form .experience-fields { grid-template-columns:1fr; }
+.resume-review-form .experience-fields textarea { width:100%; padding:12px 14px; line-height:1.6; resize:vertical; font-size:14px; }
+.resume-review-form input[readonly], .resume-review-form textarea[readonly] { background:#191D24 !important; color:#CDD2DC !important; border-color:#373C45 !important; }
+.role-progress { color:#C8ADE7; font-size:12px; margin:0 0 10px; }
+.edit-experience { border:0; background:none; padding:0; margin-top:16px; color:#C8ADE7; font:500 12px Inter,sans-serif; cursor:pointer; }
+.harvest-next { border-top:1px solid #373C45; padding-top:12px; margin-top:24px; }
+.harvest-next > summary { cursor:pointer; font-size:14px; font-weight:500; padding:14px 0 24px; }
+.resume-review-done h2 { font-size:24px; margin:0 0 12px; }
+.resume-review-done p { color:#B9BFC9; line-height:1.6; font-size:14px; margin-bottom:20px; }
+.resume-review-done button { background:#B494D8; color:#17121E; border:0; border-radius:7px; padding:12px 20px; font:600 14px Inter,sans-serif; cursor:pointer; }
+.harvest-workspace [hidden] { display:none !important; }
+@media(max-width:768px) { .resume-start { padding:22px; } .resume-upload-actions { align-items:stretch; flex-direction:column; } .resume-upload-button { justify-content:center; } }

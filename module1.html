@@ -230,8 +230,9 @@ nav{position:sticky;top:0;z-index:200;background:rgba(245,243,238,.9);backdrop-f
 @media(max-width:900px){.layout{grid-template-columns:1fr;}.sidebar{display:none;}.main{padding:32px 24px;}}
 </style>
 <link rel="stylesheet" href="workspace.css">
-<link rel="stylesheet" href="ship.css?v=3">
-<script src="ship.js?v=2" defer></script>
+<link rel="stylesheet" href="ship.css?v=4">
+<script src="ship.js?v=3" defer></script>
+<script src="harvest.js?v=1" defer></script>
 </head>
 <body class="harvest-workspace">
 
@@ -298,7 +299,7 @@ nav{position:sticky;top:0;z-index:200;background:rgba(245,243,238,.9);backdrop-f
 
       <div class="mod-eyebrow">// Module 01 — Phase C: Clarify</div>
       <h1 class="mod-h">Harvest</h1>
-      <p class="mod-p">Identify your skills and choose one to build around.</p>
+      <p class="mod-p">Upload your resume, then match your work to skills.</p>
       <div class="mod-meta">
         <div class="meta-chip">⏱ <span>~20 minutes</span></div>
         <div class="meta-chip">📐 <span>Harvest Matrix Worksheet</span></div>
@@ -330,23 +331,17 @@ nav{position:sticky;top:0;z-index:200;background:rgba(245,243,238,.9);backdrop-f
         </div>
       </div>
 
-      <!-- RESUME UPLOAD -->
-      <div id="resume-upload-section" style="padding:20px 24px;background:rgba(180,148,216,.06);border-left:1.5px solid rgba(180,148,216,.25);border-right:1.5px solid rgba(180,148,216,.25);">
-        <div style="display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;">
-          <div>
-            <div style="font-family:'Inter',sans-serif;font-size:10px;font-weight:700;color:var(--gold);letter-spacing:.15em;margin-bottom:4px;">📄 RESUME AUTO-FILL</div>
-            <div style="font-size:13px;color:var(--muted);line-height:1.5;">Upload your resume and AI will read it and fill the matrix for you. You can edit any cell after.</div>
-          </div>
-          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
-            <label for="resume-file-input" style="display:inline-flex;align-items:center;gap:6px;padding:9px 18px;border-radius:8px;background:rgba(180,148,216,.1);border:1.5px solid rgba(180,148,216,.3);color:var(--gold);font-family:'Inter',sans-serif;font-size:13px;font-weight:700;cursor:pointer;transition:all .2s;white-space:nowrap;">
-              📎 Choose Resume
-            </label>
-            <input type="file" id="resume-file-input" accept=".pdf,.docx,.doc,.txt" style="display:none;" onchange="handleResumeUpload(this)">
-            <span id="resume-file-name" style="font-size:12px;color:#666B73;"></span>
-          </div>
+      <section id="resume-upload-section" class="resume-start">
+        <h2>Start with your resume</h2>
+        <p>AI lists your roles and repeated work. You identify the skills behind those tasks.</p>
+        <div class="resume-upload-actions">
+          <label for="resume-file-input" class="resume-upload-button">Upload resume</label>
+          <input type="file" id="resume-file-input" accept=".pdf,.docx,.txt" disabled onchange="handleResumeUpload(this)">
+          <span id="resume-file-name"></span>
         </div>
-        <div id="resume-status" style="display:none;margin-top:12px;padding:10px 14px;border-radius:8px;background:rgba(180,148,216,.08);border:1px solid rgba(180,148,216,.2);font-size:13px;color:var(--gold);"></div>
-      </div>
+        <p class="resume-file-help">PDF, DOCX or TXT · Up to 10 MB · Processed by Claude</p>
+        <p id="resume-status" role="status" aria-live="polite" style="display:none;"></p>
+      </section>
 
       <!-- SKILL TRANSLATOR TRIGGER -->
       <div style="padding:14px 20px;background:rgba(180,148,216,.06);border-left:1.5px solid rgba(180,148,216,.25);border-right:1.5px solid rgba(180,148,216,.25);display:flex;align-items:center;justify-content:space-between;gap:12px;">
@@ -497,6 +492,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   const saved = await loadWorksheet('harvest-matrix');
   if (saved) populate(saved);
+  document.getElementById('resume-file-input').disabled = false;
+  document.dispatchEvent(new CustomEvent('hella:worksheet-ready'));
 });
 
 function buildRow(n) {
@@ -1058,80 +1055,102 @@ const ST_MOS = {
   '7257':['Harrier crew chief','Aircraft maintenance','Technical documentation'],
 };
 
+let resumeImportBusy = false;
+let resumeDocxParser;
+
+function loadResumeDocxParser() {
+  if (window.mammoth) return Promise.resolve(window.mammoth);
+  if (!resumeDocxParser) resumeDocxParser = new Promise((resolve, reject) => {
+    const script = document.createElement('script');
+    script.src = 'https://cdn.jsdelivr.net/npm/mammoth@1.13.0/mammoth.browser.min.js';
+    script.integrity = 'sha384-8NWE3bZDrmRI4IePMoQaEoLhAQ1MmRMJkdNgnGiHRFanTqsFKr0TmK6aSZvFJ/PO';
+    script.crossOrigin = 'anonymous';
+    script.onload = () => {
+      if (window.mammoth) resolve(window.mammoth);
+      else { resumeDocxParser = null; reject(new Error('Word reader could not start. Try a PDF.')); }
+    };
+    script.onerror = () => { resumeDocxParser = null; reject(new Error('Word reader could not load. Try a PDF.')); };
+    document.head.append(script);
+  });
+  return resumeDocxParser;
+}
+
+function importResumeRoles(rows) {
+  const normalize = value => value.trim().toLowerCase().replace(/\s+/g, ' ');
+  const signature = (role, work) => JSON.stringify([normalize(role), normalize(work)]);
+  const existing = new Map();
+  for (let n = 1; n <= rowCount; n++) {
+    const role = document.getElementById('r' + n + 'a').value;
+    const work = document.getElementById('r' + n + 'b').value;
+    if (role.trim()) existing.set(signature(role, work), n);
+  }
+  const imported = [];
+  let added = 0;
+  for (const row of rows) {
+    if (!row || typeof row.role !== 'string' || typeof row.function !== 'string' || !row.role.trim()) continue;
+    const role = row.role.trim(), work = row.function.trim();
+    const key = signature(role, work);
+    let n = existing.get(key);
+    if (!n) {
+      for (let candidate = 1; candidate <= rowCount; candidate++) {
+        if (['a','b','c','d'].every(column => !document.getElementById('r' + candidate + column).value.trim())) { n = candidate; break; }
+      }
+      if (!n) { rowCount++; buildRow(rowCount); n = rowCount; }
+      document.getElementById('r' + n + 'a').value = role;
+      document.getElementById('r' + n + 'b').value = work;
+      existing.set(key,n);
+      added++;
+    }
+    if (!imported.includes(n)) imported.push(n);
+  }
+  return { rowIds:imported, added };
+}
+
 async function handleResumeUpload(input) {
   const file = input.files[0];
-  if (!file) return;
-
-  const nameEl = document.getElementById('resume-file-name');
+  if (!file || resumeImportBusy) return;
   const statusEl = document.getElementById('resume-status');
-  nameEl.textContent = file.name;
   statusEl.style.display = 'block';
-  statusEl.textContent = '⏳ Reading your resume...';
-
+  statusEl.removeAttribute('data-error');
+  document.getElementById('resume-file-name').textContent = file.name;
+  if (file.size > 10 * 1024 * 1024) { statusEl.textContent = 'Choose a resume under 10 MB.'; input.value = ''; return; }
+  const extension = file.name.split('.').pop().toLowerCase();
+  if (!['pdf','docx','txt'].includes(extension)) { statusEl.textContent = 'Choose a PDF, DOCX or TXT file. Save older Word files as DOCX or PDF.'; input.value = ''; return; }
+  resumeImportBusy = true;
+  input.disabled = true;
+  document.dispatchEvent(new CustomEvent('hella:resume-loading',{detail:{loading:true}}));
+  statusEl.textContent = 'Reading your resume…';
   try {
-    let resumeText = '';
-    let pdfBase64 = '';
-
-    if (file.name.toLowerCase().endsWith('.txt')) {
-      resumeText = await file.text();
-    } else if (file.name.toLowerCase().endsWith('.pdf')) {
-      statusEl.textContent = '⏳ Reading your resume...';
+    let rows;
+    if (extension === 'pdf') {
       const dataUrl = await fileToBase64(file);
-      pdfBase64 = dataUrl.split(',')[1];
-    } else if (file.name.toLowerCase().endsWith('.docx') || file.name.toLowerCase().endsWith('.doc')) {
-      resumeText = await file.text().catch(() => '');
-      if (!resumeText || resumeText.trim().length < 20) {
-        statusEl.textContent = '⚠ DOCX parsing limited — save your resume as PDF and upload again.';
-        return;
-      }
+      statusEl.textContent = 'Extracting your roles and repeated work…';
+      rows = await parseResumePDF(dataUrl.split(',')[1]);
+    } else {
+      const text = extension === 'docx'
+        ? (await (await loadResumeDocxParser()).extractRawText({arrayBuffer:await file.arrayBuffer()})).value
+        : await file.text();
+      if (!text || text.trim().length < 20) throw new Error('This file has too little readable text. Try another copy or upload a PDF.');
+      statusEl.textContent = 'Extracting your roles and repeated work…';
+      rows = await parseResumeToMatrix(text);
     }
-
-    if (!resumeText && !pdfBase64) {
-      try {
-        const dataUrl = await fileToBase64(file);
-        pdfBase64 = dataUrl.split(',')[1];
-      } catch(e) {
-        statusEl.textContent = '⚠ Could not read the file. Try saving as PDF or TXT.';
-        return;
-      }
-    }
-
-    statusEl.textContent = '🧠 Analyzing your experience...';
-    const rows = pdfBase64
-      ? await parseResumePDF(pdfBase64)
-      : await parseResumeToMatrix(resumeText);
-
-    if (!rows || !rows.length) {
-      statusEl.textContent = '⚠ Could not extract experience from this file. Fill the matrix manually.';
-      return;
-    }
-
-    // Populate matrix rows
-    // Ensure enough rows exist
-    while (rowCount < rows.length) { rowCount++; buildRow(rowCount); }
-
-    rows.forEach((row, i) => {
-      const n = i + 1;
-      const fa = document.getElementById('r' + n + 'a');
-      const fb = document.getElementById('r' + n + 'b');
-      const fc = document.getElementById('r' + n + 'c');
-      const fd = document.getElementById('r' + n + 'd');
-      if (fa) fa.value = row.role || '';
-      if (fb) fb.value = row.function || '';
-      if (fc) fc.value = row.skill || '';
-      if (fd) fd.value = row.outcome || '';
-      if (fc) updateSkillCount(n);
-      if (fc) suggestOutcomes(n);
-    });
-
-    autosave();
-    statusEl.style.background = 'rgba(34,197,94,.08)';
-    statusEl.style.borderColor = 'rgba(34,197,94,.3)';
-    statusEl.style.color = '#86EFAC';
-    statusEl.textContent = `✓ Matrix filled with ${rows.length} rows from your resume. Review and edit any cell — this is your starting point.`;
-
-  } catch(e) {
-    statusEl.textContent = '⚠ Error: ' + (e.message || 'Something went wrong. Try again.');
+    if (!Array.isArray(rows) || !rows.length) throw new Error('No work history was found. Try another resume or add your experience manually.');
+    const imported = importResumeRoles(rows);
+    if (!imported.rowIds.length) throw new Error('The extracted roles could not be read. Try another file.');
+    const saved = await doSave();
+    document.dispatchEvent(new CustomEvent('hella:resume-imported',{detail:imported}));
+    if (saved.error) throw new Error('Your roles are on screen, but saving failed. Keep this page open and retry the save.');
+    statusEl.textContent = imported.added
+      ? imported.added + (imported.added === 1 ? ' role added. ' : ' roles added. ') + 'Review the tasks below and identify the skills.'
+      : 'These roles are already in your matrix. Your previous work is kept.';
+  } catch (error) {
+    statusEl.dataset.error = 'true';
+    statusEl.textContent = error.message || 'The resume could not be read. Try again.';
+  } finally {
+    resumeImportBusy = false;
+    input.disabled = false;
+    input.value = '';
+    document.dispatchEvent(new CustomEvent('hella:resume-loading',{detail:{loading:false}}));
   }
 }
 
@@ -1144,29 +1163,19 @@ function fileToBase64(file) {
   });
 }
 
-async function extractTextFromPDF(base64Data) {
-  const { data, error } = await sb.functions.invoke('parse-resume', {
-    body: { pdfBase64: base64Data }
-  });
-  if (error) throw new Error(error.message);
-  return data.text || '';
+async function requestResumeRows(body) {
+  const {data,error} = await sb.functions.invoke('parse-resume',{body:{...body,mode:'resume_roles'}});
+  if (error) {
+    let message = error.message;
+    try { const detail = await error.context.json(); message = detail.error || message; } catch (_) {}
+    throw new Error(message || 'Resume extraction could not finish. Try again.');
+  }
+  if (data?.error) throw new Error(data.error);
+  return data?.rows || [];
 }
 
-async function parseResumePDF(base64Data) {
-  const { data, error } = await sb.functions.invoke('parse-resume', {
-    body: { pdfBase64: base64Data }
-  });
-  if (error) throw new Error(error.message);
-  return data.rows || [];
-}
-
-async function parseResumeToMatrix(resumeText) {
-  const { data, error } = await sb.functions.invoke('parse-resume', {
-    body: { resumeText: resumeText.slice(0, 3000) }
-  });
-  if (error) throw new Error(error.message);
-  return data.rows || [];
-}
+async function parseResumePDF(base64Data) { return requestResumeRows({pdfBase64:base64Data}); }
+async function parseResumeToMatrix(resumeText) { return requestResumeRows({resumeText}); }
 
 async function analyzePatterns() {
   const btn = document.getElementById('pattern-btn');
@@ -1217,14 +1226,15 @@ async function analyzePatterns() {
     if (start === -1) throw new Error('No patterns returned');
     patterns = JSON.parse(text.slice(start, end + 1));
 
+    const safeText = value => String(value || '').replace(/[&<>"']/g, character => ({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',"'":'&#39;'}[character]));
     cards.innerHTML = patterns.map(p => `
       <div style="background:white;border:1.5px solid var(--border);border-radius:12px;padding:20px;border-left:4px solid ${p.strength === 'Core Competency' ? 'var(--gold)' : 'var(--cyan)'};">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
-          <div style="font-family:'Inter',sans-serif;font-size:13px;font-weight:700;color:var(--navy);">${p.pattern}</div>
-          <div style="font-size:10px;font-weight:700;padding:3px 10px;border-radius:100px;background:${p.strength === 'Core Competency' ? 'rgba(180,148,216,.12)' : 'rgba(180,148,216,.1)'};color:${p.strength === 'Core Competency' ? 'var(--gold)' : 'var(--cyan)'};">${p.strength}</div>
+          <div style="font-family:'Inter',sans-serif;font-size:13px;font-weight:700;color:var(--navy);">${safeText(p.pattern)}</div>
+          <div style="font-size:10px;font-weight:700;padding:3px 10px;border-radius:100px;background:${p.strength === 'Core Competency' ? 'rgba(180,148,216,.12)' : 'rgba(180,148,216,.1)'};color:${p.strength === 'Core Competency' ? 'var(--gold)' : 'var(--cyan)'};">${safeText(p.strength)}</div>
         </div>
-        <div style="font-size:13px;color:var(--muted);margin-bottom:6px;line-height:1.55;">${p.description}</div>
-        <div style="font-size:11px;color:rgba(32,35,40,.4);font-style:italic;">Evidence: ${p.evidence}</div>
+        <div style="font-size:13px;color:var(--muted);margin-bottom:6px;line-height:1.55;">${safeText(p.description)}</div>
+        <div style="font-size:11px;color:rgba(32,35,40,.4);font-style:italic;">Evidence: ${safeText(p.evidence)}</div>
       </div>
     `).join('');
 
@@ -1244,10 +1254,17 @@ function autosave() {
   saveTimer = setTimeout(doSave, 1400);
 }
 
+let worksheetSaveQueue = Promise.resolve();
+let worksheetSaveVersion = 0;
 async function doSave() {
   const data = collect();
-  const { error } = await saveWorksheet('harvest-matrix', data);
-  setSave(error ? 'error' : 'saved');
+  const version = ++worksheetSaveVersion;
+  const request = worksheetSaveQueue.then(() => saveWorksheet('harvest-matrix',data));
+  worksheetSaveQueue = request.catch(() => {});
+  let result;
+  try { result = await request; } catch (error) { result = {error}; }
+  if (version === worksheetSaveVersion) setSave(result.error ? 'error' : 'saved');
+  return result;
 }
 
 function setSave(s) {
@@ -1306,7 +1323,15 @@ async function completeModule() {
   const btn=document.getElementById('complete-btn');
   btn.innerHTML='<span style="display:inline-block;width:16px;height:16px;border-radius:50%;border:2px solid rgba(180,148,216,.3);border-top-color:var(--gold);animation:spin .7s linear infinite;"></span> Saving...';
   btn.disabled=true;
-  await doSave();
+  const saved = await doSave();
+  if (saved.error) {
+    const alert = document.getElementById('alert-complete');
+    alert.textContent = 'Your worksheet could not be saved. Try again before completing the module.';
+    alert.className = 'alert-msg alert-err show';
+    btn.disabled = false;
+    btn.textContent = 'Review & lock phase';
+    return;
+  }
   await markModuleComplete('module-01');
   document.getElementById('ck-01').textContent='✓';
   document.getElementById('ck-01').classList.add('done');
