@@ -71,8 +71,8 @@ nav{position:sticky;top:0;z-index:200;background:rgba(10,16,32,.95);backdrop-fil
 @media(max-width:600px){.page{padding:32px 20px;}.cta-bar{flex-direction:column;text-align:center;}}
 </style>
 <link rel="stylesheet" href="workspace.css">
-<link rel="stylesheet" href="ship.css?v=2">
-<script src="ship.js?v=1" defer></script>
+<link rel="stylesheet" href="ship.css?v=3">
+<script src="ship.js?v=2" defer></script>
 </head>
 <body>
 <nav>
@@ -86,7 +86,7 @@ nav{position:sticky;top:0;z-index:200;background:rgba(10,16,32,.95);backdrop-fil
   <div class="hero">
     <div class="hero-eyebrow">Skill Translator · Clarity Tool</div>
     <h1 class="hero-title">Find Your Skills</h1>
-    <p class="hero-sub">Search a job title, role, or MOS code to find related skills.</p>
+    <p class="hero-sub">Search a job title, role, or MOS code. Choose skills that match the work you actually did.</p>
   </div>
   <div class="search-wrapper">
     <input type="text" class="search-input" id="search-input" placeholder="Job title, background, or life role... e.g. nurse, veteran, student, stay at home mom" oninput="handleSearch(this.value)" autocomplete="off" spellcheck="false">
@@ -335,7 +335,7 @@ function handleSearch(query){
     searchTimeout = setTimeout(() => runSearch(query), 180);
   }
 }
-function quickSearch(term){document.getElementById('search-input').value=term;runSearch(term);}
+function quickSearch(term){document.getElementById('search-input').value=term;handleSearch(term);}
 
 function runMOS(mos) {
   hideBrowse();
@@ -371,7 +371,7 @@ function runMOS(mos) {
     <div class="rc-skills">
       ${getDefaultMOSSkills(mos).map(s => `<div class="skill-tag" onclick="copySkill(this,'${s}')">${s}</div>`).join('')}
     </div>
-    <div class="rc-context">"Your MOS translates directly to civilian expertise. These are the skills behind the title — named and ready to use."</div>
+
   `;
   grid.appendChild(mosCard);
   document.getElementById('results-count').textContent = 1;
@@ -443,7 +443,7 @@ function runSearch(query){
   const scored=SKILLS.map(skill=>{
     let score=0;
     words.forEach(word=>{
-      skill.keywords.forEach(kw=>{if(kw.includes(word))score+=word.length>=kw.length*.7?3:1;if(kw.startsWith(word))score+=2;});
+      skill.keywords.forEach(keyword=>{const kw=keyword.toLowerCase();if(kw.includes(word))score+=word.length>=kw.length*.7?3:1;if(kw.startsWith(word))score+=2;});
       if(skill.activity.toLowerCase().includes(word))score+=4;
       if(skill.category.toLowerCase().includes(word))score+=1;
       skill.skills.forEach(s=>{if(s.toLowerCase().includes(word))score+=2;});
@@ -477,7 +477,7 @@ function buildCard(skill,isTop){
       ${isTop?'<div class="rc-match">Best match</div>':''}
     </div>
     <div class="rc-skills">${skill.skills.map(s=>`<div class="skill-tag" onclick="copySkill(this,'${s}')">${s}</div>`).join('')}</div>
-    <div class="rc-context">"${skill.context}"</div>`;
+    `;
   return card;
 }
 
@@ -518,7 +518,7 @@ function copySkill(el,skill){
     el.classList.add('copied');el.textContent='✓ '+skill;
     showToast('"'+skill+'" copied — paste it into your Harvest Matrix');
     setTimeout(()=>{el.classList.remove('copied');el.textContent=skill;},2000);
-  });
+  }).catch(()=>showToast('Copy failed. Select the skill text and copy it manually.'));
 }
 
 function clearResults(){document.getElementById('results-grid').innerHTML='';document.getElementById('results-label').classList.remove('show');document.getElementById('empty-state').classList.remove('show');}

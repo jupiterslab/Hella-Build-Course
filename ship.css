@@ -145,3 +145,11 @@ html.ship-mode {
 .ship-mode .final-sub { color:#A8ADB8; }
 .ship-mode .ws-header [style*="border-top"] { border:0 !important; padding-top:0 !important; }
 .ship-mode .matrix-details .ws-header { padding-top:12px; }
+
+.skill-tools { display:flex; justify-content:flex-end; }
+.skill-tools button { border:0; padding:0; background:none; color:#D0B7EA; cursor:pointer; font:500 12px Inter,sans-serif; text-decoration:underline; text-underline-offset:3px; }
+.ship-mode .result-card { background:#1B1F26; border-color:#414650; box-shadow:none; }
+.ship-mode .rc-activity { color:#EDF0F2; }
+.ship-mode .skill-tag { color:#D6C2EC; border-color:#6B527E; background:#30263E; }
+.ship-mode .skill-tag:hover { background:#48345D; }
+.ship-mode .cat-pill.active { color:#15121A; }

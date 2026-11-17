@@ -65,6 +65,44 @@
     '</div><div class="experience-actions"><p class="experience-status" role="status"></p><button type="submit">Add to matrix</button></div>';
   worksheet.prepend(form);
   const status = form.querySelector('.experience-status');
+  let quickSkillTarget = false;
+  let skillNoticeTimer;
+  window.showToast = function (message) {
+    const notice = document.getElementById('st-toast');
+    notice.setAttribute('role', 'status');
+    notice.textContent = message;
+    clearTimeout(skillNoticeTimer);
+    skillNoticeTimer = setTimeout(() => { notice.textContent = ''; }, 3000);
+  };
+  const skillTools = document.createElement('div');
+  skillTools.className = 'skill-tools';
+  const findSkills = document.createElement('button');
+  findSkills.type = 'button';
+  findSkills.textContent = 'Find skills';
+  skillTools.append(findSkills);
+  document.getElementById('experience-skill').after(skillTools);
+  findSkills.addEventListener('click', () => {
+    quickSkillTarget = true;
+    window.openSkillPanel();
+    document.getElementById('st-active-label').textContent = 'Choose skills for your new experience.';
+    document.getElementById('st-row-indicator').textContent = 'Adding to your experience form';
+    document.getElementById('st-search').focus();
+  });
+  const selectMatrixRow = window.setActiveRow;
+  window.setActiveRow = function (number) { quickSkillTarget = false; return selectMatrixRow(number); };
+  const addMatrixSkill = window.injectSkill;
+  window.injectSkill = function (skill) {
+    if (!quickSkillTarget) return addMatrixSkill(skill);
+    const input = document.getElementById('experience-skill');
+    const selected = input.value.split(',').map(value => value.trim()).filter(Boolean);
+    if (selected.includes(skill)) { window.showToast('That skill is already selected.'); return; }
+    if (selected.length >= 5) { window.showToast('Choose up to five skills for this experience.'); return; }
+    selected.push(skill);
+    input.value = selected.join(', ');
+    status.textContent = 'Skill selected. Add the experience to save it to your matrix.';
+    window.showToast('Skill added to your experience form.');
+  };
+
   const fieldIds = ['role', 'work', 'skill', 'result'];
   const columns = ['a', 'b', 'c', 'd'];
   const matrixBody = document.getElementById('matrix-body');
@@ -87,6 +125,8 @@
     window.autosave();
     updateEntryCount();
     form.reset();
+    quickSkillTarget = false;
+    window.closeSkillPanel();
     status.textContent = 'Added to your matrix.';
     document.getElementById('experience-role').focus();
   });
