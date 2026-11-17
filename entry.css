@@ -1,0 +1,56 @@
+/* Public entry pages share the member workspace palette. */
+.orb, .hero-ghost, .left-orb, .panel-left::before, .panel-left::after,
+.panel-right::before, .panel-right::after, .terminal-3d::before,
+.core-section::before, .core-section::after, .founder-card::before,
+.feat-card::after { display: none; }
+.hero { padding-top: 80px; }
+.hero-h1, .hero-h1-gold { font-family: Inter, sans-serif; font-weight: 800; letter-spacing: -.055em; }
+.hero-h1-gold { background: none; color: #715397; -webkit-text-fill-color: #715397; }
+.hero-pill { color: #60427F; background: #EEE8F5; border-color: #D9CCE8; letter-spacing: .04em; }
+.pill-dot { background: #B494D8; animation: none; }
+.nav-btn, .btn-primary, .btn-gld, .auth-btn-gold, .auth-btn-navy {
+  background: #B494D8; color: #202328; border: 1px solid #B494D8;
+  box-shadow: none; animation: none; letter-spacing: 0;
+}
+.nav-btn:hover, .btn-primary:hover, .btn-gld:hover, .auth-btn:hover {
+  background: #A787CD; color: #202328; box-shadow: none; transform: none;
+}
+.btn-ghost { letter-spacing: 0; }
+.stats-strip, .feat-card, .plan, .founder-card, .term-card {
+  border: 1px solid #DDE0E4; border-radius: 10px; box-shadow: none;
+}
+.terminal-3d, .terminal-3d:hover { transform: none; }
+.term-bar { background: #ECEEF0; border-bottom: 1px solid #DDE0E4; }
+.term-url { background: #FFF; color: #666B73; border-color: #DDE0E4; }
+.term-body, .term-main { background: #FFF; }
+.term-sidebar { background: #F3F4F5; border-color: #DDE0E4; }
+.tdot { background: #BDC2CA; }
+.term-h, .term-h em { color: #202328; }
+.term-p, .term-label-text { color: #666B73; }
+.term-btn { background: #B494D8; color: #202328; box-shadow: none; }
+.core-section { background: #FFF; border-block: 1px solid #DDE0E4; }
+.phase-letter { background: none; color: #715397; -webkit-text-fill-color: #715397; }
+.core-phase { background: #F6F7F8; }
+.phase-name { color: #202328; }
+.feat-icon { background: #EEE8F5; box-shadow: none; }
+.plan.featured { background: #FFF; border-color: #B494D8; box-shadow: none; transform: none; }
+.plan-badge { background: #EEE8F5; color: #60427F; box-shadow: none; }
+.plan.featured .plan-name { color: #202328; }
+.plan.featured .plan-div { background: #DDE0E4; }
+.plan.featured .pf { border-color: #DDE0E4; }
+.founder-card { background: #FFF; }
+.founder-av { background: #EEE8F5; color: #60427F; border-color: #D9CCE8; box-shadow: none; }
+.panel-left { background: #F3F4F5; border-right: 1px solid #DDE0E4; }
+.panel-right { background: #FFF; }
+.left-mark { background: #202328; color: #FFF; }
+.left-h, .left-brand-name { color: #202328; }
+.left-h em { color: #715397; }
+.lm-item { background: #FFF; border-color: #DDE0E4; }
+.lm-tag { color: #60427F; border-color: #D9CCE8; background: #EEE8F5; }
+.auth-tab.active { background: #EEE8F5; color: #60427F; box-shadow: none; }
+@media (max-width: 768px) {
+  .hero { padding: 48px 20px; }
+  .hero-h1, .hero-h1-gold { font-size: 64px; }
+  .nav-actions { gap: 10px; }
+  .nav-btn { padding: 9px 14px; }
+}
