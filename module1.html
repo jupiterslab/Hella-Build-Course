@@ -234,6 +234,39 @@ nav{position:sticky;top:0;z-index:200;background:rgba(245,243,238,.9);backdrop-f
 <script src="ship.js?v=3" defer></script>
 <script src="harvest.js?v=1" defer></script>
 <link rel="stylesheet" href="learner-experience.css?v=1">
+<style>
+#resume-status[data-loading] {
+  display: flex !important;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+  border: 1px solid #806d96;
+  border-radius: 12px;
+  background: #28232f;
+  color: #f6efff;
+  font-family: inherit;
+  font-size: 1.05rem;
+  font-weight: 600;
+  line-height: 1.45;
+}
+#resume-status[data-loading]::before {
+  content: "";
+  box-sizing: border-box;
+  flex: 0 0 2.5rem;
+  height: 2.5rem;
+  border-radius: 50%;
+  border: 2px solid #695b78;
+  border-top-color: #dbbefa;
+  background: radial-gradient(circle at 50% 7%, #eedcff 0 3px, transparent 4px),
+              radial-gradient(circle, #c3a5df 0 6px, transparent 7px);
+  animation: resume-orbit 1.8s linear infinite;
+}
+@keyframes resume-orbit { to { transform: rotate(1turn); } }
+body:has(.motion-paused) #resume-status::before { animation-play-state: paused; }
+@media (prefers-reduced-motion: reduce) {
+  #resume-status[data-loading]::before { animation: none; }
+}
+</style>
 </head>
 <body class="harvest-workspace">
 
@@ -1118,6 +1151,7 @@ async function handleResumeUpload(input) {
   const extension = file.name.split('.').pop().toLowerCase();
   if (!['pdf','docx','txt'].includes(extension)) { statusEl.textContent = 'Choose a PDF, DOCX or TXT file. Save older Word files as DOCX or PDF.'; input.value = ''; return; }
   resumeImportBusy = true;
+  statusEl.dataset.loading = 'true';
   input.disabled = true;
   document.dispatchEvent(new CustomEvent('hella:resume-loading',{detail:{loading:true}}));
   statusEl.textContent = 'Reading your resume…';
@@ -1125,19 +1159,20 @@ async function handleResumeUpload(input) {
     let rows;
     if (extension === 'pdf') {
       const dataUrl = await fileToBase64(file);
-      statusEl.textContent = 'Extracting your roles and repeated work…';
+      statusEl.textContent = 'Finding your job titles and recurring tasks…';
       rows = await parseResumePDF(dataUrl.split(',')[1]);
     } else {
       const text = extension === 'docx'
         ? (await (await loadResumeDocxParser()).extractRawText({arrayBuffer:await file.arrayBuffer()})).value
         : await file.text();
       if (!text || text.trim().length < 20) throw new Error('This file has too little readable text. Try another copy or upload a PDF.');
-      statusEl.textContent = 'Extracting your roles and repeated work…';
+      statusEl.textContent = 'Finding your job titles and recurring tasks…';
       rows = await parseResumeToMatrix(text);
     }
     if (!Array.isArray(rows) || !rows.length) throw new Error('No work history was found. Try another resume or add your experience manually.');
     const imported = importResumeRoles(rows);
     if (!imported.rowIds.length) throw new Error('The extracted roles could not be read. Try another file.');
+    statusEl.textContent = 'Saving your roles…';
     const saved = await doSave();
     document.dispatchEvent(new CustomEvent('hella:resume-imported',{detail:imported}));
     if (saved.error) throw new Error('Your roles are on screen, but saving failed. Keep this page open and retry the save.');
@@ -1148,6 +1183,7 @@ async function handleResumeUpload(input) {
     statusEl.dataset.error = 'true';
     statusEl.textContent = error.message || 'The resume could not be read. Try again.';
   } finally {
+    delete statusEl.dataset.loading;
     resumeImportBusy = false;
     input.disabled = false;
     input.value = '';
