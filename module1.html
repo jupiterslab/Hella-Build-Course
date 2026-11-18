@@ -503,12 +503,22 @@ body:has(.motion-paused) #resume-status::before { animation-play-state: paused; 
 
 <script>
 let saveTimer=null, rowCount=5;
+let feedbackName = '';
+
+function personalizeFeedback(text) {
+  if (!feedbackName || typeof text !== 'string') return text;
+  return text.replace(/\bthe (?:learner|student)\b/gi, () => feedbackName);
+}
 
 document.addEventListener('DOMContentLoaded', async () => {
   const session = await requireAuth();
   if (!session) return;
   const user = session.user;
   const name = user.user_metadata?.full_name || user.email.split('@')[0].replace(/[._-]/g,' ').replace(/\b\w/g,c=>c.toUpperCase());
+  const metadata = user.user_metadata || {};
+  const givenName = [metadata.preferred_name, metadata.given_name, metadata.first_name].find(value => typeof value === 'string' && value.trim());
+  feedbackName = givenName?.trim() || String(metadata.full_name || metadata.name || '').trim().split(/\s+/)[0];
+  if (feedbackName) document.querySelector('#resume-upload-section h2').textContent = feedbackName + ', start with your resume';
   const initials = name.split(' ').map(n=>n[0]).join('').slice(0,2).toUpperCase();
   document.getElementById('nav-user').textContent = name;
   document.getElementById('sb-name').textContent = name;
@@ -1122,7 +1132,7 @@ function importResumeRoles(rows) {
   let added = 0;
   for (const row of rows) {
     if (!row || typeof row.role !== 'string' || typeof row.function !== 'string' || !row.role.trim()) continue;
-    const role = row.role.trim(), work = row.function.trim();
+    const role = row.role.trim(), work = personalizeFeedback(row.function.trim());
     const key = signature(role, work);
     let n = existing.get(key);
     if (!n) {
@@ -1240,7 +1250,8 @@ async function analyzePatterns() {
   try {
     const { data, error } = await sb.functions.invoke('parse-resume', {
       body: {
-        resumeText: 'PATTERN ANALYSIS MODE. Analyze these skills from a student\'s career matrix and identify the repeating core competencies:\n\n' +
+        resumeText: 'PATTERN ANALYSIS MODE. Analyze these skills from a student\'s career matrix and identify the repeating core competencies. ' +
+          (feedbackName ? 'Refer to this person as the learner. The interface inserts their name.' : 'Address this person directly as you.') + '\n\n' +
           skills.map((s, i) => `Row ${i+1}: ${s}`).join('\n') +
           '\n\nIdentify 3 to 5 core patterns. Each pattern groups skills that serve the same underlying function even if named differently. Return ONLY a JSON array. No markdown. Start with [ and end with ].\n\n[{"pattern":"Pattern name (2-4 words)","description":"What this competency actually is and why it keeps appearing","evidence":"Which rows show this pattern","strength":"Core Competency or Supporting Skill"}]'
       }
@@ -1263,7 +1274,7 @@ async function analyzePatterns() {
     if (start === -1) throw new Error('No patterns returned');
     patterns = JSON.parse(text.slice(start, end + 1));
 
-    const safeText = value => String(value || '').replace(/[&<>"']/g, character => ({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',"'":'&#39;'}[character]));
+    const safeText = value => String(personalizeFeedback(value) || '').replace(/[&<>"']/g, character => ({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',"'":'&#39;'}[character]));
     cards.innerHTML = patterns.map(p => `
       <div style="background:white;border:1.5px solid var(--border);border-radius:12px;padding:20px;border-left:4px solid ${p.strength === 'Core Competency' ? 'var(--gold)' : 'var(--cyan)'};">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
@@ -1331,7 +1342,7 @@ function populate(saved) {
   }
   if (saved.rows) saved.rows.forEach((r,idx)=>{
     const n=idx+1;
-    ['a','b','c','d'].forEach(col => { const el=document.getElementById(`r${n}${col}`); if(el) el.value=r[col]||''; });
+    ['a','b','c','d'].forEach(col => { const el=document.getElementById(`r${n}${col}`); if(el) el.value=(col === 'b' ? personalizeFeedback(r[col]) : r[col]) || ''; });
   });
   if(saved.q1) document.getElementById('dq1').value=saved.q1;
   if(saved.q2) document.getElementById('dq2').value=saved.q2;
