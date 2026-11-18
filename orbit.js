@@ -9,7 +9,7 @@
   const gl = canvas.getContext('webgl', { alpha:true, premultipliedAlpha:false, antialias:false, depth:false });
   if (!gl) return;
   const map = new Image();
-  map.src = 'assets/jupiter-map.webp';
+  map.src = 'assets/jupiter-map-hd.webp';
   await map.decode();
 
   // The aperture follows the inside edge of the existing 900 x 300 scene.
@@ -25,26 +25,41 @@
     precision highp float;
     varying vec2 uv;
     uniform sampler2D clouds, aperture;
-    uniform float phase;
+    uniform float phase, stormAngle;
     void main(){
       float edge=texture2D(aperture,uv).a;
       if(edge<.002) discard;
       // The camera tracks Jupiter from a mildly inclined orbit.
       vec2 pixel=uv*vec2(900.,300.);
-      vec2 center=vec2(575.+28.*sin(phase),508.+9.*sin(phase));
-      vec2 disc=(pixel-center)/460.;
+      vec2 center=vec2(478.+16.*sin(phase),260.+7.*sin(phase));
+      vec2 disc=(pixel-center)/187.;
       disc.y=-disc.y;
       float radius=length(disc);
-      float limb=(1.-radius)*460.;
+      float limb=(1.-radius)*187.;
       vec3 sky=vec3(.028,.029,.047);
       float haze=exp(-abs(limb)*.17);
       sky+=haze*vec3(.21,.17,.29);
       vec3 normal=vec3(disc,sqrt(max(0.,1.-dot(disc,disc))));
-      float tilt=1.19+.08*sin(phase);
+      // Bank the view across the equatorial belts.
+      float bank=-.31+.035*sin(phase);
+      normal.xy=mat2(cos(bank),sin(bank),-sin(bank),cos(bank))*normal.xy;
+      float tilt=.90+.07*sin(phase);
       float lat=asin(clamp(normal.y*cos(tilt)-normal.z*sin(tilt),-1.,1.));
       float lon=atan(normal.x,normal.z*cos(tilt)+normal.y*sin(tilt));
-      vec2 st=vec2(fract(.18+(lon+phase)/6.2831853),clamp(.5-lat/3.14159265,.065,.935));
+      vec2 st=vec2(fract(.218+(lon+phase)/6.2831853),clamp(.5-lat/3.14159265,.065,.935));
       vec3 band=texture2D(clouds,st).rgb;
+      // Rotate texture coordinates inside the storm's elliptical rim.
+      // Positive sampling rotation in image coordinates produces counterclockwise flow.
+      vec2 spot=vec2(.200,.626);
+      vec2 axes=vec2(.020,.027);
+      vec2 local=(st-spot)/axes;
+      float distanceFromEye=length(local);
+      if(distanceFromEye<1.12){
+        float c=cos(stormAngle), s=sin(stormAngle);
+        vec2 swirl=mat2(c,s,-s,c)*local;
+        vec3 circulating=texture2D(clouds,spot+axes*swirl).rgb;
+        band=mix(band,circulating,1.-smoothstep(.72,1.12,distanceFromEye));
+      }
       vec3 sun=normalize(vec3(.72*cos(phase),.60,.50+.6*sin(phase)));
       float light=.22+.78*max(dot(normal,sun),0.);
       vec3 planet=band*light+vec3(.10,.085,.135)*exp(-max(limb,0.)*.09);
@@ -76,14 +91,18 @@
     gl.uniform1i(gl.getUniformLocation(program,name),unit);
   }
   texture(0,'clouds',map); texture(1,'aperture',mask);
-  canvas.width=1600; canvas.height=533;
-  gl.viewport(0,0,canvas.width,canvas.height);
+
   const phase = gl.getUniformLocation(program,'phase');
-  let angle=0, previous=0, request=0, visible=true;
-  const draw=()=>{ gl.uniform1f(phase,angle); gl.drawArrays(gl.TRIANGLE_STRIP,0,4); };
+  const storm = gl.getUniformLocation(program,'stormAngle');
+  let spin=0, angle=0, previous=0, request=0, visible=true;
+  const draw=()=>{ gl.uniform1f(phase,angle); gl.uniform1f(storm,spin); gl.drawArrays(gl.TRIANGLE_STRIP,0,4); };
   function frame(time) {
     if (time-previous>=1000/30) {
-      if(previous) angle=(angle+Math.min(time-previous,100)*Math.PI*2/300000)%(Math.PI*2);
+      if(previous) {
+        const seconds=Math.min(time-previous,100)/1000;
+        angle=(angle+seconds*Math.PI*2/720)%(Math.PI*2);
+        spin=(spin+seconds*Math.PI*2/90)%(Math.PI*2);
+      }
       previous=time; draw();
     }
     request=requestAnimationFrame(frame);
@@ -92,7 +111,16 @@
     cancelAnimationFrame(request); previous=0;
     if(visible && !document.hidden && !windowFrame.classList.contains('motion-paused')) request=requestAnimationFrame(frame);
   }
-  draw(); windowFrame.prepend(canvas);
+  function resize() {
+    const ratio=1600/533;
+    const cssWidth=Math.max(windowFrame.clientWidth,windowFrame.clientHeight*ratio);
+    const width=Math.min(3600,Math.max(1,Math.ceil(cssWidth*(window.devicePixelRatio||1))));
+    canvas.width=width; canvas.height=Math.max(1,Math.round(width/ratio));
+    gl.viewport(0,0,canvas.width,canvas.height);
+    draw();
+  }
+  resize(); windowFrame.prepend(canvas);
+  new ResizeObserver(resize).observe(windowFrame);
   new MutationObserver(sync).observe(windowFrame,{attributes:true,attributeFilter:['class']});
   new IntersectionObserver(entries=>{visible=entries[0].isIntersecting;sync();}).observe(windowFrame);
   document.addEventListener('visibilitychange',sync);
