@@ -1,5 +1,5 @@
 /* HELLA BUILD · learner-first controls (complements ship.css) */
-.hb-ux-controls{position:sticky;top:68px;z-index:180;display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:10px clamp(16px,3vw,48px);background:rgba(17,20,25,.96);border-bottom:1px solid rgba(200,173,231,.2);backdrop-filter:blur(16px)}
+.hb-ux-controls{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:16px}
 .hb-ux-btn{font:600 13px/1.25 Inter,system-ui,sans-serif;color:#EDF0F2;background:#242832;border:1px solid #404552;border-radius:10px;padding:10px 14px;cursor:pointer;transition:background .15s ease}
 .hb-ux-btn:hover,.hb-ux-btn:focus-visible{background:#333849;outline:2px solid #B494D8;outline-offset:1px}
 .hb-ux-btn.hb-ux-primary{background:#B494D8;border-color:#B494D8;color:#15151B}
@@ -24,5 +24,5 @@
 .hb-ux-idea{background:#232630;border:1px solid #444957;border-radius:12px;padding:12px}
 .hb-ux-idea p{overflow-wrap:anywhere}
 .hb-ux-status{font-size:13px;color:#C8ADE7!important}
-@media(max-width:700px){.hb-ux-controls{top:0;padding:8px 12px}.hb-ux-btn{font-size:12px;padding:9px 10px}.hb-ux-dialog{padding:16px}}
+@media(max-width:700px){.hb-ux-btn{font-size:12px;padding:9px 10px}.hb-ux-dialog{padding:16px}}
 @media(prefers-reduced-motion:reduce){.hb-ux-btn{transition:none!important}}
