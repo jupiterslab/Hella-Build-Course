@@ -31,22 +31,19 @@
       if(edge<.002) discard;
       // The camera tracks Jupiter from a mildly inclined orbit.
       vec2 pixel=uv*vec2(900.,300.);
-      vec2 center=vec2(478.+16.*sin(phase),260.+7.*sin(phase));
-      vec2 disc=(pixel-center)/187.;
+      vec2 center=vec2(575.+28.*sin(phase),508.+9.*sin(phase));
+      vec2 disc=(pixel-center)/460.;
       disc.y=-disc.y;
       float radius=length(disc);
-      float limb=(1.-radius)*187.;
+      float limb=(1.-radius)*460.;
       vec3 sky=vec3(.028,.029,.047);
       float haze=exp(-abs(limb)*.17);
       sky+=haze*vec3(.21,.17,.29);
       vec3 normal=vec3(disc,sqrt(max(0.,1.-dot(disc,disc))));
-      // Bank the view across the equatorial belts.
-      float bank=-.31+.035*sin(phase);
-      normal.xy=mat2(cos(bank),sin(bank),-sin(bank),cos(bank))*normal.xy;
-      float tilt=.90+.07*sin(phase);
+      float tilt=1.19+.08*sin(phase);
       float lat=asin(clamp(normal.y*cos(tilt)-normal.z*sin(tilt),-1.,1.));
       float lon=atan(normal.x,normal.z*cos(tilt)+normal.y*sin(tilt));
-      vec2 st=vec2(fract(.218+(lon+phase)/6.2831853),clamp(.5-lat/3.14159265,.065,.935));
+      vec2 st=vec2(fract(.18+(lon+phase)/6.2831853),clamp(.5-lat/3.14159265,.065,.935));
       vec3 band=texture2D(clouds,st).rgb;
       // Rotate texture coordinates inside the storm's elliptical rim.
       // Positive sampling rotation in image coordinates produces counterclockwise flow.
