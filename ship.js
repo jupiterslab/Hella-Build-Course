@@ -6,9 +6,12 @@
   const banner = document.createElement('div');
   banner.className = 'lab-window';
   banner.setAttribute('aria-label', 'Jupiter outside the lab window');
-  banner.innerHTML = '<div class="lab-window-light" aria-hidden="true"></div><button class="motion-toggle" type="button" aria-pressed="false">Pause motion</button>';
+  banner.innerHTML = '<button class="motion-toggle" type="button" aria-pressed="false">Pause motion</button>';
   if (header) header.after(banner);
   else document.body.prepend(banner);
+  const orbitScript = document.createElement('script');
+  orbitScript.src = 'orbit.js?v=1';
+  document.head.append(orbitScript);
   const toggle = banner.querySelector('button');
   const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
   let paused = reducedMotion.matches;
