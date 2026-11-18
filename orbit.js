@@ -91,7 +91,8 @@
 
   const phase = gl.getUniformLocation(program,'phase');
   const storm = gl.getUniformLocation(program,'stormAngle');
-  let spin=0, angle=0, previous=0, request=0, visible=true;
+  // Open at the orbital position shown in the original course reference.
+  let spin=0, angle=0.760, previous=0, request=0, visible=true;
   const draw=()=>{ gl.uniform1f(phase,angle); gl.uniform1f(storm,spin); gl.drawArrays(gl.TRIANGLE_STRIP,0,4); };
   function frame(time) {
     if (time-previous>=1000/30) {
