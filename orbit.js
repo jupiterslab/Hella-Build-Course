@@ -1,15 +1,14 @@
-// Exterior view only. Jupiter texture: NASA, ESA, A. Simon (GSFC), M. H. Wong
-// (UC Berkeley), 2019 Hubble global map. https://science.nasa.gov/asset/hubble/jupiter-global-map-2019/
 (async function () {
   const windowFrame = document.querySelector('.lab-window');
   if (!windowFrame) return;
   const canvas = document.createElement('canvas');
   canvas.setAttribute('aria-hidden', 'true');
   canvas.className = 'orbital-view';
+  canvas.style.transform = 'scale(1.032)';
   const gl = canvas.getContext('webgl', { alpha:true, premultipliedAlpha:false, antialias:false, depth:false });
   if (!gl) return;
   const map = new Image();
-  map.src = 'assets/jupiter-map-hd.webp';
+  map.src = 'assets/lab-window.webp';
   await map.decode();
 
   // The aperture follows the inside edge of the existing 900 x 300 scene.
@@ -24,43 +23,41 @@
   const fragment = `
     precision highp float;
     varying vec2 uv;
-    uniform sampler2D clouds, aperture;
+    uniform sampler2D scene, aperture;
     uniform float phase, stormAngle;
     void main(){
+      vec2 size=vec2(900.,300.);
+      vec2 pixel=uv*size;
+      // Sample the original artwork. Ease the exterior drift to zero at the frame.
       float edge=texture2D(aperture,uv).a;
-      if(edge<.002) discard;
-      // The camera tracks Jupiter from a mildly inclined orbit.
-      vec2 pixel=uv*vec2(900.,300.);
-      vec2 center=vec2(575.+28.*sin(phase),508.+9.*sin(phase));
-      vec2 disc=(pixel-center)/460.;
-      disc.y=-disc.y;
-      float radius=length(disc);
-      float limb=(1.-radius)*460.;
-      vec3 sky=vec3(.028,.029,.047);
-      float haze=exp(-abs(limb)*.17);
-      sky+=haze*vec3(.21,.17,.29);
-      vec3 normal=vec3(disc,sqrt(max(0.,1.-dot(disc,disc))));
-      float tilt=1.19+.08*sin(phase);
-      float lat=asin(clamp(normal.y*cos(tilt)-normal.z*sin(tilt),-1.,1.));
-      float lon=atan(normal.x,normal.z*cos(tilt)+normal.y*sin(tilt));
-      vec2 st=vec2(fract(.18+(lon+phase)/6.2831853),clamp(.5-lat/3.14159265,.065,.935));
-      vec3 band=texture2D(clouds,st).rgb;
-      // Rotate texture coordinates inside the storm's elliptical rim.
-      // Positive sampling rotation in image coordinates produces counterclockwise flow.
-      vec2 spot=vec2(.200,.626);
-      vec2 axes=vec2(.020,.027);
-      vec2 local=(st-spot)/axes;
-      float distanceFromEye=length(local);
-      if(distanceFromEye<1.12){
+      float drift=edge*smoothstep(75.,145.,pixel.y)*(1.-smoothstep(197.,238.,pixel.y))
+                      *smoothstep(165.,260.,pixel.x)*(1.-smoothstep(765.,820.,pixel.x));
+      pixel.x+=5.*sin(phase)*drift;
+      vec2 center=vec2(744.,172.), axes=vec2(36.,23.);
+      vec2 local=(pixel-center)/axes;
+      float radius=length(local);
+      // Cloud crests circulate and undulate outside the faster-moving core.
+      float collar=smoothstep(.72,1.08,radius)*(1.-smoothstep(1.45,2.85,radius));
+      float azimuth=atan(local.y,local.x+.00001);
+      float wave=sin(3.*azimuth-2.*stormAngle)-sin(3.*azimuth);
+      pixel+=axes*(vec2(-local.y,local.x)*.085*wave+
+                   local*.032*(sin(5.*azimuth+stormAngle)-sin(5.*azimuth)))*collar;
+      // Extend the flow upstream through the pale, folded band beside the storm.
+      vec2 fold=(pixel-vec2(628.,143.))/vec2(110.,43.);
+      float influence=(1.-smoothstep(.45,1.,length(fold)))*edge;
+      float crest=fold.x*5.+fold.y*2.;
+      pixel+=vec2(2.8*(sin(crest+stormAngle)-sin(crest)),
+                  1.7*(cos(crest+stormAngle)-cos(crest)))*influence;
+      if(radius<1.15){
         float c=cos(stormAngle), s=sin(stormAngle);
-        vec2 swirl=mat2(c,s,-s,c)*local;
-        vec3 circulating=texture2D(clouds,spot+axes*swirl).rgb;
-        band=mix(band,circulating,1.-smoothstep(.72,1.12,distanceFromEye));
+        vec2 rotated=mat2(c,s,-s,c)*local;
+        // Feather the rotating storm into the original surrounding cloud bands.
+        vec3 rolling=texture2D(scene,(center+axes*rotated)/size).rgb;
+        vec3 still=texture2D(scene,pixel/size).rgb;
+        gl_FragColor=vec4(mix(rolling,still,smoothstep(.72,1.15,radius)),1.);
+      }else{
+        gl_FragColor=texture2D(scene,pixel/size);
       }
-      vec3 sun=normalize(vec3(.72*cos(phase),.60,.50+.6*sin(phase)));
-      float light=.22+.78*max(dot(normal,sun),0.);
-      vec3 planet=band*light+vec3(.10,.085,.135)*exp(-max(limb,0.)*.09);
-      gl_FragColor=vec4(mix(sky,planet,smoothstep(-.8,.8,limb)),edge);
     }`;
   const program = gl.createProgram();
   function attach(type, source) {
@@ -87,12 +84,11 @@
     gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,image);
     gl.uniform1i(gl.getUniformLocation(program,name),unit);
   }
-  texture(0,'clouds',map); texture(1,'aperture',mask);
+  texture(0,'scene',map); texture(1,'aperture',mask);
 
   const phase = gl.getUniformLocation(program,'phase');
   const storm = gl.getUniformLocation(program,'stormAngle');
-  // Open at the orbital position shown in the original course reference.
-  let spin=0, angle=0.760, previous=0, request=0, visible=true;
+  let spin=0, angle=0, previous=0, request=0, visible=true;
   const draw=()=>{ gl.uniform1f(phase,angle); gl.uniform1f(storm,spin); gl.drawArrays(gl.TRIANGLE_STRIP,0,4); };
   function frame(time) {
     if (time-previous>=1000/30) {
