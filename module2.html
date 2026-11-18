@@ -189,6 +189,24 @@ nav{position:sticky;top:0;z-index:200;background:rgba(245,243,238,.9);backdrop-f
 <link rel="stylesheet" href="ship.css?v=3">
 <script src="ship.js?v=2" defer></script>
 <link rel="stylesheet" href="learner-experience.css?v=1">
+<style>
+.guided-stack { max-width:820px; padding:clamp(18px,3vw,32px); background:#1b1e25; border:1px solid #40434c; border-radius:14px; }
+.guided-stack h2,.guided-stack legend {color:#edeef2;font-weight:700}
+.guided-stack p {line-height:1.55;margin:10px 0;color:#c3c7d0}
+.guided-stack label {display:grid;gap:6px;color:#ebebf0;font-size:14px}
+.guided-stack select,.guided-stack input {width:100%;min-width:0;padding:12px;border:1px solid #65636e;border-radius:7px;background:#252832;color:#faf8ff;font:inherit}
+.stack-pair {display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:end;gap:12px;margin:16px 0}
+.stack-pair>span {padding-bottom:12px;color:#c9afe2}
+.guided-stack fieldset {display:grid;gap:15px;margin:22px 0 0;padding:16px 0 0;border:0;border-top:1px solid #494652}
+.guided-stack legend {padding-right:10px;font-size:18px}
+.guided-stack fieldset p {margin:0}
+.stack-preview,#evidence {padding:14px 16px;background:#23232c;border-left:3px solid #b494d8;border-radius:4px}
+#evidence:empty {display:none}
+.guided-stack a,.guided-stack summary {color:#d2b8ed}
+.guided-stack [hidden] {display:none!important}
+.guided-stack details {margin-top:18px}
+@media(max-width:560px){.stack-pair {grid-template-columns:1fr}.stack-pair>span {display:none}}
+</style>
 </head>
 <body>
 
@@ -258,7 +276,7 @@ nav{position:sticky;top:0;z-index:200;background:rgba(245,243,238,.9);backdrop-f
 
       <div class="mod-eyebrow">// Module 02 — Phase O: Order</div>
       <h1 class="mod-h">Skill Stacking</h1>
-      <p class="mod-p">Combine your skills and context knowledge into one focused stack.</p>
+      <p class="mod-p">See how two skills from Harvest work together.</p>
       <div class="mod-meta">
         <div class="meta-chip">⏱ <span>~20 minutes</span></div>
         <div class="meta-chip">📐 <span>Skill Stack Builder Worksheet</span></div>
@@ -266,166 +284,31 @@ nav{position:sticky;top:0;z-index:200;background:rgba(245,243,238,.9);backdrop-f
       </div>
     </div>
 
-    <!-- LESSON 2.1 -->
-    <details class="lesson-details"><summary>Combine skills around a problem</summary><div class="lesson"><p class="lesson-p">A skill stack combines your primary skill, a supporting skill, and knowledge of a specific context.</p><p class="lesson-p"><strong>Example</strong><br>Financial analysis + plain-language writing + startup experience = financial reports founders can use to make decisions.</p></div></details>
-
-    <!-- LESSON 2.2 -->
-    <details class="lesson-details"><summary>Build your stacks</summary><div class="lesson"><p class="lesson-p">Review your Harvest Matrix. Group skills you regularly use together.</p><p class="lesson-p">Build two or three combinations below. For each, explain the problem it solves and who needs it. Choose one to lead with.</p></div></details>
-
-    <!-- SKILL STACK BUILDER WORKSHEET -->
-    <div class="ws-section">
-      <div class="s-label">Interactive Worksheet</div>
-      <div class="ws-header">
-        <div>
-
-          <div class="ws-title">The Skill Stack Builder</div>
-
+    <section class="guided-stack" aria-labelledby="stack-title">
+      <h2 id="stack-title">Your skill stack</h2>
+      <p id="stack-status" role="status">Opening your saved work…</p>
+      <div id="guided-work" hidden>
+        <p>Start with this pairing. Change either skill to try another combination.</p>
+        <div class="stack-pair">
+          <label>Lead skill<select id="lead"></select></label>
+          <span aria-hidden="true">+</span>
+          <label>Supporting skill<select id="support"></select></label>
         </div>
-        <div class="ws-save">
-          <div class="save-dot" id="save-dot"></div>
-          <span id="save-txt">Ready</span>
-        </div>
+        <p id="pair-context"></p>
+        <div id="evidence"></div>
+        <p id="need-harvest" hidden><a href="module1.html">Open Harvest to identify another skill →</a></p>
+        <fieldset id="stack-details">
+          <legend>Put the pair to work</legend>
+          <p><strong>Example</strong> · Scheduling + clear writing helps volunteers know where to be and when.</p>
+          <label>Who would you use these skills to help?<input id="audience" placeholder="e.g. event volunteers"></label>
+          <label>What could they do with your help?<input id="result" placeholder="e.g. find their shift without calling the organizer"></label>
+          <div class="stack-preview"><strong>Your stack in one sentence</strong><p id="stack-preview"></p></div>
+          <button class="btn-decl" id="confirm-stack" type="button">Use this stack &amp; complete Module 2</button>
+        </fieldset>
+        <details id="previous-stacks" hidden><summary>Your previous stack work</summary><div></div></details>
       </div>
-
-      <div class="ws-instructions">Build two or three stacks. Combine a primary skill, supporting skill, and context knowledge. Explain what each combination solves and who it serves.</div>
-
-      <div class="ws-body">
-        <div class="stacks-grid" id="stacks-grid">
-
-          <!-- STACK 1 -->
-          <div class="stack-card" id="stack-1">
-            <div class="stack-card-header">
-              <span class="stack-num">STACK 01</span>
-              <input type="text" class="stack-label-input" id="s1-name" placeholder="Name this stack (e.g. 'Systems Communication Stack')" oninput="autosave()">
-            </div>
-            <div class="stack-body">
-              <div class="skills-row">
-                <div class="skill-box">
-                  <div class="skill-box-label">Primary Skill</div>
-                  <input type="text" class="skill-input" id="s1-primary" placeholder="e.g. Systems thinking" oninput="autosave()">
-                </div>
-                <div class="stack-connector">
-                  <div>
-                    <div class="connector-symbol">+</div>
-                    <div class="connector-label">plus</div>
-                  </div>
-                </div>
-                <div class="skill-box">
-                  <div class="skill-box-label">Supporting Skill</div>
-                  <input type="text" class="skill-input" id="s1-support" placeholder="e.g. Plain-language writing" oninput="autosave()">
-                </div>
-                <div class="stack-connector">
-                  <div>
-                    <div class="connector-symbol">+</div>
-                    <div class="connector-label">plus</div>
-                  </div>
-                </div>
-                <div class="skill-box">
-                  <div class="skill-box-label">Context Knowledge</div>
-                  <input type="text" class="skill-input" id="s1-context" placeholder="e.g. Service-based businesses" oninput="autosave()">
-                </div>
-              </div>
-              <div class="stack-result-label">= Stack Advantage (what this combination creates)</div>
-              <textarea class="stack-result-input" id="s1-advantage" placeholder="e.g. Converting operational chaos into documented, executable systems for solo consultants who have outgrown their own process" oninput="autosave()"></textarea>
-              <div class="stack-sentence-label">3-Sentence Explanation (what it solves · who it serves · why it matters)</div>
-              <textarea class="stack-sentence-input" id="s1-sentence" placeholder="Write 3 sentences explaining what this stack solves, who experiences that problem, and why this combination makes you the right person to solve it." oninput="autosave()"></textarea>
-            </div>
-          </div>
-
-          <!-- STACK 2 -->
-          <div class="stack-card" id="stack-2">
-            <div class="stack-card-header">
-              <span class="stack-num">STACK 02</span>
-              <input type="text" class="stack-label-input" id="s2-name" placeholder="Name this stack" oninput="autosave()">
-            </div>
-            <div class="stack-body">
-              <div class="skills-row">
-                <div class="skill-box">
-                  <div class="skill-box-label">Primary Skill</div>
-                  <input type="text" class="skill-input" id="s2-primary" placeholder="e.g. Brand strategy" oninput="autosave()">
-                </div>
-                <div class="stack-connector">
-                  <div><div class="connector-symbol">+</div><div class="connector-label">plus</div></div>
-                </div>
-                <div class="skill-box">
-                  <div class="skill-box-label">Supporting Skill</div>
-                  <input type="text" class="skill-input" id="s2-support" placeholder="e.g. Identity design" oninput="autosave()">
-                </div>
-                <div class="stack-connector">
-                  <div><div class="connector-symbol">+</div><div class="connector-label">plus</div></div>
-                </div>
-                <div class="skill-box">
-                  <div class="skill-box-label">Context Knowledge</div>
-                  <input type="text" class="skill-input" id="s2-context" placeholder="e.g. Early-stage founders" oninput="autosave()">
-                </div>
-              </div>
-              <div class="stack-result-label">= Stack Advantage</div>
-              <textarea class="stack-result-input" id="s2-advantage" placeholder="Describe what this combination uniquely enables" oninput="autosave()"></textarea>
-              <div class="stack-sentence-label">3-Sentence Explanation</div>
-              <textarea class="stack-sentence-input" id="s2-sentence" placeholder="3 sentences: what it solves · who it serves · why this combination" oninput="autosave()"></textarea>
-            </div>
-          </div>
-
-          <!-- STACK 3 -->
-          <div class="stack-card" id="stack-3">
-            <div class="stack-card-header">
-              <span class="stack-num">STACK 03</span>
-              <input type="text" class="stack-label-input" id="s3-name" placeholder="Name this stack (optional)" oninput="autosave()">
-            </div>
-            <div class="stack-body">
-              <div class="skills-row">
-                <div class="skill-box">
-                  <div class="skill-box-label">Primary Skill</div>
-                  <input type="text" class="skill-input" id="s3-primary" placeholder="Primary skill" oninput="autosave()">
-                </div>
-                <div class="stack-connector">
-                  <div><div class="connector-symbol">+</div><div class="connector-label">plus</div></div>
-                </div>
-                <div class="skill-box">
-                  <div class="skill-box-label">Supporting Skill</div>
-                  <input type="text" class="skill-input" id="s3-support" placeholder="Supporting skill" oninput="autosave()">
-                </div>
-                <div class="stack-connector">
-                  <div><div class="connector-symbol">+</div><div class="connector-label">plus</div></div>
-                </div>
-                <div class="skill-box">
-                  <div class="skill-box-label">Context Knowledge</div>
-                  <input type="text" class="skill-input" id="s3-context" placeholder="Context knowledge" oninput="autosave()">
-                </div>
-              </div>
-              <div class="stack-result-label">= Stack Advantage</div>
-              <textarea class="stack-result-input" id="s3-advantage" placeholder="Describe the stack advantage" oninput="autosave()"></textarea>
-              <div class="stack-sentence-label">3-Sentence Explanation</div>
-              <textarea class="stack-sentence-input" id="s3-sentence" placeholder="3 sentences" oninput="autosave()"></textarea>
-            </div>
-          </div>
-
-        </div>
-      </div>
-    </div>
-
-    <!-- LOCK-IN -->
-    <div class="s-label">Complete this module</div>
-    <div class="lockin-section">
-      <div class="lockin-tag">Required decision</div>
-      <div class="lockin-title">Choose Primary stack.</div>
-      <p class="lockin-rule">Choose one stack from the combinations above. Name it and explain what it solves.</p>
-      <input type="text" class="lockin-input" id="primary-stack" placeholder="My primary stack is: [write the stack name and one sentence explaining why]" oninput="autosave(); checkLockIn();" />
-      <div class="lockin-warn" id="lockin-warn">⚠ You must define your primary stack before completing this module.</div>
-      <div class="lockin-ok" id="lockin-ok">✓ Primary stack documented. You may advance.</div>
-    </div>
-
-    <!-- DECLARATION -->
-    <div class="decl-box">
-
-
-
-      <div class="alert-msg" id="alert-complete"></div>
-      <button class="btn-decl" id="complete-btn" onclick="completeModule()">
-        Complete Module 2 →
-      </button>
-    </div>
-
+      <button type="button" id="retry-stack" hidden>Retry</button>
+    </section>
     <div class="mod-nav">
       <a href="module1.html" class="btn-back">← Back to Module 1</a>
       <a href="module3.html" class="btn-next" id="next-btn">Module 3 →</a>
@@ -435,7 +318,7 @@ nav{position:sticky;top:0;z-index:200;background:rgba(245,243,238,.9);backdrop-f
 </div>
 
 <script>
-let saveTimer = null;
+
 
 document.addEventListener('DOMContentLoaded', async () => {
   const session = await requireAuth();
@@ -466,85 +349,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('next-btn').classList.add('unlocked');
   }
 
-  const saved = await loadWorksheet('skill-stack-builder');
-  if (saved) populate(saved);
+  await openStackBuilder(user.id);
 });
-
-function autosave() {
-  clearTimeout(saveTimer);
-  setSave('saving');
-  saveTimer = setTimeout(doSave, 1400);
-}
-
-async function doSave() {
-  const { error } = await saveWorksheet('skill-stack-builder', collect());
-  setSave(error ? 'error' : 'saved');
-}
-
-function setSave(s) {
-  const dot = document.getElementById('save-dot');
-  const txt = document.getElementById('save-txt');
-  dot.className = 'save-dot';
-  if (s === 'saving') { dot.classList.add('saving'); txt.textContent = 'Saving...'; }
-  else if (s === 'saved') { dot.classList.add('saved'); txt.textContent = 'Saved ✓'; }
-  else { txt.textContent = 'Error — check connection'; }
-}
-
-function collect() {
-  const fields = ['s1-name','s1-primary','s1-support','s1-context','s1-advantage','s1-sentence',
-                  's2-name','s2-primary','s2-support','s2-context','s2-advantage','s2-sentence',
-                  's3-name','s3-primary','s3-support','s3-context','s3-advantage','s3-sentence'];
-  const data = {};
-  fields.forEach(id => { data[id] = document.getElementById(id)?.value || ''; });
-  data.primaryStack = document.getElementById('primary-stack')?.value || '';
-  return data;
-}
-
-function populate(saved) {
-  Object.keys(saved).forEach(key => {
-    const el = document.getElementById(key);
-    if (el) el.value = saved[key];
-  });
-  if (saved.primaryStack) checkLockIn();
-  setSave('saved');
-}
-
-function checkLockIn() {
-  const val = document.getElementById('primary-stack').value.trim();
-  document.getElementById('lockin-warn').style.display = 'none';
-  document.getElementById('lockin-ok').style.display = val.length > 10 ? 'block' : 'none';
-}
-
-async function completeModule() {
-  const stack = document.getElementById('primary-stack').value.trim();
-  if (stack.length < 10) {
-    document.getElementById('lockin-warn').style.display = 'block';
-    document.querySelector('.lockin-section').scrollIntoView({ behavior: 'smooth' });
-    const a = document.getElementById('alert-complete');
-    a.textContent = 'Define your primary stack before completing this module.';
-    a.className = 'alert-msg alert-err show';
-    return;
-  }
-  const btn = document.getElementById('complete-btn');
-  btn.innerHTML = '<span style="display:inline-block;width:16px;height:16px;border-radius:50%;border:2px solid rgba(180,148,216,.3);border-top-color:var(--gold);animation:spin .7s linear infinite;"></span> Saving...';
-  btn.disabled = true;
-  await doSave();
-  await markModuleComplete('module-02');
-  const c = document.getElementById('ck-02');
-  if (c) { c.textContent = '✓'; c.classList.add('done'); }
-  document.getElementById('next-btn').classList.add('unlocked');
-  const a = document.getElementById('alert-complete');
-  a.textContent = '✓ Module 2 complete! Your stacks are saved. Module 3 is now unlocked.';
-  a.className = 'alert-msg alert-ok show';
-  btn.innerHTML = '✓ Module 2 Complete';
-}
-
-function toggleAudio(btn) {
-  const on = btn.dataset.playing === 'true';
-  btn.textContent = on ? '▶' : '⏸';
-  btn.dataset.playing = (!on).toString();
-}
 </script>
+<script src="stack-builder.js?v=1"></script>
 <script src="learner-experience.js?v=1" defer></script>
 </body>
 </html>
