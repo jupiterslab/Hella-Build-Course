@@ -25,40 +25,63 @@
     varying vec2 uv;
     uniform sampler2D scene, aperture;
     uniform float phase, stormAngle;
-    void main(){
-      vec2 size=vec2(900.,300.);
-      vec2 pixel=uv*size;
-      // Sample the original artwork. Ease the exterior drift to zero at the frame.
-      float edge=texture2D(aperture,uv).a;
-      float drift=edge*smoothstep(75.,145.,pixel.y)*(1.-smoothstep(197.,238.,pixel.y))
-                      *smoothstep(165.,260.,pixel.x)*(1.-smoothstep(765.,820.,pixel.x));
-      pixel.x+=5.*sin(phase)*drift;
-      vec2 center=vec2(744.,172.), axes=vec2(36.,23.);
-      vec2 local=(pixel-center)/axes;
-      float radius=length(local);
-      // Cloud crests circulate and undulate outside the faster-moving core.
-      float collar=smoothstep(.72,1.08,radius)*(1.-smoothstep(1.45,2.85,radius));
-      float azimuth=atan(local.y,local.x+.00001);
-      float wave=sin(3.*azimuth-2.*stormAngle)-sin(3.*azimuth);
-      pixel+=axes*(vec2(-local.y,local.x)*.085*wave+
-                   local*.032*(sin(5.*azimuth+stormAngle)-sin(5.*azimuth)))*collar;
-      // Extend the flow upstream through the pale, folded band beside the storm.
-      vec2 fold=(pixel-vec2(628.,143.))/vec2(110.,43.);
-      float influence=(1.-smoothstep(.45,1.,length(fold)))*edge;
-      float crest=fold.x*5.+fold.y*2.;
-      pixel+=vec2(2.8*(sin(crest+stormAngle)-sin(crest)),
-                  1.7*(cos(crest+stormAngle)-cos(crest)))*influence;
-      if(radius<1.15){
-        float c=cos(stormAngle), s=sin(stormAngle);
-        vec2 rotated=mat2(c,s,-s,c)*local;
-        // Feather the rotating storm into the original surrounding cloud bands.
-        vec3 rolling=texture2D(scene,(center+axes*rotated)/size).rgb;
-        vec3 still=texture2D(scene,pixel/size).rgb;
-        gl_FragColor=vec4(mix(rolling,still,smoothstep(.72,1.15,radius)),1.);
-      }else{
-        gl_FragColor=texture2D(scene,pixel/size);
+    const vec2 size=vec2(900.,300.);
+    const vec2 eye=vec2(744.,172.);
+    const vec2 axes=vec2(36.,23.);
+    // Curved latitude coordinate, locally parallel to the photographed belts.
+    float bandHeight(float x){return 127.+.00030*(x-760.)*(x-760.)-.065*(x-760.);}
+    // Velocity = (dPsi/dy, -dPsi/dx). Adjacent jets split around the core.
+    vec2 velocity(vec2 p){
+      float lat=p.y-bandHeight(p.x);
+      vec2 gradLat=vec2(.065-.00060*(p.x-760.),1.);
+      vec2 q=(p-eye)/axes, gradR=2.*q/axes;
+      float r=dot(q,q);
+      float bend=p.x*.048+lat*.10, envelope=exp(-lat*lat/1100.);
+      float jets=70.*sin(lat/16.)+22.*sin(lat/7.5)+24.*sin(bend)*envelope;
+      vec2 gradJets=gradLat*(70./16.*cos(lat/16.)+22./7.5*cos(lat/7.5)
+                      -48.*lat/1100.*sin(bend)*envelope)
+                    +24.*envelope*cos(bend)*(vec2(.048,0.)+.10*gradLat);
+      float gate=clamp((r-.7)/3.1,0.,1.);
+      vec2 grad=gradJets*smoothstep(.7,3.8,r)
+                +gradR*(jets*6.*gate*(1.-gate)/3.1+180./(1.+r));
+      return vec2(grad.y,-grad.x);
+    }
+    vec2 traceFlow(vec2 p,float seconds){
+      // Midpoint backtrace in two short steps through the same velocity field.
+      float stepTime=seconds*.5;
+      for(int i=0;i<2;i++){
+        vec2 mid=p-.5*stepTime*velocity(p);
+        p-=stepTime*velocity(mid);
       }
-    }`;
+      return p;
+    }
+    void main(){
+      vec2 p=uv*size;
+      vec3 original=texture2D(scene,uv).rgb;
+      float edge=texture2D(aperture,uv).a;
+      if(edge<.01){gl_FragColor=vec4(original,1.);return;}
+      float horizon=64.+.00040*(p.x-655.)*(p.x-655.)-.085*(p.x-655.);
+      float mask=edge*smoothstep(-6.,12.,p.y-horizon);
+      float border=min(min(p.x-150.,827.-p.x),min(p.y-70.,244.-p.y));
+      mask*=smoothstep(0.,14.,border);
+      vec2 local=(p-eye)/axes;
+      float radius=length(local);
+      float t=fract(stormAngle/6.2831853*15.);
+      float a=fract(t+.5), b=fract(t);
+      float weight=.5-.5*cos(6.2831853*a);
+      vec2 drift=vec2(4.*sin(phase),0.)*mask;
+      vec2 u=traceFlow(p+drift,(a-.5)*6.*mask);
+      vec2 v=traceFlow(p+drift,(b-.5)*6.*mask);
+      vec3 clouds=mix(texture2D(scene,v/size).rgb,texture2D(scene,u/size).rgb,weight);
+      if(radius<1.35){
+        float c=cos(stormAngle), s=sin(stormAngle);
+        vec2 rolled=eye+axes*(mat2(c,s,-s,c)*local);
+        vec3 storm=texture2D(scene,rolled/size).rgb;
+        clouds=mix(storm,clouds,smoothstep(.75,1.35,radius));
+      }
+      gl_FragColor=vec4(mix(original,clouds,mask),1.);
+    }
+    `;
   const program = gl.createProgram();
   function attach(type, source) {
     const shader = gl.createShader(type);
