@@ -45,7 +45,7 @@
     document.addEventListener('keydown',key,{once:false});
   }
   const controls = el('div','hb-ux-controls');
-  const focus = button('Focus mode',()=>{pref.focus=!pref.focus;persistPref();applyFocus();},'hb-ux-focus');
+  const focus = button('Focus mode',()=>{pref.focus=!pref.focus;persistPref();applyFocus();close();toolsButton.focus();},'hb-ux-focus');
   function applyFocus(){
     document.documentElement.classList.toggle('hb-ux-focused',!!pref.focus);
     focus.textContent=pref.focus?'Show course menu':'Focus mode';
@@ -66,7 +66,11 @@
     button('Idea Vault',()=>{ void showVault(); }),
     focus
   );
-  document.querySelector('.mod-hero')?.append(controls);
+  const toolsButton = button('Tools', () => {
+    openPanel('Course tools', panel => panel.append(controls));
+  });
+  toolsButton.setAttribute('aria-haspopup', 'dialog');
+  document.querySelector('nav .nav-right')?.prepend(toolsButton);
   applyFocus();
   // Idea Vault uses the existing authenticated worksheet table. Never place private
   // learner text in shared browser storage, and show failures rather than pretending to save.
