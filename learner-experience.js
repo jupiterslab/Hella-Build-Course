@@ -66,8 +66,7 @@
     button('Idea Vault',()=>{ void showVault(); }),
     focus
   );
-  const nav = document.querySelector('nav');
-  if(nav) nav.insertAdjacentElement('afterend', controls); else document.body.prepend(controls);
+  document.querySelector('.mod-hero')?.append(controls);
   applyFocus();
   // Idea Vault uses the existing authenticated worksheet table. Never place private
   // learner text in shared browser storage, and show failures rather than pretending to save.
