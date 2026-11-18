@@ -10,7 +10,7 @@
   if (header) header.after(banner);
   else document.body.prepend(banner);
   const orbitScript = document.createElement('script');
-  orbitScript.src = 'orbit.js?v=2';
+  orbitScript.src = 'orbit.js?v=3';
   document.head.append(orbitScript);
   const toggle = banner.querySelector('button');
   const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
