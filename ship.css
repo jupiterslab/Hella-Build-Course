@@ -14,8 +14,8 @@ html.ship-mode {
 .ship-mode .nav-name { color:#EDF0F2; font-size:15px; }
 .ship-mode .nav-sub { display:none; }
 .lab-window { position:relative; width:100%; height:clamp(160px,20vw,290px); overflow:hidden; border-bottom:1px solid #555361; background:#111419 url('assets/lab-window.webp') center 58% / cover no-repeat; }
-.lab-window-light { position:absolute; inset:-1%; background:url('assets/lab-window.webp') center 58% / cover no-repeat; animation:lab-light 20s ease-in-out infinite alternate; will-change:opacity; }
-@keyframes lab-light { from { opacity:1; transform:scale(1); } to { opacity:1; transform:scale(1.012); } }
+.lab-window-light { position:absolute; inset:-5%; background:url('assets/lab-window.webp') center 58% / cover no-repeat; animation:lab-drift 16s ease-in-out -5s infinite alternate; will-change:transform; }
+@keyframes lab-drift { from { transform:translate3d(-3%,1%,0) scale(1); } to { transform:translate3d(3%,-1%,0) scale(1.04); } }
 .motion-toggle { position:absolute; bottom:12px; right:20px; background:#14171DDD; color:#E3D6F1; border:1px solid #777080; border-radius:6px; padding:7px 12px; font:500 11px Inter,sans-serif; cursor:pointer; }
 .motion-paused .lab-window-light, .lab-window.motion-paused::after { animation-play-state:paused; }
 .lab-window::after { content:""; position:absolute; inset:0; pointer-events:none; background:radial-gradient(ellipse at 88% 30%,#B494D81A,transparent 55%); animation:lab-reflection 18s ease-in-out infinite alternate; }
@@ -134,7 +134,7 @@ html.ship-mode {
  .experience-actions { align-items:stretch; flex-direction:column; }
  .ship-mode .mod-h, .ship-mode .bonus-h { font-size:30px; }
 }
-@media (prefers-reduced-motion:reduce) { .lab-window-light, .lab-window::after { animation:none; opacity:1; } }
+@media (prefers-reduced-motion:reduce) { .lab-window.motion-paused .lab-window-light, .lab-window.motion-paused::after { animation-play-state:paused; } }
 .ship-mode .bonus-hero::before, .ship-mode .bonus-hero::after, .ship-mode .final-decl::before { display:none; }
 .ship-mode .stack-header, .ship-mode .phase-name, .ship-mode .compass-label,
 .ship-mode .eight-name, .ship-mode .eight-num, .ship-mode .section-title,
