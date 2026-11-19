@@ -111,12 +111,13 @@
 
   const phase = gl.getUniformLocation(program,'phase');
   const storm = gl.getUniformLocation(program,'stormAngle');
+  const motionRate = 0.2;
   let spin=0, angle=0, previous=0, request=0, visible=true;
   const draw=()=>{ gl.uniform1f(phase,angle); gl.uniform1f(storm,spin); gl.drawArrays(gl.TRIANGLE_STRIP,0,4); };
   function frame(time) {
     if (time-previous>=1000/30) {
       if(previous) {
-        const seconds=Math.min(time-previous,100)/1000;
+        const seconds=Math.min(time-previous,100)/1000 * motionRate;
         angle=(angle+seconds*Math.PI*2/720)%(Math.PI*2);
         spin=(spin+seconds*Math.PI*2/90)%(Math.PI*2);
       }
