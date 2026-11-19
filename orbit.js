@@ -81,7 +81,7 @@
   texture(0,'scene',map); texture(1,'aperture',mask);
 
   const phase = gl.getUniformLocation(program,'phase');
-  const orbitSeconds=240;
+  const orbitSeconds=200;
   let angle=0, previous=0, request=0, visible=true;
   const draw=()=>{ gl.uniform1f(phase,angle); gl.drawArrays(gl.TRIANGLE_STRIP,0,4); };
   function frame(time) {
